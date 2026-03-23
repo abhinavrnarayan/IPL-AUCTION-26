@@ -4,6 +4,10 @@
 [build.environment]
   NODE_VERSION = "20"
 
+[secrets]
+  # NEXT_PUBLIC_* keys are intentionally embedded in the client bundle
+  excluded = ["NEXT_PUBLIC_SUPABASE_URL", "NEXT_PUBLIC_SUPABASE_ANON_KEY", "NEXT_PUBLIC_SUPABASE_PUBLISHABLE_DEFAULT_KEY", "NEXT_PUBLIC_APP_URL"]
+
 [[plugins]]
   package = "@netlify/plugin-nextjs"
 
