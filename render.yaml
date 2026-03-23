@@ -11,7 +11,7 @@ services:
       - key: NODE_VERSION
         value: 20.14.0
       - key: PORT
-        value: 3000
+        value: 10000
       - key: HOSTNAME
         value: 0.0.0.0
       - key: NEXT_PUBLIC_APP_URL
