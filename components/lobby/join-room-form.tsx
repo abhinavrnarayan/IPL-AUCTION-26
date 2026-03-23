@@ -29,6 +29,11 @@ export function JoinRoomForm() {
         room?: { code: string };
       };
 
+      if (response.status === 401) {
+        window.location.assign(`/login?next=/lobby`);
+        return;
+      }
+
       if (!response.ok || !payload.room) {
         throw new Error(payload.error ?? "Room join failed.");
       }
