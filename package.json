@@ -6,7 +6,7 @@
     "node": "20.x"
   },
   "scripts": {
-    "dev": "next dev",
+    "dev": "next dev -p 10000",
     "build": "next build && node scripts/copy-standalone.mjs",
     "start": "next start",
     "lint": "next lint",

@@ -93,8 +93,10 @@ where t.room_id       = ti.room_id
 -- mark those as claimed too
 update public.team_invites ti
 set claimed_at = now()
-from public.users u
-join public.teams t on lower(t.name) = lower(ti.team_name) and t.room_id = ti.room_id
-where lower(u.email) = lower(ti.email)
+from public.users u,
+     public.teams t
+where lower(u.email)  = lower(ti.email)
+  and lower(t.name)   = lower(ti.team_name)
+  and t.room_id       = ti.room_id
   and t.owner_user_id = u.id
   and ti.claimed_at   is null;
