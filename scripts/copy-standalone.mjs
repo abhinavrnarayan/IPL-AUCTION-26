@@ -11,7 +11,10 @@ if (!existsSync(standalone)) {
   process.exit(0);
 }
 
-cpSync(join(root, "public"), join(standalone, "public"), { recursive: true });
+const publicDir = join(root, "public");
+if (existsSync(publicDir)) {
+  cpSync(publicDir, join(standalone, "public"), { recursive: true });
+}
 cpSync(join(root, ".next", "static"), join(standalone, ".next", "static"), {
   recursive: true,
 });
