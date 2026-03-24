@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { SiteLogo } from "@/components/site-logo";
 
 import { ImportResultsForm } from "@/components/room/import-results-form";
 import { RoomInvitePanel } from "@/components/room/room-invite-panel";
@@ -85,7 +86,8 @@ export default async function RoomPage({
       <DashboardAutoRefresher roomId={snapshot.room.id} />
       <div className="nav">
         <div>
-          <div className="brand">{snapshot.room.name}</div>
+          <div className="brand"><SiteLogo suffix="Room" /></div>
+          <div className="subtle" style={{ fontFamily: "var(--font-display)", fontWeight: 600 }}>{snapshot.room.name}</div>
           <div className="subtle mono">{snapshot.room.code}</div>
         </div>
         <div className="link-row">

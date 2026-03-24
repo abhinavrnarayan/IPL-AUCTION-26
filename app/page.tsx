@@ -1,10 +1,11 @@
 import Link from "next/link";
+import { SiteLogo } from "@/components/site-logo";
 
 export default function HomePage() {
   return (
     <main className="shell">
       <div className="nav">
-        <div className="brand">IPL Auction Platform</div>
+        <div className="brand"><SiteLogo suffix="Auction Platform" /></div>
         <div className="button-row">
           <Link className="button ghost" href="/login">
             Sign in
@@ -17,7 +18,7 @@ export default function HomePage() {
 
       <section className="hero">
         <span className="eyebrow">PRD v2 foundation</span>
-        <h1>Run a live IPL auction with room controls, trades, and scoring.</h1>
+        <h1>Run a live SFL auction with room controls, trades, and scoring.</h1>
         <p className="subtle">
           This starter ships with Supabase auth, room setup, uploads, a
           server-validated auction engine, realtime subscriptions, emoji

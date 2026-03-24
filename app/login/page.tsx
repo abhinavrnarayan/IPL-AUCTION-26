@@ -1,4 +1,5 @@
 import { redirect } from "next/navigation";
+import { SiteLogo } from "@/components/site-logo";
 
 import {
   getLoginAuthErrorMessage,
@@ -37,7 +38,7 @@ export default async function LoginPage({
   return (
     <main className="shell">
       <div className="nav">
-        <div className="brand">IPL Auction Platform</div>
+        <div className="brand"><SiteLogo suffix="Auction Platform" /></div>
       </div>
 
       <section className="hero">

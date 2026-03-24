@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { SiteLogo } from "@/components/site-logo";
 
 import { signOutAction } from "@/app/login/actions";
 import { CreateRoomForm } from "@/components/lobby/create-room-form";
@@ -17,7 +18,7 @@ export default async function LobbyPage() {
       <main className="shell">
         <div className="nav">
           <div>
-            <div className="brand">Lobby</div>
+            <div className="brand"><SiteLogo suffix="Lobby" /></div>
             <div className="subtle">
               {user.displayName ?? user.email ?? "Signed-in user"}
             </div>
@@ -39,7 +40,7 @@ export default async function LobbyPage() {
       <main className="shell">
         <div className="nav">
           <div>
-            <div className="brand">Lobby</div>
+            <div className="brand"><SiteLogo suffix="Lobby" /></div>
             <div className="subtle">
               {user.displayName ?? user.email ?? "Signed-in user"}
             </div>

@@ -15,8 +15,8 @@ const bodyFont = Inter({
 });
 
 export const metadata: Metadata = {
-  title: "IPL Auction Platform",
-  description: "Real-time IPL auction simulator with bidding, trades, and scoring.",
+  title: "SFL Auction Platform",
+  description: "Real-time SFL fantasy auction simulator with bidding, trades, and scoring.",
 };
 
 export default function RootLayout({

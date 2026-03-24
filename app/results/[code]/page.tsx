@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { SiteLogo } from "@/components/site-logo";
 
 import { ResultsBoard } from "@/components/results/results-board";
 import { hasServiceRoleEnv } from "@/lib/config";
@@ -52,7 +53,7 @@ export default async function ResultsPage({
     <main className="shell">
       <div className="nav">
         <div>
-          <div className="brand">Results</div>
+          <div className="brand"><SiteLogo suffix="Results" /></div>
           <div className="subtle mono">{snapshot.room.code}</div>
         </div>
         <div className="link-row">

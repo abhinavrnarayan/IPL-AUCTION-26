@@ -1,6 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
+import Image from "next/image";
 import { startTransition, useCallback, useEffect, useRef, useState } from "react";
 
 import { BidPanel } from "@/components/auction/bid-panel";
@@ -808,10 +809,22 @@ export function AuctionRoomClient({ snapshot }: { snapshot: AuctionSnapshot }) {
             }}
           >
             <span
-              className="brand"
-              style={{ fontSize: "1rem", letterSpacing: "-0.03em" }}
+              style={{ display: "flex", alignItems: "center", gap: "0.5rem", flexShrink: 0 }}
             >
-              {snapshot.room.name}
+              <Image
+                alt="SFL"
+                height={22}
+                src="/images/sfl.png"
+                style={{ objectFit: "contain" }}
+                width={22}
+              />
+              <span className="brand" style={{ fontSize: "0.95rem", letterSpacing: "-0.03em" }}>
+                SFL
+              </span>
+              <span style={{ opacity: 0.35, fontSize: "0.85rem" }}>·</span>
+              <span style={{ fontFamily: "var(--font-display)", fontWeight: 600, fontSize: "0.9rem" }}>
+                {snapshot.room.name}
+              </span>
             </span>
             <span className="pill">Round {localAuctionState.currentRound}</span>
             <span className="pill">
