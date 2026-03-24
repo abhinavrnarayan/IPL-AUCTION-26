@@ -62,7 +62,9 @@ export function AuctionRoomClient({ snapshot }: { snapshot: AuctionSnapshot }) {
   const prevPlayerIdRef = useRef<string | null>(snapshot.auctionState.currentPlayerId);
   const [localAuctionState, setLocalAuctionState] = useState(snapshot.auctionState);
   const [localPlayers, setLocalPlayers] = useState(snapshot.players);
+  const localPlayersRef = useRef(snapshot.players);
   const [localTeams, setLocalTeams] = useState(snapshot.teams);
+  const localTeamsRef = useRef(snapshot.teams);
   const [localSquads, setLocalSquads] = useState(snapshot.squads);
   const [localBids, setLocalBids] = useState(snapshot.bids);
 
@@ -134,7 +136,9 @@ export function AuctionRoomClient({ snapshot }: { snapshot: AuctionSnapshot }) {
   useEffect(() => {
     setLocalAuctionState(snapshot.auctionState);
     setLocalPlayers(snapshot.players);
+    localPlayersRef.current = snapshot.players;
     setLocalTeams(snapshot.teams);
+    localTeamsRef.current = snapshot.teams;
     setLocalSquads(snapshot.squads);
     setLocalBids(snapshot.bids);
   }, [snapshot]);
@@ -155,31 +159,6 @@ export function AuctionRoomClient({ snapshot }: { snapshot: AuctionSnapshot }) {
     setOptimisticPhase(null);
   }, [snapshot.auctionState.version]);
 
-  // SOLD/UNSOLD overlay — fires when current player changes
-  useEffect(() => {
-    const prevId = prevPlayerIdRef.current;
-    const newId = localAuctionState.currentPlayerId;
-    prevPlayerIdRef.current = newId;
-
-    if (!prevId || prevId === newId) return;
-
-    const oldPlayer = localPlayers.find((p) => p.id === prevId);
-    if (oldPlayer?.status !== "SOLD" && oldPlayer?.status !== "UNSOLD") return;
-
-    let teamName: string | undefined;
-    if (oldPlayer.status === "SOLD" && oldPlayer.currentTeamId) {
-      teamName = localTeams.find((t) => t.id === oldPlayer.currentTeamId)?.name;
-    }
-
-    setResultOverlay({ 
-      kind: oldPlayer.status, 
-      playerName: oldPlayer.name,
-      teamName,
-      price: oldPlayer.soldPrice ?? undefined,
-    });
-    const t = setTimeout(() => setResultOverlay(null), 2500);
-    return () => clearTimeout(t);
-  }, [localAuctionState.currentPlayerId, localPlayers, localTeams]);
 
   const routerRef = useRef(router);
   routerRef.current = router;
@@ -351,6 +330,26 @@ export function AuctionRoomClient({ snapshot }: { snapshot: AuctionSnapshot }) {
           version: Math.max(curr.version + 1, next.version),
         }));
         setRemainingSeconds(getRemainingSeconds(next.expiresAt));
+
+        // Show SOLD/UNSOLD overlay directly from the broadcast payload —
+        // this is reliable for ALL clients, including members who didn't place the bid.
+        if (next.previousPlayerId && next.previousPlayerStatus) {
+          const prevPlayerName =
+            localPlayersRef.current.find((p) => p.id === next.previousPlayerId)?.name ??
+            "Player";
+          const winningTeamName = next.winningTeamId
+            ? localTeamsRef.current.find((t) => t.id === next.winningTeamId)?.name
+            : undefined;
+          setResultOverlay({
+            kind: next.previousPlayerStatus,
+            playerName: prevPlayerName,
+            teamName: next.previousPlayerStatus === "SOLD" ? winningTeamName : undefined,
+            price: next.previousPlayerStatus === "SOLD" && next.winningBid !== null ? next.winningBid : undefined,
+          });
+          const overlayTimer = window.setTimeout(() => setResultOverlay(null), 2500);
+          // cleanup is handled by the component unmount; this is fire-and-forget
+          void overlayTimer;
+        }
       })
       .on("broadcast", { event: "REFRESH_ROOM" }, () => refreshRoom())
       .subscribe();
@@ -483,6 +482,19 @@ export function AuctionRoomClient({ snapshot }: { snapshot: AuctionSnapshot }) {
         version: curr.version + 1,
       }));
       setRemainingSeconds(getRemainingSeconds(optimisticExpiresAt));
+
+      // Fire the overlay directly for the admin (other users get it from the AUCTION_ADVANCED broadcast handler)
+      if (currentPlayer) {
+        const isSold = currentBid !== null && currentTeam;
+        setResultOverlay({
+          kind: isSold ? "SOLD" : "UNSOLD",
+          playerName: currentPlayer.name,
+          teamName: isSold ? currentTeam.name : undefined,
+          price: isSold ? currentBid : undefined,
+        });
+        const overlayTimer = window.setTimeout(() => setResultOverlay(null), 2500);
+        void overlayTimer;
+      }
       channelRef.current?.send({
         type: "broadcast",
         event: "AUCTION_ADVANCED",
