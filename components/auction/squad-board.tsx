@@ -128,7 +128,7 @@ function TeamSection({
         onMouseOut={(e) => (e.currentTarget.style.background = "transparent")}
       >
         <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", flex: 1, minWidth: 0 }}>
-          <span className="squad-shortcode" style={{ padding: "0.2rem 0.5rem", background: "var(--primary-strong)", color: "#000", borderRadius: "4px", fontSize: "0.75rem", fontWeight: "bold" }}>{team.shortCode}</span>
+          <span className="squad-shortcode" style={{ padding: "0.2rem 0.5rem", background: "var(--primary)", color: "#fff", borderRadius: "4px", fontSize: "0.75rem", fontWeight: "bold" }}>{team.shortCode}</span>
           {editing ? (
             <input
               autoFocus
@@ -144,7 +144,7 @@ function TeamSection({
               }}
             />
           ) : (
-            <span className="squad-team-name" title={team.name} style={{ fontWeight: 600, fontSize: "0.95rem" }}>{team.name}</span>
+            <span className="squad-team-name" title={team.name} style={{ fontWeight: 600, fontSize: "0.95rem", color: "var(--text)" }}>{team.name}</span>
           )}
           {canRename && !isLive && !editing && (
             <div
@@ -158,7 +158,7 @@ function TeamSection({
           )}
         </div>
         <div style={{ display: "flex", alignItems: "center", gap: "0.75rem", flexShrink: 0 }}>
-          <span className="subtle" style={{ fontSize: "0.8rem" }}>
+          <span className="subtle" style={{ fontSize: "0.8rem", color: "var(--muted)" }}>
             {entries.length}/{team.squadLimit} Players
           </span>
           <span className="squad-purse" style={{ fontWeight: "bold", color: "var(--success)" }}>{formatCurrencyShort(team.purseRemaining)}</span>
