@@ -293,30 +293,35 @@ export default async function RoomPage({
           )}
         </div>
 
-        <div className="panel">
-          <h2>Players</h2>
-          {snapshot.players.length === 0 ? (
-            <div className="empty-state">
-              Upload a player sheet to populate round one and round two queues.
-            </div>
-          ) : (
-            <div className="table-like">
-              {snapshot.players.slice(0, 12).map((player) => (
-                <div className="room-card" key={player.id}>
-                  <div className="header-row">
-                    <strong>{player.name}</strong>
-                    <span className="pill">{player.status}</span>
+        <details className="panel" style={{ cursor: "pointer", transition: "all 0.2s ease" }}>
+          <summary style={{ outline: "none", listStyle: "none", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+            <h2 style={{ margin: 0 }}>Player Pool ({snapshot.players.length})</h2>
+            <span style={{ fontSize: "1.2rem", opacity: 0.7 }}>▾</span>
+          </summary>
+          <div style={{ marginTop: "1rem" }}>
+            {snapshot.players.length === 0 ? (
+              <div className="empty-state">
+                Upload a player sheet to populate round one and round two queues.
+              </div>
+            ) : (
+              <div className="table-like">
+                {snapshot.players.slice(0, 12).map((player) => (
+                  <div className="room-card" key={player.id}>
+                    <div className="header-row">
+                      <strong>{player.name}</strong>
+                      <span className="pill">{player.status}</span>
+                    </div>
+                    <div className="subtle">
+                      {player.role}
+                      {player.nationality ? ` • ${player.nationality}` : ""} •{" "}
+                      {formatCurrency(player.basePrice)}
+                    </div>
                   </div>
-                  <div className="subtle">
-                    {player.role}
-                    {player.nationality ? ` • ${player.nationality}` : ""} •{" "}
-                    {formatCurrency(player.basePrice)}
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
+                ))}
+              </div>
+            )}
+          </div>
+        </details>
       </section>
 
       {snapshot.teams.length > 1 && (

@@ -409,6 +409,12 @@ export function AuctionRoomClient({ snapshot }: { snapshot: AuctionSnapshot }) {
     });
   }
 
+  const feedItems = [...snapshot.bids.map(b => ({
+    type: "BID" as const, id: b.id, createdAt: b.createdAt, teamId: b.teamId, playerId: b.playerId, amount: b.amount
+  })), ...snapshot.squads.map(sq => ({
+    type: "SOLD" as const, id: `sq-${sq.id}`, createdAt: sq.createdAt, teamId: sq.teamId, playerId: sq.playerId, amount: sq.purchasePrice
+  }))].sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()).slice(0, 12);
+
   return (
     <>
       {/* SOLD / UNSOLD overlay */}
@@ -840,21 +846,34 @@ export function AuctionRoomClient({ snapshot }: { snapshot: AuctionSnapshot }) {
               />
             )}
 
-            {/* Recent bids */}
+            {/* Recent bids & purchases */}
             <div className="panel">
-              <h3>Recent bids</h3>
-              <div className="bid-log">
-                {snapshot.bids.length === 0 ? (
-                  <div className="empty-state">No bids recorded yet.</div>
+              <h3>Auction feed</h3>
+              <div className="bid-log" style={{ display: "flex", flexDirection: "column", gap: "0.4rem" }}>
+                {feedItems.length === 0 ? (
+                  <div className="empty-state">No events recorded yet.</div>
                 ) : (
-                  snapshot.bids.slice(0, 10).map((bid) => {
-                    const team = snapshot.teams.find((t) => t.id === bid.teamId);
-                    const player = snapshot.players.find((p) => p.id === bid.playerId);
+                  feedItems.map((item) => {
+                    const team = snapshot.teams.find((t) => t.id === item.teamId);
+                    const player = snapshot.players.find((p) => p.id === item.playerId);
+                    
+                    if (item.type === "SOLD") {
+                      return (
+                        <div className="bid-row" key={item.id} style={{ background: "rgba(16, 185, 129, 0.1)", borderLeft: "3px solid var(--success)", paddingLeft: "0.5rem" }}>
+                          🎉 <strong>{player?.name ?? "Unknown player"}</strong>
+                          {" bought by "}
+                          <strong style={{ color: "var(--success)" }}>{team?.shortCode ?? "?"}</strong>
+                          {" for "}
+                          <strong>{formatCurrencyShort(item.amount)}</strong>
+                        </div>
+                      );
+                    }
+                    
                     return (
-                      <div className="bid-row" key={bid.id}>
+                      <div className="bid-row" key={item.id}>
                         <strong>{team?.shortCode ?? "?"}</strong>
                         {" bid "}
-                        <strong>{formatCurrencyShort(bid.amount)}</strong>
+                        <strong>{formatCurrencyShort(item.amount)}</strong>
                         {" for "}
                         {player?.name ?? "Unknown player"}
                       </div>
