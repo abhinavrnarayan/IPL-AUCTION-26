@@ -173,7 +173,11 @@ export function AuctionRoomClient({ snapshot }: { snapshot: AuctionSnapshot }) {
 
     const supabase = getSupabaseBrowserClient();
     const channel = supabase
-      .channel(getRoomChannelName(snapshot.room.code))
+      .channel(getRoomChannelName(snapshot.room.code), {
+        config: {
+          broadcast: { ack: true, self: true },
+        },
+      })
       .on(
         "postgres_changes",
         { event: "*", schema: "public", table: "auction_state", filter: `room_id=eq.${snapshot.room.id}` },
@@ -255,7 +259,10 @@ export function AuctionRoomClient({ snapshot }: { snapshot: AuctionSnapshot }) {
         setOptimisticPhase(null);
         throw new Error(payload.error ?? "Auction action failed.");
       }
-      channelRef.current?.send({ type: "broadcast", event: "REFRESH_ROOM" });
+      refreshRoom();
+      try {
+        channelRef.current?.send({ type: "broadcast", event: "REFRESH_ROOM" });
+      } catch (e) {}
       router.refresh();
     } catch (err) {
       setActionError(toErrorMessage(err));
