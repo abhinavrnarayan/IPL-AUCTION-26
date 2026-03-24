@@ -4,6 +4,7 @@ import { NextResponse } from "next/server";
 import { AppError } from "@/lib/domain/errors";
 import { startNextRoundSchema } from "@/lib/domain/schemas";
 import { readJson, handleRouteError } from "@/lib/server/api";
+import { isMissingPausedRemainingMsColumnError, omitPausedRemainingMs } from "@/lib/server/auction-state";
 import { requireApiUser } from "@/lib/server/auth";
 import { getAuctionStateOnly, requireRoomAdmin } from "@/lib/server/room";
 import { getSupabaseAdminClient } from "@/lib/supabase/admin";
@@ -59,21 +60,30 @@ export async function POST(
 
     const expiresAt = new Date(Date.now() + room.timerSeconds * 1000).toISOString();
 
-    const { error: stateError } = await admin
+    const updateValues = {
+      phase: "LIVE",
+      current_round: nextRound,
+      current_player_id: firstPlayer.id,
+      current_bid: null,
+      current_team_id: null,
+      expires_at: expiresAt,
+      paused_remaining_ms: null,
+      skip_vote_team_ids: [],
+      version: auctionState.version + 1,
+      last_event: "ROUND_STARTED",
+    };
+    let { error: stateError } = await admin
       .from("auction_state")
-      .update({
-        phase: "LIVE",
-        current_round: nextRound,
-        current_player_id: firstPlayer.id,
-        current_bid: null,
-        current_team_id: null,
-        expires_at: expiresAt,
-        paused_remaining_ms: null,
-        skip_vote_team_ids: [],
-        version: auctionState.version + 1,
-        last_event: "ROUND_STARTED",
-      })
+      .update(updateValues)
       .eq("room_id", room.id);
+
+    if (stateError && isMissingPausedRemainingMsColumnError(stateError.message)) {
+      const retry = await admin
+        .from("auction_state")
+        .update(omitPausedRemainingMs(updateValues))
+        .eq("room_id", room.id);
+      stateError = retry.error;
+    }
 
     if (stateError) {
       throw new AppError(stateError.message, 500, "STATE_UPDATE_FAILED");

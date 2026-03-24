@@ -3,6 +3,7 @@ import { NextResponse } from "next/server";
 
 import { AppError } from "@/lib/domain/errors";
 import { handleRouteError } from "@/lib/server/api";
+import { isMissingPausedRemainingMsColumnError, omitPausedRemainingMs } from "@/lib/server/auction-state";
 import { requireApiUser } from "@/lib/server/auth";
 import { getAuctionStateOnly, requireRoomAdmin } from "@/lib/server/room";
 import { getSupabaseAdminClient } from "@/lib/supabase/admin";
@@ -36,20 +37,33 @@ export async function POST(
       .eq("status", "AVAILABLE");
 
     // Finalize the auction immediately — no intermediate ROUND_END
-    await admin
+    const updateValues = {
+      phase: "COMPLETED",
+      current_player_id: null,
+      current_bid: null,
+      current_team_id: null,
+      expires_at: null,
+      paused_remaining_ms: null,
+      skip_vote_team_ids: [],
+      version: auctionState.version + 1,
+      last_event: "AUCTION_COMPLETED",
+    };
+    let { error: stateError } = await admin
       .from("auction_state")
-      .update({
-        phase: "COMPLETED",
-        current_player_id: null,
-        current_bid: null,
-        current_team_id: null,
-        expires_at: null,
-        paused_remaining_ms: null,
-        skip_vote_team_ids: [],
-        version: auctionState.version + 1,
-        last_event: "AUCTION_COMPLETED",
-      })
+      .update(updateValues)
       .eq("room_id", room.id);
+
+    if (stateError && isMissingPausedRemainingMsColumnError(stateError.message)) {
+      const retry = await admin
+        .from("auction_state")
+        .update(omitPausedRemainingMs(updateValues))
+        .eq("room_id", room.id);
+      stateError = retry.error;
+    }
+
+    if (stateError) {
+      throw new AppError(stateError.message, 500, "AUCTION_COMPLETE_FAILED");
+    }
 
     revalidatePath(`/room/${room.code}`);
     revalidatePath(`/auction/${room.code}`);

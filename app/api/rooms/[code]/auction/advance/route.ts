@@ -4,6 +4,7 @@ import { NextResponse } from "next/server";
 import { canAuctionComplete, resolveExpiredAuction } from "@/lib/domain/auction";
 import { AppError } from "@/lib/domain/errors";
 import { handleRouteError } from "@/lib/server/api";
+import { isMissingPausedRemainingMsColumnError, omitPausedRemainingMs } from "@/lib/server/auction-state";
 import { requireApiUser, syncUserProfileFromAuthUser } from "@/lib/server/auth";
 import { getRoomEntities, requireRoomAdmin } from "@/lib/server/room";
 import { getSupabaseAdminClient } from "@/lib/supabase/admin";
@@ -144,24 +145,38 @@ export async function POST(
     const finalExpiresAt = forceComplete ? null : resolution.expiresAt;
     const finalLastEvent = forceComplete ? "AUCTION_COMPLETED" : resolution.lastEvent;
 
-    const { data: finalState, error: finalError } = await admin
+    const finalUpdate = {
+      phase: finalPhase,
+      current_round: resolution.nextRound,
+      current_player_id: finalPlayerId,
+      current_bid: null,
+      current_team_id: null,
+      expires_at: finalExpiresAt,
+      paused_remaining_ms: null,
+      skip_vote_team_ids: [],
+      version: Number(claimState.version) + 1,
+      last_event: finalLastEvent,
+    };
+
+    let { data: finalState, error: finalError } = await admin
       .from("auction_state")
-      .update({
-        phase: finalPhase,
-        current_round: resolution.nextRound,
-        current_player_id: finalPlayerId,
-        current_bid: null,
-        current_team_id: null,
-        expires_at: finalExpiresAt,
-        paused_remaining_ms: null,
-        skip_vote_team_ids: [],
-        version: Number(claimState.version) + 1,
-        last_event: finalLastEvent,
-      })
+      .update(finalUpdate)
       .eq("room_id", room.id)
       .eq("version", claimState.version)
       .select("*")
       .maybeSingle();
+
+    if (finalError && isMissingPausedRemainingMsColumnError(finalError.message)) {
+      const retry = await admin
+        .from("auction_state")
+        .update(omitPausedRemainingMs(finalUpdate))
+        .eq("room_id", room.id)
+        .eq("version", claimState.version)
+        .select("*")
+        .maybeSingle();
+      finalState = retry.data;
+      finalError = retry.error;
+    }
 
     if (finalError) {
       throw new AppError(finalError.message, 500, "AUCTION_FINALIZE_FAILED");
