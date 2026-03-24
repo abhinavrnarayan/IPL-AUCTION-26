@@ -144,7 +144,7 @@ function AdminBidPanel({
           "No bids yet — open at base price"
         )}
         {" · "}
-        <span className="pill" style={{ fontSize: "0.75rem" }}>Solo mode</span>
+        <span className="pill" style={{ fontSize: "0.75rem" }}>Admin control</span>
         {skipVotes.length > 0 && (
           <span className="pill" style={{ fontSize: "0.75rem", marginLeft: "0.4rem" }}>
             Skip {skipVotes.length}/{teams.length}

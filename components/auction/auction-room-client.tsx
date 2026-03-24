@@ -78,6 +78,9 @@ export function AuctionRoomClient({ snapshot }: { snapshot: AuctionSnapshot }) {
   const hasSkipVoted = selectedTeam
     ? snapshot.auctionState.skipVoteTeamIds.includes(selectedTeam.id)
     : false;
+  const myOwnedTeam = snapshot.teams.find((team) => team.ownerUserId === snapshot.user?.id) ?? null;
+  const showPlayerBidBar = !isAdmin || Boolean(myOwnedTeam);
+  const bidBarTeams = myOwnedTeam ? [myOwnedTeam] : snapshot.teams;
 
   const soldCount = snapshot.players.filter((p) => p.status === "SOLD").length;
   const unsoldCount = snapshot.players.filter((p) => p.status === "UNSOLD").length;
@@ -93,6 +96,17 @@ export function AuctionRoomClient({ snapshot }: { snapshot: AuctionSnapshot }) {
   const roleClass = currentPlayer
     ? `role-${currentPlayer.role.toUpperCase().replace(/[\s/]+/g, "-")}`
     : "";
+
+  useEffect(() => {
+    if (myOwnedTeam && bidTeamId !== myOwnedTeam.id) {
+      setBidTeamId(myOwnedTeam.id);
+      return;
+    }
+
+    if (!myOwnedTeam && !snapshot.teams.some((team) => team.id === bidTeamId)) {
+      setBidTeamId(snapshot.teams[0]?.id ?? "");
+    }
+  }, [bidTeamId, myOwnedTeam, snapshot.teams]);
 
   // Reset optimistic phase when server confirms update
   useEffect(() => {
@@ -540,7 +554,7 @@ export function AuctionRoomClient({ snapshot }: { snapshot: AuctionSnapshot }) {
         </header>
 
         {/* MAIN BODY */}
-        <div className={`auction-body${!isAdmin ? " has-bottom-bar" : ""}`}>
+        <div className={`auction-body${showPlayerBidBar ? " has-bottom-bar" : ""}`}>
           <div className="auction-content">
             {/* Player spotlight */}
             <div className="panel">
@@ -610,10 +624,10 @@ export function AuctionRoomClient({ snapshot }: { snapshot: AuctionSnapshot }) {
                       ? formatCurrencyShort(currentPlayer.basePrice)
                       : "—"}
                   </div>
-                  {currentTeam ? (
+                      {currentTeam ? (
                     <div style={{ marginTop: "0.4rem" }}>
                       <span className="pill highlight" style={{ fontSize: "0.73rem" }}>
-                        {!isAdmin && isLeading
+                        {isLeading
                           ? "You're leading!"
                           : `${currentTeam.shortCode} leading`}
                       </span>
@@ -822,16 +836,16 @@ export function AuctionRoomClient({ snapshot }: { snapshot: AuctionSnapshot }) {
         </div>
 
         {/* BOTTOM BID BAR — non-admin players */}
-        {!isAdmin && (
+        {showPlayerBidBar && (
           <footer className="auction-bottom-bar">
-            {snapshot.teams.length > 1 && (
+            {bidBarTeams.length > 1 && (
               <select
                 className="select"
                 style={{ width: "auto", minWidth: "100px", minHeight: "52px" }}
                 value={bidTeamId}
                 onChange={(e) => setBidTeamId(e.target.value)}
               >
-                {snapshot.teams.map((t) => (
+                {bidBarTeams.map((t) => (
                   <option key={t.id} value={t.id}>
                     {t.shortCode} ({formatCurrencyShort(t.purseRemaining)})
                   </option>
