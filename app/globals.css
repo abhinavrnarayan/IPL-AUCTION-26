@@ -1,19 +1,19 @@
 :root {
-  --bg: #09090b;
-  --bg-accent: #18181b;
-  --surface: rgba(24, 24, 27, 0.4);
-  --surface-strong: rgba(39, 39, 42, 0.6);
-  --border: rgba(255, 255, 255, 0.08);
-  --border-glow: rgba(59, 130, 246, 0.2);
-  --text: #f4f4f5;
-  --muted: #a1a1aa;
+  --bg: #060608;
+  --bg-accent: #0f0f13;
+  --surface: rgba(255, 255, 255, 0.03);
+  --surface-strong: rgba(255, 255, 255, 0.06);
+  --border: rgba(255, 255, 255, 0.06);
+  --border-glow: rgba(59, 130, 246, 0.5);
+  --text: #f8fafc;
+  --muted: #94a3b8;
   --primary: #3b82f6;
   --primary-strong: #60a5fa;
   --secondary: #8b5cf6;
   --success: #10b981;
   --warning: #f59e0b;
   --danger: #ef4444;
-  --shadow: 0 12px 40px -12px rgba(0, 0, 0, 0.6);
+  --shadow: 0 10px 40px -5px rgba(0, 0, 0, 0.8);
 }
 
 * {
@@ -29,8 +29,8 @@ body {
   min-height: 100vh;
   color: var(--text);
   background:
-    radial-gradient(circle at 15% 10%, rgba(59, 130, 246, 0.15), transparent 35%),
-    radial-gradient(circle at 85% 90%, rgba(139, 92, 246, 0.15), transparent 45%),
+    radial-gradient(circle at 15% 10%, rgba(59, 130, 246, 0.12), transparent 35%),
+    radial-gradient(circle at 85% 90%, rgba(139, 92, 246, 0.12), transparent 45%),
     var(--bg);
   font-family: var(--font-body), "Inter", -apple-system, sans-serif;
   -webkit-font-smoothing: antialiased;
@@ -121,25 +121,26 @@ button {
 }
 
 .panel {
-  background: var(--surface);
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
+  background: linear-gradient(145deg, rgba(255,255,255,0.03), rgba(255,255,255,0.01));
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
   border: 1px solid var(--border);
-  border-radius: 16px;
-  box-shadow: var(--shadow);
-  padding: 1.5rem;
-  transition: border-color 0.3s ease;
+  border-radius: 20px;
+  box-shadow: var(--shadow), inset 0 1px 0 rgba(255,255,255,0.05);
+  padding: 1.75rem;
+  transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .panel:hover {
-  border-color: var(--border-glow);
+  border-color: rgba(255,255,255,0.1);
+  box-shadow: 0 20px 50px -10px rgba(0,0,0,0.8), inset 0 1px 0 rgba(255,255,255,0.08);
 }
 
 .panel h2,
 .panel h3 {
-  margin: 0 0 0.75rem;
+  margin: 0 0 0.85rem;
   font-family: var(--font-display), sans-serif;
-  letter-spacing: -0.04em;
+  letter-spacing: -0.02em;
 }
 
 .eyebrow {
@@ -169,53 +170,54 @@ button {
   align-items: center;
   justify-content: center;
   gap: 0.5rem;
-  min-height: 42px;
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: 12px;
-  padding: 0.6rem 1.2rem;
-  background: linear-gradient(135deg, var(--primary), #2563eb);
+  min-height: 44px;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 14px;
+  padding: 0.6rem 1.4rem;
+  background: linear-gradient(135deg, rgba(59, 130, 246, 0.9), rgba(37, 99, 235, 0.9));
   color: white;
   font-family: var(--font-display), sans-serif;
   font-weight: 600;
   letter-spacing: 0.01em;
-  transition: all 0.2s ease;
-  box-shadow: 0 4px 14px rgba(59, 130, 246, 0.3);
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  box-shadow: 0 4px 14px rgba(59, 130, 246, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.2);
 }
 
 .button:hover:not(:disabled) {
   transform: translateY(-2px);
-  box-shadow: 0 6px 20px rgba(59, 130, 246, 0.5);
+  box-shadow: 0 8px 25px rgba(59, 130, 246, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.3);
   filter: brightness(1.1);
 }
 
 .button:disabled {
   cursor: not-allowed;
-  opacity: 0.6;
+  opacity: 0.5;
   transform: none;
   box-shadow: none;
 }
 
 .button.secondary {
-  background: linear-gradient(135deg, var(--secondary), #7c3aed);
-  box-shadow: 0 4px 14px rgba(139, 92, 246, 0.3);
+  background: linear-gradient(135deg, rgba(139, 92, 246, 0.9), rgba(124, 58, 237, 0.9));
+  box-shadow: 0 4px 14px rgba(139, 92, 246, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.2);
 }
 
 .button.ghost {
-  background: rgba(255, 255, 255, 0.03);
+  background: rgba(255, 255, 255, 0.04);
   color: var(--text);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.08);
   box-shadow: none;
 }
 .button.ghost:hover:not(:disabled) {
-  background: rgba(255, 255, 255, 0.08);
+  background: rgba(255, 255, 255, 0.1);
+  border-color: rgba(255, 255, 255, 0.2);
 }
 
 .button.warning {
-  background: var(--warning);
+  background: linear-gradient(135deg, rgba(245, 158, 11, 0.9), #d97706);
 }
 
 .button.danger {
-  background: var(--danger);
+  background: linear-gradient(135deg, rgba(239, 68, 68, 0.9), #dc2626);
 }
 
 .form-grid {
@@ -271,13 +273,18 @@ button {
 .leader-row,
 .bid-row {
   border: 1px solid var(--border);
-  border-radius: 14px;
-  background: rgba(24, 24, 27, 0.4);
+  border-radius: 16px;
+  background: linear-gradient(145deg, rgba(255,255,255,0.04), rgba(255,255,255,0.01));
   padding: 1.25rem;
-  transition: background 0.2s;
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
 }
 .room-card:hover {
-  background: rgba(24, 24, 27, 0.6);
+  background: linear-gradient(145deg, rgba(255,255,255,0.07), rgba(255,255,255,0.02));
+  transform: translateY(-2px);
+  border-color: rgba(255,255,255,0.12);
+  box-shadow: 0 8px 24px rgba(0,0,0,0.5);
 }
 
 .player-card {
@@ -293,12 +300,13 @@ button {
 
 .stat-tile {
   padding: 1rem 1.25rem;
-  border-radius: 14px;
-  background: rgba(24, 24, 27, 0.5);
+  border-radius: 16px;
+  background: linear-gradient(145deg, rgba(255,255,255,0.04), rgba(255,255,255,0.01));
   border: 1px solid var(--border);
   display: flex;
   flex-direction: column;
   justify-content: center;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.03);
 }
 
 .stat-tile strong {
