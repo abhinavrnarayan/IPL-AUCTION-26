@@ -1,4 +1,3 @@
-import { revalidatePath } from "next/cache";
 import { NextResponse } from "next/server";
 
 import { buildResumedAuctionState } from "@/lib/domain/auction";
@@ -60,8 +59,6 @@ export async function POST(
     if (!data) {
       throw new AppError("Auction state changed. Refresh and retry.", 409, "VERSION_CONFLICT");
     }
-
-    revalidatePath(`/auction/${room.code}`);
 
     return NextResponse.json({ resumed: true });
   } catch (error) {

@@ -1,4 +1,3 @@
-import { revalidatePath } from "next/cache";
 import { NextResponse } from "next/server";
 
 import {
@@ -9,7 +8,7 @@ import { AppError } from "@/lib/domain/errors";
 import { bidSchema } from "@/lib/domain/schemas";
 import { readJson, handleRouteError } from "@/lib/server/api";
 import { requireApiUser } from "@/lib/server/auth";
-import { getRoomEntities, requireRoomMember } from "@/lib/server/room";
+import { requireRoomMember } from "@/lib/server/room";
 import { getSupabaseAdminClient } from "@/lib/supabase/admin";
 
 export async function POST(
@@ -115,9 +114,6 @@ export async function POST(
     if (bidError) {
       throw new AppError(bidError.message, 500, "BID_LOG_FAILED");
     }
-
-    revalidatePath(`/auction/${room.code}`);
-    revalidatePath(`/results/${room.code}`);
 
     return NextResponse.json({ amount: nextBidAmount });
   } catch (error) {

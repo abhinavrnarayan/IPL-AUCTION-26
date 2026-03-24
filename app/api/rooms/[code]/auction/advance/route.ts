@@ -1,4 +1,3 @@
-import { revalidatePath } from "next/cache";
 import { NextResponse } from "next/server";
 
 import { canAuctionComplete, resolveExpiredAuction } from "@/lib/domain/auction";
@@ -185,10 +184,6 @@ export async function POST(
     if (!finalState) {
       throw new AppError("Final auction update conflicted. Refresh the room.", 409, "VERSION_CONFLICT");
     }
-
-    revalidatePath(`/room/${room.code}`);
-    revalidatePath(`/auction/${room.code}`);
-    revalidatePath(`/results/${room.code}`);
 
     return NextResponse.json({
       phase: finalPhase,
