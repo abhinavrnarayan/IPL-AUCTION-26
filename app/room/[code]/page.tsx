@@ -7,6 +7,7 @@ import { TeamOwnershipPanel } from "@/components/room/team-ownership-panel";
 import { UploadPlayersForm } from "@/components/room/upload-players-form";
 import { UploadTeamsForm } from "@/components/room/upload-teams-form";
 import { SelfCreateTeamForm } from "@/components/room/self-create-team-form";
+import { TradePanel } from "@/components/trades/trade-panel";
 import { defaultPlayerPoolCount } from "@/lib/default-player-pool";
 import { hasServiceRoleEnv } from "@/lib/config";
 import { requireSessionUser } from "@/lib/server/auth";
@@ -317,6 +318,24 @@ export default async function RoomPage({
           )}
         </div>
       </section>
+
+      {snapshot.teams.length > 1 && (
+        <section className="panel" style={{ marginTop: "1rem" }}>
+          <h2 style={{ marginBottom: "0.2rem" }}>Player Trading</h2>
+          <p className="subtle" style={{ marginBottom: "1.25rem" }}>
+            Propose or accept player transfers. The auction does not need to be active.
+          </p>
+          <TradePanel
+            currentUserId={snapshot.currentMember.userId}
+            isAdmin={snapshot.currentMember.isAdmin}
+            roomCode={snapshot.room.code}
+            squads={snapshot.squads}
+            teams={snapshot.teams}
+            players={snapshot.players}
+            trades={snapshot.trades}
+          />
+        </section>
+      )}
     </main>
   );
 }

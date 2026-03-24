@@ -53,7 +53,7 @@ export async function POST(
 
     // Fetch total teams to check if all have voted
     const { teams } = await getRoomEntities(room.id);
-    const allVoted = nextSkipVotes.length >= teams.length;
+    const allVoted = member.isAdmin || nextSkipVotes.length >= teams.length;
 
     // If all teams voted, expire the timer immediately to trigger auto-advance
     const nextExpiresAt = allVoted ? new Date().toISOString() : auctionState.expiresAt;

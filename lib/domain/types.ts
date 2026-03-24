@@ -142,6 +142,8 @@ export interface RoomSnapshot {
   auctionState: AuctionState | null;
   user: UserProfile | null;
   currentMember: RoomMember | null;
+  squads: SquadEntry[];
+  trades: Trade[];
 }
 
 export interface AuctionSnapshot {

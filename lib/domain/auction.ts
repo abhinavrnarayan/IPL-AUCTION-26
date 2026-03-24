@@ -37,6 +37,7 @@ interface ResolveAuctionInput {
   auctionState: AuctionState;
   players: Player[];
   now: Date;
+  forceResolution?: boolean;
 }
 
 export function getRoundQueue(players: Player[], round: number) {
@@ -202,6 +203,7 @@ export function resolveExpiredAuction({
   auctionState,
   players,
   now,
+  forceResolution,
 }: ResolveAuctionInput) {
   if (auctionState.phase !== "LIVE") {
     throw new AppError("Only a live auction can be advanced.", 400, "INVALID_PHASE");
@@ -211,7 +213,7 @@ export function resolveExpiredAuction({
     throw new AppError("No player is currently active.", 400, "NO_ACTIVE_PLAYER");
   }
 
-  if (!auctionState.expiresAt || new Date(auctionState.expiresAt).getTime() - 2000 > now.getTime()) {
+  if (!forceResolution && (!auctionState.expiresAt || new Date(auctionState.expiresAt).getTime() - 2000 > now.getTime())) {
     throw new AppError("Timer has not expired yet.", 400, "TIMER_RUNNING");
   }
 

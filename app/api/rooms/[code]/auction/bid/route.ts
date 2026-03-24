@@ -8,7 +8,7 @@ import {
 import { AppError } from "@/lib/domain/errors";
 import { bidSchema } from "@/lib/domain/schemas";
 import { readJson, handleRouteError } from "@/lib/server/api";
-import { requireApiUser, syncUserProfileFromAuthUser } from "@/lib/server/auth";
+import { requireApiUser } from "@/lib/server/auth";
 import { getRoomEntities, requireRoomMember } from "@/lib/server/room";
 import { getSupabaseAdminClient } from "@/lib/supabase/admin";
 
@@ -19,7 +19,6 @@ export async function POST(
   try {
     const { code } = await context.params;
     const authUser = await requireApiUser();
-    await syncUserProfileFromAuthUser(authUser);
     const { room, member } = await requireRoomMember(code, authUser.id);
     const input = await readJson(request, bidSchema);
     const admin = getSupabaseAdminClient();

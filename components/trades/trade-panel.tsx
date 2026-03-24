@@ -272,21 +272,25 @@ function ProposeForm({
         </select>
       </div>
 
-      <div className="grid two" style={{ gap: "0.75rem" }}>
-        <div className="room-card">
-          <strong style={{ fontSize: "0.85rem" }}>
-            {myTeam?.shortCode} offers
+      <div className="grid two" style={{ gap: "1rem", marginTop: "1rem", marginBottom: "1rem" }}>
+        <div className="panel" style={{ background: "linear-gradient(145deg, rgba(59, 130, 246, 0.08), rgba(0, 0, 0, 0.2))", borderColor: "rgba(59, 130, 246, 0.3)" }}>
+          <strong style={{ fontSize: "1rem", display: "block", marginBottom: "0.2rem", color: "var(--primary-strong)" }}>
+            {myTeam?.shortCode ?? "Select Team"} offers
           </strong>
-          <div className="checkbox-grid" style={{ marginTop: "0.5rem" }}>
+          <div className="subtle" style={{ fontSize: "0.75rem", marginBottom: "0.75rem" }}>
+            Select players from your squad to include in the trade.
+          </div>
+          
+          <div className="checkbox-grid" style={{ marginBottom: "1rem" }}>
             {mySquad.length === 0 ? (
-              <div className="subtle" style={{ fontSize: "0.82rem" }}>
-                No players in your squad
+              <div className="empty-state" style={{ padding: "0.75rem", fontSize: "0.85rem" }}>
+                No active players in this squad.
               </div>
             ) : (
               mySquad.map((entry) => {
                 const player = playerById.get(entry.playerId);
                 return (
-                  <label className="checkbox-row" key={entry.id} style={{ fontSize: "0.82rem" }}>
+                  <label className="checkbox-row" key={entry.id} style={{ fontSize: "0.9rem", padding: "0.4rem 0.6rem", background: "rgba(255,255,255,0.03)", borderRadius: "8px", border: "1px solid rgba(255,255,255,0.05)" }}>
                     <input
                       checked={playersFromA.includes(entry.playerId)}
                       onChange={() => setPlayersFromA((p) => toggleId(p, entry.playerId))}
@@ -294,7 +298,7 @@ function ProposeForm({
                     />
                     <span>
                       {player?.name ?? "Unknown"}{" "}
-                      <span className="subtle">
+                      <span className="subtle" style={{ fontSize: "0.8rem" }}>
                         ({formatCurrencyShort(entry.purchasePrice)})
                       </span>
                     </span>
@@ -303,8 +307,9 @@ function ProposeForm({
               })
             )}
           </div>
-          <div className="field" style={{ marginTop: "0.5rem" }}>
-            <label style={{ fontSize: "0.78rem" }}>+ Cash</label>
+          
+          <div className="field">
+            <label style={{ fontSize: "0.85rem", color: "var(--success)" }}>Extra Cash (+)</label>
             <input
               className="input"
               min={0}
@@ -312,24 +317,29 @@ function ProposeForm({
               type="number"
               value={cashFromA}
               onChange={(e) => setCashFromA(Number(e.target.value))}
+              style={{ background: "rgba(16, 185, 129, 0.05)", borderColor: "rgba(16, 185, 129, 0.2)" }}
             />
           </div>
         </div>
 
-        <div className="room-card">
-          <strong style={{ fontSize: "0.85rem" }}>
-            {theirTeam?.shortCode} offers
+        <div className="panel" style={{ background: "linear-gradient(145deg, rgba(139, 92, 246, 0.08), rgba(0, 0, 0, 0.2))", borderColor: "rgba(139, 92, 246, 0.3)" }}>
+          <strong style={{ fontSize: "1rem", display: "block", marginBottom: "0.2rem", color: "var(--secondary)" }}>
+            {theirTeam?.shortCode ?? "Select Target"} offers
           </strong>
-          <div className="checkbox-grid" style={{ marginTop: "0.5rem" }}>
+          <div className="subtle" style={{ fontSize: "0.75rem", marginBottom: "0.75rem" }}>
+            Select players from their squad to request in return.
+          </div>
+          
+          <div className="checkbox-grid" style={{ marginBottom: "1rem" }}>
             {theirSquad.length === 0 ? (
-              <div className="subtle" style={{ fontSize: "0.82rem" }}>
-                No players in their squad
+              <div className="empty-state" style={{ padding: "0.75rem", fontSize: "0.85rem" }}>
+                No active players in this squad.
               </div>
             ) : (
               theirSquad.map((entry) => {
                 const player = playerById.get(entry.playerId);
                 return (
-                  <label className="checkbox-row" key={entry.id} style={{ fontSize: "0.82rem" }}>
+                  <label className="checkbox-row" key={entry.id} style={{ fontSize: "0.9rem", padding: "0.4rem 0.6rem", background: "rgba(255,255,255,0.03)", borderRadius: "8px", border: "1px solid rgba(255,255,255,0.05)" }}>
                     <input
                       checked={playersFromB.includes(entry.playerId)}
                       onChange={() => setPlayersFromB((p) => toggleId(p, entry.playerId))}
@@ -337,7 +347,7 @@ function ProposeForm({
                     />
                     <span>
                       {player?.name ?? "Unknown"}{" "}
-                      <span className="subtle">
+                      <span className="subtle" style={{ fontSize: "0.8rem" }}>
                         ({formatCurrencyShort(entry.purchasePrice)})
                       </span>
                     </span>
@@ -346,8 +356,9 @@ function ProposeForm({
               })
             )}
           </div>
-          <div className="field" style={{ marginTop: "0.5rem" }}>
-            <label style={{ fontSize: "0.78rem" }}>+ Cash</label>
+          
+          <div className="field">
+            <label style={{ fontSize: "0.85rem", color: "var(--success)" }}>Extra Cash (+)</label>
             <input
               className="input"
               min={0}
@@ -355,6 +366,7 @@ function ProposeForm({
               type="number"
               value={cashFromB}
               onChange={(e) => setCashFromB(Number(e.target.value))}
+              style={{ background: "rgba(16, 185, 129, 0.05)", borderColor: "rgba(16, 185, 129, 0.2)" }}
             />
           </div>
         </div>

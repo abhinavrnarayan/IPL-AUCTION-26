@@ -48,6 +48,8 @@ export function AuctionRoomClient({ snapshot }: { snapshot: AuctionSnapshot }) {
   const [resultOverlay, setResultOverlay] = useState<{
     kind: "SOLD" | "UNSOLD";
     playerName: string;
+    teamName?: string;
+    price?: number;
   } | null>(null);
 
   // Player-side bid state (used in bottom bar)
@@ -124,7 +126,17 @@ export function AuctionRoomClient({ snapshot }: { snapshot: AuctionSnapshot }) {
     const oldPlayer = snapshot.players.find((p) => p.id === prevId);
     if (oldPlayer?.status !== "SOLD" && oldPlayer?.status !== "UNSOLD") return;
 
-    setResultOverlay({ kind: oldPlayer.status, playerName: oldPlayer.name });
+    let teamName: string | undefined;
+    if (oldPlayer.status === "SOLD" && oldPlayer.currentTeamId) {
+      teamName = snapshot.teams.find((t) => t.id === oldPlayer.currentTeamId)?.name;
+    }
+
+    setResultOverlay({ 
+      kind: oldPlayer.status, 
+      playerName: oldPlayer.name,
+      teamName,
+      price: oldPlayer.soldPrice ?? undefined,
+    });
     const t = setTimeout(() => setResultOverlay(null), 2500);
     return () => clearTimeout(t);
   }, [snapshot.auctionState.currentPlayerId, snapshot.players]);
@@ -398,7 +410,14 @@ export function AuctionRoomClient({ snapshot }: { snapshot: AuctionSnapshot }) {
           className={`result-overlay ${resultOverlay.kind === "SOLD" ? "sold" : "unsold"}`}
         >
           <div className="result-overlay-label">{resultOverlay.kind}</div>
-          <div className="result-overlay-sub">{resultOverlay.playerName}</div>
+          <div className="result-overlay-sub">
+            {resultOverlay.playerName}
+            {resultOverlay.kind === "SOLD" && resultOverlay.teamName && resultOverlay.price && (
+              <span style={{ display: "block", marginTop: "0.5rem", fontSize: "0.8em", opacity: 0.9 }}>
+                to <strong>{resultOverlay.teamName}</strong> for <strong>{formatCurrencyShort(resultOverlay.price)}</strong>
+              </span>
+            )}
+          </div>
         </div>
       )}
 

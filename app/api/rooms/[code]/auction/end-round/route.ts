@@ -24,9 +24,8 @@ export async function POST(
       throw new AppError("Auction has not started yet.", 400, "NO_AUCTION_STATE");
     }
 
-    // Idempotent: if already completed, return success
-    if (auctionState.phase === "COMPLETED") {
-      return NextResponse.json({ ok: true, phase: "COMPLETED" });
+    if (auctionState.phase === "ROUND_END" || auctionState.phase === "COMPLETED") {
+      return NextResponse.json({ ok: true, phase: auctionState.phase });
     }
 
     // Mark all remaining AVAILABLE players as UNSOLD
@@ -36,9 +35,9 @@ export async function POST(
       .eq("room_id", room.id)
       .eq("status", "AVAILABLE");
 
-    // Finalize the auction immediately — no intermediate ROUND_END
+    // Transition to ROUND_END so admins can pick unsold players for the next round
     const updateValues = {
-      phase: "COMPLETED",
+      phase: "ROUND_END",
       current_player_id: null,
       current_bid: null,
       current_team_id: null,
@@ -69,7 +68,7 @@ export async function POST(
     revalidatePath(`/auction/${room.code}`);
     revalidatePath(`/results/${room.code}`);
 
-    return NextResponse.json({ ok: true, phase: "COMPLETED" });
+    return NextResponse.json({ ok: true, phase: "ROUND_END" });
   } catch (error) {
     return handleRouteError(error);
   }

@@ -5,7 +5,7 @@ import { canAuctionComplete, resolveExpiredAuction } from "@/lib/domain/auction"
 import { AppError } from "@/lib/domain/errors";
 import { handleRouteError } from "@/lib/server/api";
 import { isMissingColumnError, omitOptionalColumns } from "@/lib/server/auction-state";
-import { requireApiUser, syncUserProfileFromAuthUser } from "@/lib/server/auth";
+import { requireApiUser } from "@/lib/server/auth";
 import { getRoomEntities, requireRoomAdmin } from "@/lib/server/room";
 import { getSupabaseAdminClient } from "@/lib/supabase/admin";
 
@@ -16,7 +16,6 @@ export async function POST(
   try {
     const { code } = await context.params;
     const authUser = await requireApiUser();
-    await syncUserProfileFromAuthUser(authUser);
     const { room } = await requireRoomAdmin(code, authUser.id);
     const admin = getSupabaseAdminClient();
     const { players, teams, auctionState, squads } = await getRoomEntities(room.id);
@@ -30,6 +29,7 @@ export async function POST(
       auctionState,
       players,
       now: new Date(),
+      forceResolution: true,
     });
 
     const { data: claimState, error: claimError } = await admin

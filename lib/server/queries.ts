@@ -102,8 +102,17 @@ export async function getRoomSnapshot(
 ): Promise<RoomSnapshot> {
   const room = await findRoomByCode(code);
   const currentMember = await getRoomMember(room.id, user.id);
-  const { teams, players, auctionState } = await getRoomEntities(room.id);
+  const { teams, players, auctionState, squads } = await getRoomEntities(room.id);
   const members = await listRoomMembers(room.id);
+  
+  const admin = getSupabaseAdminClient();
+  const { data: tradeRows } = await admin
+    .from("trades")
+    .select("*")
+    .eq("room_id", room.id)
+    .in("status", ["PENDING", "EXECUTED"])
+    .order("created_at", { ascending: false })
+    .limit(40);
 
   return {
     room,
@@ -111,6 +120,8 @@ export async function getRoomSnapshot(
     teams,
     players,
     auctionState,
+    squads,
+    trades: (tradeRows ?? []).map((row) => mapTrade(row as Record<string, unknown>)),
     user,
     currentMember,
   };
