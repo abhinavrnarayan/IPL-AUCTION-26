@@ -15,6 +15,31 @@ import type { AuctionSnapshot, EmojiReaction } from "@/lib/domain/types";
 import { getSupabaseBrowserClient } from "@/lib/supabase/client";
 import { formatCurrencyShort, formatIncrement, toErrorMessage } from "@/lib/utils";
 
+type BidPlacedPayload = {
+  playerId: string;
+  teamId: string;
+  amount: number;
+  expiresAt: string;
+  version: number;
+};
+
+type SkipVotePayload = {
+  teamId: string;
+  version: number;
+};
+
+type AdvancePayload = {
+  phase: string;
+  round: number;
+  playerId: string | null;
+  previousPlayerId: string | null;
+  previousPlayerStatus: "SOLD" | "UNSOLD" | null;
+  winningTeamId: string | null;
+  winningBid: number | null;
+  expiresAt: string | null;
+  version: number;
+};
+
 function getRemainingSeconds(expiresAt: string | null) {
   if (!expiresAt) return 0;
   return Math.max(0, Math.ceil((new Date(expiresAt).getTime() - Date.now()) / 1000));
@@ -227,6 +252,104 @@ export function AuctionRoomClient({ snapshot }: { snapshot: AuctionSnapshot }) {
         const reaction = payload as EmojiReaction;
         setRecentReactions((curr) => [reaction, ...curr].slice(0, 12));
       })
+      .on("broadcast", { event: ROOM_EVENTS.newBid }, ({ payload }) => {
+        const next = payload as BidPlacedPayload;
+        setLocalAuctionState((curr) => ({
+          ...curr,
+          currentBid: next.amount,
+          currentTeamId: next.teamId,
+          expiresAt: next.expiresAt,
+          version: Math.max(curr.version + 1, next.version),
+          lastEvent: "NEW_BID",
+        }));
+        setLocalBids((curr) => [
+          {
+            id: `broadcast-bid-${next.version}-${next.teamId}`,
+            roomId: snapshot.room.id,
+            playerId: next.playerId,
+            teamId: next.teamId,
+            amount: next.amount,
+            createdAt: new Date().toISOString(),
+            createdBy: "broadcast",
+          },
+          ...curr.filter(
+            (item) =>
+              !(item.playerId === next.playerId && item.teamId === next.teamId && item.amount === next.amount),
+          ),
+        ]);
+        setRemainingSeconds(getRemainingSeconds(next.expiresAt));
+      })
+      .on("broadcast", { event: "SKIP_VOTED" }, ({ payload }) => {
+        const next = payload as SkipVotePayload;
+        setLocalAuctionState((curr) => {
+          if (curr.skipVoteTeamIds.includes(next.teamId)) return curr;
+          return {
+            ...curr,
+            skipVoteTeamIds: [...curr.skipVoteTeamIds, next.teamId],
+            version: Math.max(curr.version + 1, next.version),
+          };
+        });
+      })
+      .on("broadcast", { event: "AUCTION_ADVANCED" }, ({ payload }) => {
+        const next = payload as AdvancePayload;
+        if (next.previousPlayerId) {
+          setLocalPlayers((curr) =>
+            curr.map((player) =>
+              player.id === next.previousPlayerId
+                ? {
+                    ...player,
+                    status: next.previousPlayerStatus ?? player.status,
+                    currentTeamId:
+                      next.previousPlayerStatus === "SOLD" ? next.winningTeamId : null,
+                    soldPrice: next.previousPlayerStatus === "SOLD" ? next.winningBid : null,
+                  }
+                : player,
+            ),
+          );
+        }
+        if (
+          next.previousPlayerStatus === "SOLD" &&
+          next.winningTeamId &&
+          next.previousPlayerId &&
+          next.winningBid !== null
+        ) {
+          const winningTeamId = next.winningTeamId;
+          const previousPlayerId = next.previousPlayerId;
+          const winningBid = next.winningBid;
+          setLocalTeams((curr) =>
+            curr.map((team) =>
+              team.id === winningTeamId
+                ? { ...team, purseRemaining: team.purseRemaining - winningBid }
+                : team,
+            ),
+          );
+          setLocalSquads((curr) => [
+            {
+              id: `broadcast-squad-${next.version}-${previousPlayerId}`,
+              roomId: snapshot.room.id,
+              teamId: winningTeamId,
+              playerId: previousPlayerId,
+              purchasePrice: winningBid,
+              acquiredInRound: localAuctionState.currentRound,
+              createdAt: new Date().toISOString(),
+            },
+            ...curr.filter((item) => item.playerId !== previousPlayerId),
+          ]);
+        }
+        setLocalAuctionState((curr) => ({
+          ...curr,
+          phase: next.phase as typeof curr.phase,
+          currentRound: next.round,
+          currentPlayerId: next.playerId,
+          currentBid: null,
+          currentTeamId: null,
+          expiresAt: next.expiresAt,
+          pausedRemainingMs: null,
+          skipVoteTeamIds: [],
+          version: Math.max(curr.version + 1, next.version),
+        }));
+        setRemainingSeconds(getRemainingSeconds(next.expiresAt));
+      })
       .on("broadcast", { event: "REFRESH_ROOM" }, () => refreshRoom())
       .subscribe();
 
@@ -358,6 +481,21 @@ export function AuctionRoomClient({ snapshot }: { snapshot: AuctionSnapshot }) {
         version: curr.version + 1,
       }));
       setRemainingSeconds(getRemainingSeconds(optimisticExpiresAt));
+      channelRef.current?.send({
+        type: "broadcast",
+        event: "AUCTION_ADVANCED",
+        payload: {
+          phase: payload.phase ?? localAuctionState.phase,
+          round: payload.round ?? localAuctionState.currentRound,
+          playerId: payload.playerId ?? null,
+          previousPlayerId: currentPlayer?.id ?? null,
+          previousPlayerStatus: currentBid !== null && currentTeam ? "SOLD" : "UNSOLD",
+          winningTeamId: currentTeam?.id ?? null,
+          winningBid: currentBid ?? null,
+          expiresAt: optimisticExpiresAt,
+          version: localAuctionState.version + 2,
+        } satisfies AdvancePayload,
+      });
       channelRef.current?.send({ type: "broadcast", event: "REFRESH_ROOM" });
       refreshRoom();
     } catch (err) {
@@ -479,6 +617,17 @@ export function AuctionRoomClient({ snapshot }: { snapshot: AuctionSnapshot }) {
           ...curr,
         ]);
         setRemainingSeconds(getRemainingSeconds(nextExpiresAt));
+        channelRef.current?.send({
+          type: "broadcast",
+          event: ROOM_EVENTS.newBid,
+          payload: {
+            playerId: currentPlayer?.id ?? "",
+            teamId,
+            amount: nextAmount,
+            expiresAt: nextExpiresAt,
+            version: localAuctionState.version + 1,
+          } satisfies BidPlacedPayload,
+        });
         channelRef.current?.send({ type: "broadcast", event: "REFRESH_ROOM" });
         refreshRoom();
         return null;
@@ -516,6 +665,14 @@ export function AuctionRoomClient({ snapshot }: { snapshot: AuctionSnapshot }) {
             skipVoteTeamIds: [...curr.skipVoteTeamIds, teamId],
             version: curr.version + 1,
           };
+        });
+        channelRef.current?.send({
+          type: "broadcast",
+          event: "SKIP_VOTED",
+          payload: {
+            teamId,
+            version: localAuctionState.version + 1,
+          } satisfies SkipVotePayload,
         });
         channelRef.current?.send({ type: "broadcast", event: "REFRESH_ROOM" });
         refreshRoom();
