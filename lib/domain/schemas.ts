@@ -53,6 +53,10 @@ export const teamRenameSchema = z.object({
   name: z.string().trim().min(1).max(60),
 });
 
+export const teamPurseSchema = z.object({
+  purseRemaining: z.coerce.number().int().nonnegative().max(5_000_000_000),
+});
+
 export const teamOwnerSchema = z.object({
   ownerUserId: z.string().uuid().nullable(),
 });
@@ -89,3 +93,4 @@ export type BidInput = z.infer<typeof bidSchema>;
 export type RemovePlayersInput = z.infer<typeof removePlayersSchema>;
 export type TradeInput = z.infer<typeof tradeSchema>;
 export type TeamOwnerInput = z.infer<typeof teamOwnerSchema>;
+export type TeamPurseInput = z.infer<typeof teamPurseSchema>;

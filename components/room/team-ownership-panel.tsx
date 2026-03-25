@@ -4,7 +4,7 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 
 import type { RoomMember, Team } from "@/lib/domain/types";
-import { toErrorMessage } from "@/lib/utils";
+import { formatCurrency, toErrorMessage } from "@/lib/utils";
 
 interface TeamOwnershipPanelProps {
   roomCode: string;
@@ -20,6 +20,9 @@ export function TeamOwnershipPanel({
   const router = useRouter();
   const [pendingTeamId, setPendingTeamId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [purseDrafts, setPurseDrafts] = useState<Record<string, string>>(
+    Object.fromEntries(teams.map((team) => [team.id, String(team.purseRemaining)])),
+  );
 
   const assignableMembers = members.filter((member) => member.isPlayer);
   const memberById = new Map(assignableMembers.map((member) => [member.userId, member]));
@@ -50,6 +53,32 @@ export function TeamOwnershipPanel({
     }
   }
 
+  async function updatePurse(teamId: string) {
+    setPendingTeamId(teamId);
+    setError(null);
+
+    try {
+      const response = await fetch(`/api/rooms/${roomCode}/teams/${teamId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          purseRemaining: Number(purseDrafts[teamId] ?? 0),
+        }),
+      });
+
+      const payload = (await response.json()) as { error?: string };
+      if (!response.ok) {
+        throw new Error(payload.error ?? "Failed to update team purse.");
+      }
+
+      router.refresh();
+    } catch (updateError) {
+      setError(toErrorMessage(updateError));
+    } finally {
+      setPendingTeamId(null);
+    }
+  }
+
   return (
     <div className="form-grid">
       <div className="subtle">
@@ -71,6 +100,9 @@ export function TeamOwnershipPanel({
               <div className="subtle" style={{ marginBottom: "0.75rem" }}>
                 Owner: {owner?.displayName ?? owner?.email ?? "Unassigned"}
               </div>
+              <div className="subtle" style={{ marginBottom: "0.75rem" }}>
+                Purse left: {formatCurrency(team.purseRemaining)}
+              </div>
               <select
                 className="select"
                 disabled={pendingTeamId === team.id}
@@ -84,6 +116,37 @@ export function TeamOwnershipPanel({
                   </option>
                 ))}
               </select>
+              <div
+                style={{
+                  display: "grid",
+                  gap: "0.5rem",
+                  gridTemplateColumns: "minmax(0, 1fr) auto",
+                  marginTop: "0.75rem",
+                }}
+              >
+                <input
+                  className="input"
+                  disabled={pendingTeamId === team.id}
+                  inputMode="numeric"
+                  min={0}
+                  onChange={(event) =>
+                    setPurseDrafts((current) => ({
+                      ...current,
+                      [team.id]: event.target.value,
+                    }))
+                  }
+                  type="number"
+                  value={purseDrafts[team.id] ?? String(team.purseRemaining)}
+                />
+                <button
+                  className="button ghost"
+                  disabled={pendingTeamId === team.id}
+                  onClick={() => void updatePurse(team.id)}
+                  type="button"
+                >
+                  {pendingTeamId === team.id ? "Saving..." : "Save purse"}
+                </button>
+              </div>
             </div>
           );
         })}

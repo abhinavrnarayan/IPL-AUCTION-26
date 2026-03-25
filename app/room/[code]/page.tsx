@@ -3,6 +3,7 @@ import { SiteLogo } from "@/components/site-logo";
 
 import { ImportResultsForm } from "@/components/room/import-results-form";
 import { PlayerPoolManager } from "@/components/room/player-pool-manager";
+import { ReadinessPanel } from "@/components/room/readiness-panel";
 import { RoomInvitePanel } from "@/components/room/room-invite-panel";
 import { StartAuctionButton } from "@/components/room/start-auction-button";
 import { TeamOwnershipPanel } from "@/components/room/team-ownership-panel";
@@ -61,20 +62,6 @@ export default async function RoomPage({
     );
   }
 
-  const availablePlayers = snapshot.players.filter(
-    (player) => player.status === "AVAILABLE",
-  ).length;
-  const soldPlayers = snapshot.players.filter((player) => player.status === "SOLD").length;
-  const unsoldPlayers = snapshot.players.filter(
-    (player) => player.status === "UNSOLD",
-  ).length;
-  const availablePlayerList = snapshot.players.filter(
-    (player) => player.status === "AVAILABLE",
-  );
-  const soldPlayerList = snapshot.players.filter((player) => player.status === "SOLD");
-  const unsoldPlayerList = snapshot.players.filter(
-    (player) => player.status === "UNSOLD",
-  );
   const summaryButtonStyle = {
     outline: "none",
     listStyle: "none",
@@ -267,103 +254,14 @@ export default async function RoomPage({
         <div className="grid">
           <div className="panel" style={{ position: "relative", zIndex: 20, overflow: "visible" }}>
             <h2>Auction readiness</h2>
-            <div className="stats-strip">
-              <details className="stat-tile" style={{ cursor: "pointer" }}>
-                <summary style={summaryButtonStyle}>
-                  <strong>{snapshot.players.length}</strong>
-                  Total players
-                  <div className="subtle" style={{ marginTop: "0.35rem", fontSize: "0.78rem" }}>
-                    Click to view player list
-                  </div>
-                </summary>
-                <div style={{ marginTop: "1rem", maxHeight: "250px", overflowY: "auto", fontSize: "0.85rem", display: "grid", gap: "0.4rem", scrollbarWidth: "thin", scrollbarColor: "rgba(99,102,241,0.3) transparent" }}>
-                  {snapshot.players.map(p => (
-                    <div key={p.id} style={{ borderBottom: "1px solid rgba(255,255,255,0.05)", paddingBottom: "0.2rem" }}>
-                      {p.name} <span className="subtle">({p.role})</span>
-                    </div>
-                  ))}
-                </div>
-              </details>
-              
-              <details className="stat-tile" style={{ cursor: "pointer" }}>
-                <summary style={summaryButtonStyle}>
-                  <strong>{snapshot.teams.length}</strong>
-                  Teams
-                  <div className="subtle" style={{ marginTop: "0.35rem", fontSize: "0.78rem" }}>
-                    Click to view teams
-                  </div>
-                </summary>
-                <div style={{ marginTop: "1rem", maxHeight: "250px", overflowY: "auto", fontSize: "0.85rem", display: "grid", gap: "0.4rem", scrollbarWidth: "thin", scrollbarColor: "rgba(99,102,241,0.3) transparent" }}>
-                  {snapshot.teams.map(t => (
-                    <div key={t.id} style={{ borderBottom: "1px solid rgba(255,255,255,0.05)", paddingBottom: "0.3rem", display: "flex", flexDirection: "column", gap: "0.1rem" }}>
-                      <span style={{ fontWeight: 600, color: "var(--text)", whiteSpace: "normal", wordBreak: "break-word" }}>{t.name}</span>
-                      <span style={{ color: "var(--secondary)", fontSize: "0.78rem", fontWeight: 700 }}>{formatCurrencyShort(t.purseRemaining)} left</span>
-                    </div>
-                  ))}
-                </div>
-              </details>
-
-              <details className="stat-tile" style={{ cursor: "pointer" }}>
-                <summary style={summaryButtonStyle}>
-                  <strong>{snapshot.members.length}</strong>
-                  Members
-                  <div className="subtle" style={{ marginTop: "0.35rem", fontSize: "0.78rem" }}>
-                    Click to view room members
-                  </div>
-                </summary>
-                <div style={{ marginTop: "1rem", maxHeight: "250px", overflowY: "auto", fontSize: "0.85rem", display: "grid", gap: "0.4rem", scrollbarWidth: "thin", scrollbarColor: "rgba(99,102,241,0.3) transparent" }}>
-                  {snapshot.members.map(m => (
-                    <div key={m.userId} style={{ display: "flex", justifyContent: "space-between", borderBottom: "1px solid rgba(255,255,255,0.05)", paddingBottom: "0.2rem" }}>
-                      <span>{m.displayName ?? m.email ?? "Unnamed"}</span>
-                      <span className="subtle">{deriveRoleLabel(m)}</span>
-                    </div>
-                  ))}
-                </div>
-              </details>
-            </div>
-            
-            <div className="grid" style={{ marginTop: "0.9rem" }}>
-              <div className="pill-row">
-              <details style={{ cursor: "pointer", display: "inline-block", position: "relative", zIndex: 30 }}>
-                <summary className="pill" style={summaryButtonStyle}>Available: {availablePlayers}</summary>
-                <div className="panel" style={{ position: "absolute", zIndex: 120, marginTop: "0.5rem", width: "min(280px, 85vw)", maxHeight: "300px", overflowY: "auto", padding: "1rem", scrollbarWidth: "thin", scrollbarColor: "rgba(99,102,241,0.3) transparent" }}>
-                  {availablePlayerList.map(p => (
-                    <div key={p.id} style={{ fontSize: "0.85rem", padding: "0.3rem 0", borderBottom: "1px solid rgba(255,255,255,0.05)" }}>
-                      {p.name} <span className="subtle">({p.role})</span>
-                    </div>
-                  ))}
-                </div>
-              </details>
-
-              <details style={{ cursor: "pointer", display: "inline-block", position: "relative", zIndex: 30 }}>
-                <summary className="pill" style={summaryButtonStyle}>Sold: {soldPlayers}</summary>
-                <div className="panel" style={{ position: "absolute", zIndex: 120, marginTop: "0.5rem", width: "min(300px, 85vw)", maxHeight: "300px", overflowY: "auto", padding: "1rem", scrollbarWidth: "thin", scrollbarColor: "rgba(99,102,241,0.3) transparent" }}>
-                  {soldPlayerList.map(p => (
-                    <div key={p.id} style={{ display: "flex", justifyContent: "space-between", fontSize: "0.85rem", padding: "0.3rem 0", borderBottom: "1px solid rgba(255,255,255,0.05)" }}>
-                      <span>{p.name} <span className="subtle" style={{fontSize: "0.75rem"}}>{
-                        snapshot.teams.find(t => t.id === p.currentTeamId)?.shortCode
-                      }</span></span>
-                      <strong>{p.soldPrice ? formatCurrencyShort(p.soldPrice) : "-"}</strong>
-                    </div>
-                  ))}
-                </div>
-              </details>
-
-              <details style={{ cursor: "pointer", display: "inline-block", position: "relative", zIndex: 30 }}>
-                <summary className="pill" style={summaryButtonStyle}>Unsold: {unsoldPlayers}</summary>
-                <div className="panel" style={{ position: "absolute", zIndex: 120, marginTop: "0.5rem", width: "min(280px, 85vw)", maxHeight: "300px", overflowY: "auto", padding: "1rem", scrollbarWidth: "thin", scrollbarColor: "rgba(99,102,241,0.3) transparent" }}>
-                  {unsoldPlayerList.map(p => (
-                    <div key={p.id} style={{ fontSize: "0.85rem", padding: "0.3rem 0", borderBottom: "1px solid rgba(255,255,255,0.05)" }}>
-                      {p.name} <span className="subtle">({p.role})</span>
-                    </div>
-                  ))}
-                </div>
-              </details>
-              </div>
-              <div className="subtle" style={{ fontSize: "0.8rem" }}>
-                Click any count above to open the matching list.
-              </div>
-            </div>
+            <ReadinessPanel
+              isAdmin={snapshot.currentMember.isAdmin}
+              members={snapshot.members}
+              phase={snapshot.auctionState?.phase ?? "WAITING"}
+              players={snapshot.players}
+              roomCode={snapshot.room.code}
+              teams={snapshot.teams}
+            />
             {snapshot.currentMember.isAdmin &&
             (snapshot.auctionState?.phase ?? "WAITING") === "WAITING" ? (
               <div style={{ marginTop: "1rem" }}>

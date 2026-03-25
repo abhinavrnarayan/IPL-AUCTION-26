@@ -24,6 +24,8 @@ export function PlayerPoolManager({
     () => [...players].sort((a, b) => a.orderIndex - b.orderIndex),
     [players],
   );
+  const selectedCount = selectedIds.length;
+  const allSelected = sortedPlayers.length > 0 && selectedCount === sortedPlayers.length;
 
   function togglePlayer(playerId: string) {
     setSelectedIds((curr) =>
@@ -64,28 +66,42 @@ export function PlayerPoolManager({
   return (
     <div style={{ marginTop: "1rem" }}>
       {canManage ? (
-        <div className="button-row" style={{ marginBottom: "0.9rem" }}>
-          <button
-            className="button ghost"
-            disabled={selectedIds.length === 0 || pendingAction !== null}
-            onClick={() => void removePlayers(selectedIds)}
-            type="button"
-          >
-            {pendingAction === "selected"
-              ? "Removing..."
-              : `Remove selected (${selectedIds.length})`}
-          </button>
-          <button
-            className="button danger"
-            disabled={players.length === 0 || pendingAction !== null}
-            onClick={() => {
-              if (!window.confirm("Remove all players from this room?")) return;
-              void removePlayers([], true);
-            }}
-            type="button"
-          >
-            {pendingAction === "all" ? "Removing..." : "Remove all players"}
-          </button>
+        <div className="player-manager-toolbar">
+          <div className="player-manager-summary">
+            <span className="pill highlight">{players.length} players</span>
+            <span className="pill">{selectedCount} selected</span>
+          </div>
+          <div className="player-manager-actions">
+            <button
+              className="button ghost"
+              disabled={players.length === 0 || pendingAction !== null}
+              onClick={() => setSelectedIds(allSelected ? [] : sortedPlayers.map((player) => player.id))}
+              type="button"
+            >
+              {allSelected ? "Clear selection" : "Select all"}
+            </button>
+            <button
+              className="button ghost"
+              disabled={selectedIds.length === 0 || pendingAction !== null}
+              onClick={() => void removePlayers(selectedIds)}
+              type="button"
+            >
+              {pendingAction === "selected"
+                ? "Removing..."
+                : `Remove selected (${selectedCount})`}
+            </button>
+            <button
+              className="button danger"
+              disabled={players.length === 0 || pendingAction !== null}
+              onClick={() => {
+                if (!window.confirm("Remove all players from this room?")) return;
+                void removePlayers([], true);
+              }}
+              type="button"
+            >
+              {pendingAction === "all" ? "Removing..." : "Remove all players"}
+            </button>
+          </div>
         </div>
       ) : null}
 
@@ -97,29 +113,36 @@ export function PlayerPoolManager({
         </div>
       ) : (
         <div className="table-like">
-          {sortedPlayers.slice(0, 200).map((player) => (
-            <div className="room-card" key={player.id}>
-              <div className="header-row" style={{ alignItems: "flex-start" }}>
-                <div style={{ display: "flex", gap: "0.75rem", alignItems: "flex-start", flex: 1 }}>
+          {sortedPlayers.slice(0, 200).map((player, index) => (
+            <div
+              className={`room-card${selectedIds.includes(player.id) ? " player-manager-card-selected" : ""}`}
+              key={player.id}
+              style={{ padding: "1rem 1.1rem" }}
+            >
+              <div className="header-row" style={{ alignItems: "center" }}>
+                <div style={{ display: "flex", gap: "0.75rem", alignItems: "flex-start", flex: 1, minWidth: 0 }}>
                   {canManage ? (
                     <input
                       checked={selectedIds.includes(player.id)}
                       disabled={pendingAction !== null}
                       onChange={() => togglePlayer(player.id)}
-                      style={{ marginTop: "0.2rem" }}
+                      style={{ marginTop: "0.1rem" }}
                       type="checkbox"
                     />
                   ) : null}
-                  <div style={{ flex: 1 }}>
-                    <strong>{player.name}</strong>
-                    <div className="subtle">
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{ display: "flex", gap: "0.6rem", alignItems: "center", flexWrap: "wrap" }}>
+                      <strong>{player.name}</strong>
+                      <span className="subtle mono" style={{ fontSize: "0.76rem" }}>#{index + 1}</span>
+                    </div>
+                    <div className="subtle" style={{ fontSize: "0.86rem", marginTop: "0.2rem" }}>
                       {player.role}
                       {player.nationality ? ` | ${player.nationality}` : ""}
                       {" | "}
                       {formatCurrency(player.basePrice)}
                     </div>
                     {player.status === "SOLD" ? (
-                      <div className="subtle" style={{ marginTop: "0.3rem", fontSize: "0.8rem" }}>
+                      <div className="subtle" style={{ marginTop: "0.35rem", fontSize: "0.8rem" }}>
                         Sold to {teams.find((team) => team.id === player.currentTeamId)?.name ?? "Team"} for{" "}
                         {player.soldPrice ? formatCurrency(player.soldPrice) : "-"}
                       </div>
@@ -140,8 +163,9 @@ export function PlayerPoolManager({
                       style={{
                         minHeight: "30px",
                         minWidth: "30px",
-                        padding: "0.2rem 0.5rem",
+                        padding: "0.2rem 0.45rem",
                         borderRadius: "999px",
+                        fontSize: "0.85rem",
                       }}
                       type="button"
                     >
