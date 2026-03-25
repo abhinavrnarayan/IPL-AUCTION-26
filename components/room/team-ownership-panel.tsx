@@ -4,7 +4,7 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 
 import type { RoomMember, Team } from "@/lib/domain/types";
-import { formatCurrency, toErrorMessage } from "@/lib/utils";
+import { formatAmountInput, formatCurrency, parseAmountInput, toErrorMessage } from "@/lib/utils";
 
 interface TeamOwnershipPanelProps {
   roomCode: string;
@@ -21,7 +21,7 @@ export function TeamOwnershipPanel({
   const [pendingTeamId, setPendingTeamId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [purseDrafts, setPurseDrafts] = useState<Record<string, string>>(
-    Object.fromEntries(teams.map((team) => [team.id, String(team.purseRemaining)])),
+    Object.fromEntries(teams.map((team) => [team.id, formatAmountInput(team.purseRemaining)])),
   );
 
   const assignableMembers = members.filter((member) => member.isPlayer);
@@ -58,11 +58,12 @@ export function TeamOwnershipPanel({
     setError(null);
 
     try {
+      const purseRemaining = parseAmountInput(purseDrafts[teamId] ?? "");
       const response = await fetch(`/api/rooms/${roomCode}/teams/${teamId}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          purseRemaining: Number(purseDrafts[teamId] ?? 0),
+          purseRemaining,
         }),
       });
 
@@ -127,16 +128,16 @@ export function TeamOwnershipPanel({
                 <input
                   className="input"
                   disabled={pendingTeamId === team.id}
-                  inputMode="numeric"
-                  min={0}
+                  inputMode="text"
+                  placeholder="50L or 2Cr"
                   onChange={(event) =>
                     setPurseDrafts((current) => ({
                       ...current,
                       [team.id]: event.target.value,
                     }))
                   }
-                  type="number"
-                  value={purseDrafts[team.id] ?? String(team.purseRemaining)}
+                  type="text"
+                  value={purseDrafts[team.id] ?? formatAmountInput(team.purseRemaining)}
                 />
                 <button
                   className="button ghost"

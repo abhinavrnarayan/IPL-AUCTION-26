@@ -5,7 +5,13 @@ import type { ReactNode } from "react";
 import { useMemo, useState } from "react";
 
 import type { Player, RoomMember, Team } from "@/lib/domain/types";
-import { deriveRoleLabel, formatCurrencyShort, toErrorMessage } from "@/lib/utils";
+import {
+  deriveRoleLabel,
+  formatAmountInput,
+  formatCurrencyShort,
+  parseAmountInput,
+  toErrorMessage,
+} from "@/lib/utils";
 
 const summaryButtonStyle = {
   outline: "none",
@@ -53,7 +59,7 @@ export function ReadinessPanel({
   const [pendingTeamId, setPendingTeamId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [purseDrafts, setPurseDrafts] = useState<Record<string, string>>(
-    Object.fromEntries(teams.map((team) => [team.id, String(team.purseRemaining)])),
+    Object.fromEntries(teams.map((team) => [team.id, formatAmountInput(team.purseRemaining)])),
   );
 
   const availablePlayerList = useMemo(
@@ -102,11 +108,12 @@ export function ReadinessPanel({
     setError(null);
 
     try {
+      const purseRemaining = parseAmountInput(purseDrafts[teamId] ?? "");
       const response = await fetch(`/api/rooms/${roomCode}/teams/${teamId}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          purseRemaining: Number(purseDrafts[teamId] ?? 0),
+          purseRemaining,
         }),
       });
 
@@ -221,16 +228,16 @@ export function ReadinessPanel({
                     <input
                       className="input"
                       disabled={pendingTeamId !== null || phase === "LIVE"}
-                      inputMode="numeric"
-                      min={0}
+                      inputMode="text"
+                      placeholder="50L or 2Cr"
                       onChange={(event) =>
                         setPurseDrafts((current) => ({
                           ...current,
                           [team.id]: event.target.value,
                         }))
                       }
-                      type="number"
-                      value={purseDrafts[team.id] ?? String(team.purseRemaining)}
+                      type="text"
+                      value={purseDrafts[team.id] ?? formatAmountInput(team.purseRemaining)}
                     />
                     <button
                       className="button ghost"

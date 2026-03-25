@@ -50,8 +50,17 @@ export function validateTrade({
     }
   }
 
-  const nextTeamAPurse = teamA.purseRemaining - trade.cashFromA + trade.cashFromB;
-  const nextTeamBPurse = teamB.purseRemaining - trade.cashFromB + trade.cashFromA;
+  const outgoingValueFromA = squad
+    .filter((entry) => entry.teamId === teamA.id && trade.playersFromA.includes(entry.playerId))
+    .reduce((sum, entry) => sum + entry.purchasePrice, 0);
+  const outgoingValueFromB = squad
+    .filter((entry) => entry.teamId === teamB.id && trade.playersFromB.includes(entry.playerId))
+    .reduce((sum, entry) => sum + entry.purchasePrice, 0);
+
+  const nextTeamAPurse =
+    teamA.purseRemaining + outgoingValueFromA - outgoingValueFromB - trade.cashFromA + trade.cashFromB;
+  const nextTeamBPurse =
+    teamB.purseRemaining + outgoingValueFromB - outgoingValueFromA - trade.cashFromB + trade.cashFromA;
 
   if (nextTeamAPurse < 0 || nextTeamBPurse < 0) {
     throw new AppError(
@@ -81,6 +90,8 @@ export function validateTrade({
     teamB,
     nextTeamAPurse,
     nextTeamBPurse,
+    outgoingValueFromA,
+    outgoingValueFromB,
     nextTeamASquadCount,
     nextTeamBSquadCount,
   };

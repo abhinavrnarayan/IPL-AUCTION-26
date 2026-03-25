@@ -1,11 +1,11 @@
-"use client";
+﻿"use client";
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 
 import { getAllowedIncrements } from "@/lib/domain/auction";
 import type { AuctionState, Player, RoomMember, Team } from "@/lib/domain/types";
-import { formatCurrencyShort, formatIncrement, toErrorMessage } from "@/lib/utils";
+import { formatCurrencyShort, formatIncrement } from "@/lib/utils";
 
 async function placeBid(
   roomCode: string,
@@ -22,24 +22,12 @@ async function placeBid(
   return null;
 }
 
-async function castSkipVote(roomCode: string, teamId: string): Promise<string | null> {
-  const response = await fetch(`/api/rooms/${roomCode}/auction/skip-vote`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ teamId }),
-  });
-  const payload = (await response.json()) as { error?: string };
-  if (!response.ok) return payload.error ?? "Skip vote failed.";
-  return null;
-}
-
 function IncrementButtons({
   auctionState,
   currentPlayer,
   team,
   roomCode,
   anyPending,
-  isLive,
   isBiddingOpen,
   onPendingChange,
   onError,
@@ -50,7 +38,6 @@ function IncrementButtons({
   team: Team;
   roomCode: string;
   anyPending: boolean;
-  isLive: boolean;
   isBiddingOpen: boolean;
   onPendingChange: (teamId: string | null) => void;
   onError: (msg: string | null) => void;
@@ -129,7 +116,6 @@ function AdminBidPanel({
   currentPlayer,
   teams,
   onBidAction,
-  onSkipVoteAction,
   isBiddingOpen,
 }: {
   roomCode: string;
@@ -137,16 +123,11 @@ function AdminBidPanel({
   currentPlayer: Player | null;
   teams: Team[];
   onBidAction?: (teamId: string, increment?: number) => Promise<string | null>;
-  onSkipVoteAction?: (teamId: string) => Promise<string | null>;
   isBiddingOpen?: boolean;
 }) {
-  const router = useRouter();
   const [pendingTeamId, setPendingTeamId] = useState<string | null>(null);
-  const [skipPendingId, setSkipPendingId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const isLive = auctionState.phase === "LIVE";
   const currentBid = auctionState.currentBid;
-  const skipVotes = auctionState.skipVoteTeamIds;
 
   return (
     <div className="panel">
@@ -155,15 +136,10 @@ function AdminBidPanel({
         {currentBid !== null ? (
           <>Leading: <strong>{formatCurrencyShort(currentBid)}</strong></>
         ) : (
-          "No bids yet — open at base price"
+          "No bids yet - open at base price"
         )}
-        {" · "}
+        {" | "}
         <span className="pill" style={{ fontSize: "0.75rem" }}>Admin control</span>
-        {skipVotes.length > 0 && (
-          <span className="pill" style={{ fontSize: "0.75rem", marginLeft: "0.4rem" }}>
-            Skip {skipVotes.length}/{teams.length}
-          </span>
-        )}
       </div>
 
       {error ? (
@@ -175,15 +151,12 @@ function AdminBidPanel({
       <div className="team-grid">
         {teams.map((team) => {
           const isLeading = team.id === auctionState.currentTeamId;
-          const hasSkipVoted = skipVotes.includes(team.id);
 
           return (
             <div
               className="room-card"
               key={team.id}
-              style={{
-                outline: isLeading ? "2px solid var(--accent, #4ade80)" : undefined,
-              }}
+              style={{ outline: isLeading ? "2px solid var(--accent, #4ade80)" : undefined }}
             >
               <div className="header-row" style={{ alignItems: "center" }}>
                 <div>
@@ -192,44 +165,19 @@ function AdminBidPanel({
                     {team.shortCode}
                   </div>
                 </div>
-                <div style={{ display: "flex", gap: "0.4rem", alignItems: "center" }}>
-                  {isLeading ? (
-                    <span className="pill highlight" style={{ fontSize: "0.75rem" }}>
-                      Leading
-                    </span>
-                  ) : null}
-                  {hasSkipVoted ? (
-                    <span className="pill skip-voted-pill" style={{ fontSize: "0.72rem" }}>
-                      Skip ✓
-                    </span>
-                  ) : (
-                    <button
-                      className="button ghost skip-btn"
-                      disabled={!isBiddingOpen || skipPendingId === team.id || Boolean(pendingTeamId)}
-                      onClick={async () => {
-                        setSkipPendingId(team.id);
-                        const err = onSkipVoteAction
-                          ? await onSkipVoteAction(team.id)
-                          : await castSkipVote(roomCode, team.id);
-                        if (err) setError(err);
-                        else if (!onSkipVoteAction) router.refresh();
-                        setSkipPendingId(null);
-                      }}
-                      type="button"
-                    >
-                      Skip
-                    </button>
-                  )}
-                </div>
+                {isLeading ? (
+                  <span className="pill highlight" style={{ fontSize: "0.75rem" }}>
+                    Leading
+                  </span>
+                ) : null}
               </div>
               <div className="subtle" style={{ marginTop: "0.25rem", fontSize: "0.85rem" }}>
                 Purse: {formatCurrencyShort(team.purseRemaining)}
               </div>
               <IncrementButtons
-                anyPending={Boolean(pendingTeamId) || Boolean(skipPendingId)}
+                anyPending={Boolean(pendingTeamId)}
                 auctionState={auctionState}
                 currentPlayer={currentPlayer}
-                isLive={isLive}
                 isBiddingOpen={Boolean(isBiddingOpen)}
                 onError={setError}
                 onPendingChange={setPendingTeamId}
@@ -252,7 +200,6 @@ export function BidPanel({
   teams,
   currentMember,
   onBidAction,
-  onSkipVoteAction,
   isBiddingOpen,
 }: {
   roomCode: string;
@@ -267,7 +214,6 @@ export function BidPanel({
   const router = useRouter();
   const [teamId, setTeamId] = useState("");
   const [pending, setPending] = useState(false);
-  const [skipPending, setSkipPending] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
@@ -283,7 +229,6 @@ export function BidPanel({
         currentPlayer={currentPlayer}
         isBiddingOpen={isBiddingOpen}
         onBidAction={onBidAction}
-        onSkipVoteAction={onSkipVoteAction}
         roomCode={roomCode}
         teams={teams}
       />
@@ -297,7 +242,6 @@ export function BidPanel({
 
   const selectedTeam = teams.find((t) => t.id === teamId) ?? null;
   const isLeading = selectedTeam?.id === auctionState.currentTeamId;
-  const hasSkipVoted = selectedTeam ? auctionState.skipVoteTeamIds.includes(selectedTeam.id) : false;
 
   async function handleIncrementBid(increment?: number) {
     if (!teamId) {
@@ -312,22 +256,6 @@ export function BidPanel({
     if (err) setError(err);
     else if (!onBidAction) router.refresh();
     setPending(false);
-  }
-
-  async function handleSkipVote() {
-    if (!teamId) return;
-    setSkipPending(true);
-    setError(null);
-    try {
-      const err = onSkipVoteAction
-        ? await onSkipVoteAction(teamId)
-        : await castSkipVote(roomCode, teamId);
-      if (err) setError(err);
-      else if (!onSkipVoteAction) router.refresh();
-    } catch (err) {
-      setError(toErrorMessage(err));
-    }
-    setSkipPending(false);
   }
 
   const canBid =
@@ -368,7 +296,7 @@ export function BidPanel({
       {isFirstBid ? (
         <button
           className="button"
-          disabled={!canBid || !isBiddingOpen || pending || !selectedTeam || (selectedTeam.purseRemaining < (currentPlayer?.basePrice ?? 0))}
+          disabled={!canBid || !isBiddingOpen || pending || !selectedTeam || selectedTeam.purseRemaining < (currentPlayer?.basePrice ?? 0)}
           onClick={() => void handleIncrementBid(undefined)}
           style={{ width: "100%" }}
           type="button"
@@ -391,23 +319,11 @@ export function BidPanel({
                 title={`Bid ${formatCurrencyShort(nextAmount)}`}
                 type="button"
               >
-                {pending ? "…" : `+${formatIncrement(inc)}`}
+                {pending ? "..." : `+${formatIncrement(inc)}`}
               </button>
             );
           })}
         </div>
-      )}
-
-      {isLive && currentPlayer && currentMember?.isPlayer && (
-        <button
-          className={`button ghost skip-btn`}
-          disabled={!isBiddingOpen || hasSkipVoted || skipPending || pending}
-          onClick={() => void handleSkipVote()}
-          style={{ width: "100%", marginTop: "0.75rem" }}
-          type="button"
-        >
-          {hasSkipVoted ? "✓ Voted to skip" : skipPending ? "Voting…" : "Skip player"}
-        </button>
       )}
     </div>
   );
