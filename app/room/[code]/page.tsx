@@ -174,7 +174,7 @@ export default async function RoomPage({
                           <strong>{myTeam.name}</strong>
                           <div className="subtle mono">{myTeam.shortCode}</div>
                           <div className="pill-row" style={{ marginTop: "0.5rem" }}>
-                            <span className="pill highlight">{formatCurrency(myTeam.purseRemaining)}</span>
+                            <span className="pill highlight">{formatCurrencyShort(myTeam.purseRemaining)}</span>
                             <span className="pill">Squad limit: {myTeam.squadLimit}</span>
                           </div>
                         </summary>
@@ -216,7 +216,7 @@ export default async function RoomPage({
                         <strong>{myTeam.name}</strong>
                         <div className="subtle mono">{myTeam.shortCode}</div>
                         <div className="pill-row" style={{ marginTop: "0.5rem" }}>
-                          <span className="pill highlight">{formatCurrency(myTeam.purseRemaining)}</span>
+                          <span className="pill highlight">{formatCurrencyShort(myTeam.purseRemaining)}</span>
                           <span className="pill">Squad limit: {myTeam.squadLimit}</span>
                         </div>
                       </summary>

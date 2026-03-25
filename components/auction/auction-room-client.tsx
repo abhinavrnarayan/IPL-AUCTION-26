@@ -88,7 +88,6 @@ export function AuctionRoomClient({ snapshot }: { snapshot: AuctionSnapshot }) {
   // Player-side bid state (used in bottom bar)
   const [bidTeamId, setBidTeamId] = useState(() => snapshot.teams[0]?.id ?? "");
   const [bidPending, setBidPending] = useState(false);
-  const [skipPending, setSkipPending] = useState(false);
   const [bidError, setBidError] = useState<string | null>(null);
 
   // ROUND_END — player picker for next round
@@ -111,9 +110,6 @@ export function AuctionRoomClient({ snapshot }: { snapshot: AuctionSnapshot }) {
 
   const selectedTeam = localTeams.find((t) => t.id === bidTeamId) ?? null;
   const isLeading = selectedTeam?.id === localAuctionState.currentTeamId;
-  const hasSkipVoted = selectedTeam
-    ? localAuctionState.skipVoteTeamIds.includes(selectedTeam.id)
-    : false;
   const myOwnedTeam = localTeams.find((team) => team.ownerUserId === snapshot.user?.id) ?? null;
   const showPlayerBidBar = !isAdmin || Boolean(myOwnedTeam);
   const bidBarTeams = myOwnedTeam ? [myOwnedTeam] : localTeams;
@@ -121,8 +117,6 @@ export function AuctionRoomClient({ snapshot }: { snapshot: AuctionSnapshot }) {
   const soldCount = localPlayers.filter((p) => p.status === "SOLD").length;
   const unsoldCount = localPlayers.filter((p) => p.status === "UNSOLD").length;
   const hasAvailablePlayers = localPlayers.some((p) => p.status === "AVAILABLE");
-  const skipVoteCount = localAuctionState.skipVoteTeamIds.length;
-
   const franchise =
     (currentPlayer?.stats?.["franchise"] as string | undefined) ??
     (currentPlayer?.stats?.["team"] as string | undefined) ??
@@ -670,53 +664,6 @@ export function AuctionRoomClient({ snapshot }: { snapshot: AuctionSnapshot }) {
     }
   }
 
-  async function handleSkipVote(teamIdOverride?: string): Promise<string | null> {
-    const teamId = teamIdOverride ?? bidTeamId;
-    if (!teamId) return "No team selected.";
-    if (!isBiddingOpen) return "Bidding time has ended for this player.";
-    setSkipPending(true);
-    setBidError(null);
-    try {
-      const res = await fetch(`/api/rooms/${snapshot.room.code}/auction/skip-vote`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ teamId }),
-      });
-      const payload = (await res.json()) as { error?: string };
-      if (!res.ok) {
-        const message = payload.error ?? "Skip vote failed.";
-        setBidError(message);
-        return message;
-      } else {
-        setLocalAuctionState((curr) => {
-          if (curr.skipVoteTeamIds.includes(teamId)) return curr;
-          return {
-            ...curr,
-            skipVoteTeamIds: [...curr.skipVoteTeamIds, teamId],
-            version: curr.version + 1,
-          };
-        });
-        channelRef.current?.send({
-          type: "broadcast",
-          event: "SKIP_VOTED",
-          payload: {
-            teamId,
-            version: localAuctionState.version + 1,
-          } satisfies SkipVotePayload,
-        });
-        channelRef.current?.send({ type: "broadcast", event: "REFRESH_ROOM" });
-        refreshRoom();
-        return null;
-      }
-    } catch (err) {
-      const message = toErrorMessage(err);
-      setBidError(message);
-      return message;
-    } finally {
-      setSkipPending(false);
-    }
-  }
-
   async function sendReaction(emoji: string) {
     let context: string | undefined;
     if (currentPlayer) {
@@ -857,14 +804,6 @@ export function AuctionRoomClient({ snapshot }: { snapshot: AuctionSnapshot }) {
               {soldCount}/{localPlayers.length} sold
             </span>
             <span className="pill highlight">{effectivePhase}</span>
-            {skipVoteCount > 0 && isLive && (
-              <span
-                className="pill"
-                style={{ background: "rgba(183,121,31,0.12)", color: "var(--warning)" }}
-              >
-                Skip {skipVoteCount}/{localTeams.length}
-              </span>
-            )}
             {myOwnedTeam && (
               <span className="my-team-chip">
                 <span className="my-team-chip-avatar">
@@ -1203,7 +1142,6 @@ export function AuctionRoomClient({ snapshot }: { snapshot: AuctionSnapshot }) {
                   setBidTeamId(teamId);
                   return handleBid(increment, teamId);
                 }}
-                onSkipVoteAction={(teamId) => handleSkipVote(teamId)}
                 roomCode={snapshot.room.code}
                 teams={localTeams}
               />
@@ -1331,23 +1269,6 @@ export function AuctionRoomClient({ snapshot }: { snapshot: AuctionSnapshot }) {
                   </button>
                 );
               })
-            )}
-
-            {isLive && currentPlayer && (
-              <button
-                className="button ghost"
-                style={{
-                  minHeight: "52px",
-                  borderRadius: "16px",
-                  padding: "0.75rem 1.1rem",
-                  flexShrink: 0,
-                }}
-                disabled={!isBiddingOpen || hasSkipVoted || skipPending || bidPending}
-                onClick={() => void handleSkipVote()}
-                type="button"
-              >
-                {hasSkipVoted ? "✓ Skip" : skipPending ? "…" : "Skip"}
-              </button>
             )}
           </footer>
         )}

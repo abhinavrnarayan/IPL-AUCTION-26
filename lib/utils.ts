@@ -1,4 +1,4 @@
-export function mergeClassNames(
+﻿export function mergeClassNames(
   ...values: Array<string | false | null | undefined>
 ) {
   return values.filter(Boolean).join(" ");
@@ -18,16 +18,27 @@ export function generateRoomCode() {
 
 export function formatCurrencyShort(value: number) {
   if (value >= 10_000_000) {
-    const cr = value / 10_000_000;
-    return `₹${cr % 1 === 0 ? cr : cr.toFixed(1)}Cr`;
+    const crore = value / 10_000_000;
+    return `Rs.${crore % 1 === 0 ? crore : crore.toFixed(1)}Cr`;
   }
-  const l = value / 100_000;
-  return `₹${l % 1 === 0 ? l : l.toFixed(1)}L`;
+
+  if (value >= 100_000) {
+    const lakh = value / 100_000;
+    return `Rs.${lakh % 1 === 0 ? lakh : lakh.toFixed(1)}L`;
+  }
+
+  if (value >= 1_000) {
+    const thousand = value / 1_000;
+    return `Rs.${thousand % 1 === 0 ? thousand : thousand.toFixed(1)}K`;
+  }
+
+  return `Rs.${value}`;
 }
 
 export function formatIncrement(value: number) {
   if (value >= 10_000_000) return `${value / 10_000_000}Cr`;
-  return `${value / 100_000}L`;
+  if (value >= 100_000) return `${value / 100_000}L`;
+  return `${value / 1_000}K`;
 }
 
 export function formatAmountInput(value: number) {
@@ -36,21 +47,36 @@ export function formatAmountInput(value: number) {
     return `${cr % 1 === 0 ? cr : cr.toFixed(1)}Cr`;
   }
 
-  const lakh = value / 100_000;
-  return `${lakh % 1 === 0 ? lakh : lakh.toFixed(1)}L`;
+  if (value >= 100_000) {
+    const lakh = value / 100_000;
+    return `${lakh % 1 === 0 ? lakh : lakh.toFixed(1)}L`;
+  }
+
+  if (value >= 1_000) {
+    const thousand = value / 1_000;
+    return `${thousand % 1 === 0 ? thousand : thousand.toFixed(1)}K`;
+  }
+
+  return String(value);
 }
 
 export function parseAmountInput(value: string) {
-  const normalized = value.trim().replace(/,/g, "").replace(/\s+/g, "").replace(/rs\.?/gi, "").replace(/inr/gi, "").replace(/₹/g, "");
+  const normalized = value
+    .trim()
+    .replace(/,/g, "")
+    .replace(/\s+/g, "")
+    .replace(/rs\.?/gi, "")
+    .replace(/inr/gi, "")
+    .replace(/₹/g, "");
 
   if (!normalized) {
     throw new Error("Enter an amount like 50L or 2Cr.");
   }
 
-  const match = normalized.match(/^(\d+(?:\.\d+)?)(cr|crore|crores|l|lac|lakh|lakhs)?$/i);
+  const match = normalized.match(/^([0-9]+(?:\.[0-9]+)?)(cr|crore|crores|l|lac|lakh|lakhs|k|thousand)?$/i);
 
   if (!match) {
-    throw new Error("Use a purse amount like 50L, 1.5Cr, or 2500000.");
+    throw new Error("Use a purse amount like 50L, 1.5Cr, 250K, or 2500000.");
   }
 
   const amount = Number(match[1]);
@@ -66,6 +92,10 @@ export function parseAmountInput(value: string) {
 
   if (suffix === "l" || suffix === "lac" || suffix === "lakh" || suffix === "lakhs") {
     return Math.round(amount * 100_000);
+  }
+
+  if (suffix === "k" || suffix === "thousand") {
+    return Math.round(amount * 1_000);
   }
 
   return Math.round(amount);

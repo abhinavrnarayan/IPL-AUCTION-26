@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useRouter } from "next/navigation";
 import type { ReactNode } from "react";
@@ -19,6 +19,8 @@ const summaryButtonStyle = {
   display: "block",
   cursor: "pointer",
 } as const;
+
+type PlayerListKey = "available" | "sold" | "unsold" | null;
 
 function ScrollList({ children }: { children: ReactNode }) {
   return (
@@ -58,6 +60,7 @@ export function ReadinessPanel({
   const [pendingPlayerId, setPendingPlayerId] = useState<string | null>(null);
   const [pendingTeamId, setPendingTeamId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [openList, setOpenList] = useState<PlayerListKey>(null);
   const [purseDrafts, setPurseDrafts] = useState<Record<string, string>>(
     Object.fromEntries(teams.map((team) => [team.id, formatAmountInput(team.purseRemaining)])),
   );
@@ -152,7 +155,8 @@ export function ReadinessPanel({
           </div>
           {showSaleDetails && soldTeam ? (
             <div className="subtle" style={{ fontSize: "0.75rem", marginTop: "0.15rem" }}>
-              {soldTeam.shortCode} {player.soldPrice ? `| ${formatCurrencyShort(player.soldPrice)}` : ""}
+              {soldTeam.shortCode}
+              {player.soldPrice ? ` | ${formatCurrencyShort(player.soldPrice)}` : ""}
             </div>
           ) : null}
         </div>
@@ -181,6 +185,19 @@ export function ReadinessPanel({
       </div>
     );
   }
+
+  function toggleList(key: PlayerListKey) {
+    setOpenList((current) => (current === key ? null : key));
+  }
+
+  const openPlayers =
+    openList === "available"
+      ? availablePlayerList
+      : openList === "sold"
+        ? soldPlayerList
+        : openList === "unsold"
+          ? unsoldPlayerList
+          : [];
 
   return (
     <>
@@ -283,72 +300,39 @@ export function ReadinessPanel({
       </div>
 
       <div className="grid" style={{ marginTop: "0.9rem" }}>
-        <div className="pill-row">
-          <details style={{ cursor: "pointer", display: "inline-block", position: "relative", zIndex: 30 }}>
-            <summary className="pill" style={summaryButtonStyle}>
-              Available: {availablePlayerList.length}
-            </summary>
-            <div
-              className="panel"
-              style={{
-                position: "absolute",
-                zIndex: 120,
-                marginTop: "0.5rem",
-                width: "min(320px, 85vw)",
-                maxHeight: "300px",
-                overflowY: "auto",
-                padding: "1rem",
-                scrollbarWidth: "thin",
-                scrollbarColor: "rgba(99,102,241,0.3) transparent",
-              }}
-            >
-              {availablePlayerList.map((player) => renderPlayerRow(player))}
-            </div>
-          </details>
+        <div className="pill-row" style={{ position: "relative", zIndex: 30 }}>
+          <button className="pill" onClick={() => toggleList("available")} type="button">
+            Available: {availablePlayerList.length}
+          </button>
+          <button className="pill" onClick={() => toggleList("sold")} type="button">
+            Sold: {soldPlayerList.length}
+          </button>
+          <button className="pill" onClick={() => toggleList("unsold")} type="button">
+            Unsold: {unsoldPlayerList.length}
+          </button>
 
-          <details style={{ cursor: "pointer", display: "inline-block", position: "relative", zIndex: 30 }}>
-            <summary className="pill" style={summaryButtonStyle}>
-              Sold: {soldPlayerList.length}
-            </summary>
+          {openList ? (
             <div
               className="panel"
               style={{
                 position: "absolute",
+                top: "calc(100% + 0.5rem)",
+                left: 0,
                 zIndex: 120,
-                marginTop: "0.5rem",
                 width: "min(340px, 85vw)",
                 maxHeight: "300px",
                 overflowY: "auto",
                 padding: "1rem",
+                background: "#141726",
+                border: "1px solid rgba(99,102,241,0.22)",
+                boxShadow: "0 24px 48px rgba(0,0,0,0.45)",
                 scrollbarWidth: "thin",
                 scrollbarColor: "rgba(99,102,241,0.3) transparent",
               }}
             >
-              {soldPlayerList.map((player) => renderPlayerRow(player, true))}
+              {openPlayers.map((player) => renderPlayerRow(player, openList === "sold"))}
             </div>
-          </details>
-
-          <details style={{ cursor: "pointer", display: "inline-block", position: "relative", zIndex: 30 }}>
-            <summary className="pill" style={summaryButtonStyle}>
-              Unsold: {unsoldPlayerList.length}
-            </summary>
-            <div
-              className="panel"
-              style={{
-                position: "absolute",
-                zIndex: 120,
-                marginTop: "0.5rem",
-                width: "min(320px, 85vw)",
-                maxHeight: "300px",
-                overflowY: "auto",
-                padding: "1rem",
-                scrollbarWidth: "thin",
-                scrollbarColor: "rgba(99,102,241,0.3) transparent",
-              }}
-            >
-              {unsoldPlayerList.map((player) => renderPlayerRow(player))}
-            </div>
-          </details>
+          ) : null}
         </div>
         <div className="subtle" style={{ fontSize: "0.8rem" }}>
           Click any count above to open the matching list.
