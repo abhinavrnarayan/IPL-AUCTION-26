@@ -615,7 +615,11 @@ export function AuctionRoomClient({ snapshot }: { snapshot: AuctionSnapshot }) {
         return message;
       } else {
         if (payload.timing) {
-          console.info("[auction-bid-client-timing]", payload.timing);
+          console.info(
+            "[auction-bid-client-timing]",
+            `total=${payload.timing.totalMs}ms`,
+            payload.timing.steps.map((step) => `${step.step}:${step.ms}ms`).join(" | "),
+          );
         }
         const nextAmount = payload.amount ?? currentBid ?? currentPlayer?.basePrice ?? 0;
         const nextExpiresAt = new Date(
