@@ -5,7 +5,8 @@ import { useEffect, useRef, useState } from "react";
 
 import sflLogo from "@/app/images/sfl.png";
 
-const SESSION_KEY = "sfl_intro_played";
+// localStorage key — persists forever so intro only plays on first-ever visit
+const STORAGE_KEY = "sfl_intro_played";
 
 // Phase durations (ms)
 const PHASES: number[] = [
@@ -25,12 +26,12 @@ export default function IntroSplash() {
     if (mounted.current) return;
     mounted.current = true;
 
-    // Skip if already played this session
-    if (typeof window !== "undefined" && sessionStorage.getItem(SESSION_KEY)) {
+    // Skip if already played on this device (localStorage persists forever)
+    if (typeof window !== "undefined" && localStorage.getItem(STORAGE_KEY)) {
       return;
     }
 
-    sessionStorage.setItem(SESSION_KEY, "1");
+    localStorage.setItem(STORAGE_KEY, "1");
     setPhase(0);
 
     const timers = PHASES.slice(1).map((delay, i) =>

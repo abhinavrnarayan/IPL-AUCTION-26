@@ -1169,92 +1169,288 @@ button { cursor: pointer; }
   .bid-button-lg { min-width: calc(50% - 0.2rem); font-size: 0.8rem; min-height: 42px; }
 }
 
+/* ════════════════════════════════════════════════════════
+   PAGE LOADER — Luxury Typographic Edition
+════════════════════════════════════════════════════════ */
+
 .sfl-loader-screen {
   position: fixed;
   inset: 0;
   z-index: 9999;
-  display: grid;
-  place-items: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
   overflow: hidden;
-  background:
-    radial-gradient(ellipse 80% 60% at 50% 10%,  rgba(99,102,241,0.18) 0%, transparent 65%),
-    radial-gradient(ellipse 55% 45% at 12% 85%,  rgba(16,185,129,0.14) 0%, transparent 60%),
-    radial-gradient(ellipse 50% 40% at 88% 20%,  rgba(244,114,182,0.10) 0%, transparent 55%),
-    linear-gradient(180deg, #06060f 0%, #0d0d1a 50%, #080b14 100%);
-  animation: sfl-screen-in 600ms cubic-bezier(0.22,1,0.36,1) both;
+  background: #09090f;
+  animation: ld-fade-in 300ms ease both;
 }
 
-/* ── YouTube-style top progress bar ── */
+/* Deep radial depth — no coloured orbs, just pure dark depth */
+.sfl-loader-screen::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(ellipse 90% 70% at 50% 50%, rgba(99,102,241,0.07) 0%, transparent 70%),
+    radial-gradient(ellipse 60% 40% at 50% 0%,  rgba(129,140,248,0.05) 0%, transparent 60%);
+  pointer-events: none;
+}
+
+/* ── Top progress bar ── */
 .sfl-loader-topbar {
   position: absolute;
   top: 0; left: 0; right: 0;
   height: 2px;
-  background: rgba(255,255,255,0.06);
-  overflow: hidden;
   z-index: 10;
+  overflow: hidden;
+  background: rgba(255,255,255,0.04);
 }
 
 .sfl-loader-topbar-fill {
   display: block;
   height: 100%;
-  width: 30%;
+  width: 28%;
   border-radius: 0 999px 999px 0;
   background: linear-gradient(90deg,
-    rgba(99,102,241,0.4),
+    rgba(99,102,241,0.3),
     rgba(129,140,248,1) 50%,
-    rgba(16,185,129,0.9)
+    rgba(16,185,129,0.85)
   );
-  box-shadow: 0 0 10px 2px rgba(129,140,248,0.8), 0 0 20px 4px rgba(16,185,129,0.5);
-  animation: sfl-topbar-sweep 1.4s cubic-bezier(0.4,0,0.2,1) infinite;
+  box-shadow: 0 0 12px 3px rgba(129,140,248,0.85), 0 0 24px 6px rgba(16,185,129,0.4);
+  animation: ld-topbar 1.6s cubic-bezier(0.4,0,0.2,1) infinite;
 }
 
-
-.sfl-loader-screen::before {
-  content: "";
+/* ── Radial vignette ── */
+.sfl-loader-vignette {
   position: absolute;
   inset: 0;
-  background: repeating-linear-gradient(
-    0deg,
-    transparent,
-    transparent 3px,
-    rgba(0,0,0,0.06) 3px,
-    rgba(0,0,0,0.06) 4px
+  background: radial-gradient(ellipse 80% 80% at 50% 50%, transparent 40%, rgba(0,0,0,0.7) 100%);
+  pointer-events: none;
+}
+
+/* ── Centre content ── */
+.sfl-loader-center {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2rem;
+  animation: ld-rise 600ms 80ms cubic-bezier(0.22,1,0.36,1) both;
+}
+
+/* ── Brand row: logo | divider | wordmark+subtitle ── */
+.sfl-loader-brand {
+  display: flex;
+  align-items: center;
+  gap: 2rem;
+}
+
+/* ── Logo ── */
+.sfl-loader-logo-wrap {
+  flex-shrink: 0;
+  width: 72px;
+  height: 72px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  background: radial-gradient(circle at 35% 30%, rgba(255,255,255,0.10), rgba(5,5,14,0.95));
+  box-shadow:
+    0 0 0 1px rgba(255,255,255,0.06),
+    0 0 0 5px rgba(99,102,241,0.05),
+    0 8px 32px rgba(0,0,0,0.8);
+  animation: ld-logo-breathe 3.2s ease-in-out infinite;
+}
+
+.sfl-loader-logo {
+  width: 58%;
+  height: auto;
+  object-fit: contain;
+  filter: drop-shadow(0 0 10px rgba(255,255,255,0.25)) drop-shadow(0 0 22px rgba(129,140,248,0.35));
+}
+
+/* ── Vertical divider ── */
+.sfl-loader-divider {
+  width: 1px;
+  height: 52px;
+  background: linear-gradient(180deg, transparent, rgba(255,255,255,0.15) 40%, rgba(255,255,255,0.15) 60%, transparent);
+  flex-shrink: 0;
+}
+
+/* ── Text stack ── */
+.sfl-loader-text {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+}
+
+/* ── Typographic SFL wordmark with shimmer ── */
+.sfl-loader-wordmark {
+  font-family: var(--font-display), sans-serif;
+  font-size: clamp(3.2rem, 7vw, 5rem);
+  font-weight: 900;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  line-height: 1;
+
+  /* Shimmer gradient — metallic iridescent sweep */
+  background: linear-gradient(
+    105deg,
+    #c8ccff 0%,
+    #ffffff 28%,
+    #a5b4fc 42%,
+    #ffffff 56%,
+    #6ee7b7 70%,
+    #ffffff 84%,
+    #c8ccff 100%
   );
-  pointer-events: none;
-  z-index: 0;
-  opacity: 0.5;
+  background-size: 240% 100%;
+  background-clip: text;
+  -webkit-background-clip: text;
+  color: transparent;
+  animation: ld-shimmer 2.8s linear infinite;
 }
 
-/* ── Ambient orbs ── */
-.sfl-loader-orb {
-  position: absolute;
+.sfl-loader-subtitle {
+  font-family: var(--font-display), sans-serif;
+  font-size: clamp(0.7rem, 1.8vw, 0.85rem);
+  letter-spacing: 0.24em;
+  text-transform: uppercase;
+  color: rgba(180,190,230,0.5);
+  opacity: 0;
+  animation: ld-fade-up 500ms ease 400ms forwards;
+}
+
+/* ── Precision accent line (three segments) ── */
+.sfl-loader-accent-line {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+}
+
+.sfl-loader-accent-line span {
+  display: block;
+  height: 1px;
   border-radius: 999px;
-  filter: blur(60px);
-  pointer-events: none;
-  z-index: 0;
+  background: rgba(129,140,248,0.5);
+  opacity: 0;
+  animation: ld-accent-in 400ms ease forwards;
 }
 
-.sfl-loader-orb-one {
-  width: 28rem; height: 28rem;
-  background: radial-gradient(circle, rgba(99,102,241,0.28) 0%, transparent 70%);
-  top: -8rem; left: -6rem;
-  animation: sfl-orb-drift-a 9s ease-in-out infinite;
+.sfl-loader-accent-line span:nth-child(1) {
+  width: 20px;
+  animation-delay: 250ms;
+}
+.sfl-loader-accent-line span:nth-child(2) {
+  width: 60px;
+  background: linear-gradient(90deg, rgba(129,140,248,0.8), rgba(16,185,129,0.6));
+  box-shadow: 0 0 8px rgba(129,140,248,0.5);
+  animation-delay: 300ms;
+}
+.sfl-loader-accent-line span:nth-child(3) {
+  width: 20px;
+  animation-delay: 350ms;
 }
 
-.sfl-loader-orb-two {
-  width: 22rem; height: 22rem;
-  background: radial-gradient(circle, rgba(16,185,129,0.22) 0%, transparent 70%);
-  bottom: -6rem; right: -4rem;
-  animation: sfl-orb-drift-b 11s ease-in-out infinite;
+/* ── Edition text ── */
+.sfl-loader-edition {
+  font-family: var(--font-display), sans-serif;
+  font-size: clamp(0.6rem, 1.4vw, 0.72rem);
+  letter-spacing: 0.36em;
+  text-transform: uppercase;
+  color: rgba(129,140,248,0.35);
+  opacity: 0;
+  animation: ld-fade-up 400ms ease 550ms forwards;
 }
 
-.sfl-loader-orb-three {
-  width: 18rem; height: 18rem;
-  background: radial-gradient(circle, rgba(244,114,182,0.16) 0%, transparent 70%);
-  top: 50%; left: 50%;
-  transform: translate(-50%, -50%) translate(14rem, -10rem);
-  animation: sfl-orb-drift-c 13s ease-in-out infinite;
+/* ── Bottom bar wrapper ── */
+.sfl-loader-bottom {
+  position: absolute;
+  bottom: 0; left: 0; right: 0;
+  padding: 0;
 }
+
+.sfl-loader-bar {
+  height: 2px;
+  overflow: hidden;
+  background: rgba(255,255,255,0.04);
+}
+
+.sfl-loader-bar-fill {
+  display: block;
+  height: 100%;
+  width: 28%;
+  background: linear-gradient(90deg,
+    transparent,
+    rgba(99,102,241,0.6) 25%,
+    rgba(129,140,248,0.95) 55%,
+    rgba(16,185,129,0.75)
+  );
+  box-shadow: 0 0 10px 2px rgba(129,140,248,0.6);
+  animation: ld-topbar 1.6s 0.8s cubic-bezier(0.4,0,0.2,1) infinite;
+}
+
+/* ════════════════════════════════════════
+   KEYFRAMES — LOADER
+════════════════════════════════════════ */
+
+@keyframes ld-fade-in {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+@keyframes ld-rise {
+  from { opacity: 0; transform: translateY(20px); }
+  to   { opacity: 1; transform: translateY(0);    }
+}
+
+@keyframes ld-shimmer {
+  0%   { background-position: 100% 0; }
+  100% { background-position: -100% 0; }
+}
+
+@keyframes ld-topbar {
+  0%   { transform: translateX(-140%); }
+  100% { transform: translateX(500%);  }
+}
+
+@keyframes ld-logo-breathe {
+  0%, 100% {
+    box-shadow:
+      0 0 0 1px rgba(255,255,255,0.06),
+      0 0 0 5px rgba(99,102,241,0.05),
+      0 8px 32px rgba(0,0,0,0.8),
+      0 0 28px rgba(99,102,241,0.08);
+  }
+  50% {
+    box-shadow:
+      0 0 0 1px rgba(255,255,255,0.09),
+      0 0 0 7px rgba(99,102,241,0.09),
+      0 10px 40px rgba(0,0,0,0.9),
+      0 0 44px rgba(99,102,241,0.15);
+  }
+}
+
+@keyframes ld-fade-up {
+  from { opacity: 0; transform: translateY(6px); }
+  to   { opacity: 1; transform: translateY(0);   }
+}
+
+@keyframes ld-accent-in {
+  from { opacity: 0; transform: scaleX(0); }
+  to   { opacity: 1; transform: scaleX(1); }
+}
+
+/* ── Mobile ── */
+@media (max-width: 600px) {
+  .sfl-loader-brand  { gap: 1.25rem; }
+  .sfl-loader-divider { height: 40px; }
+  .sfl-loader-logo-wrap { width: 56px; height: 56px; }
+}
+
+
+
 
 /* ── Floating particles ── */
 .sfl-loader-particles {
