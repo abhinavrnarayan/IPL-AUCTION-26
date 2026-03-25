@@ -1174,6 +1174,7 @@ button { cursor: pointer; }
 ════════════════════════════════════════════════════════ */
 
 /* Premium Page Loader */
+/* Premium Page Loader */
 .sfl-loader-screen {
   position: fixed;
   inset: 0;
@@ -1183,9 +1184,9 @@ button { cursor: pointer; }
   overflow: hidden;
   padding: 2rem;
   background:
-    radial-gradient(circle at 50% 18%, rgba(129, 140, 248, 0.12), transparent 24rem),
-    radial-gradient(circle at 50% 100%, rgba(16, 185, 129, 0.08), transparent 26rem),
-    linear-gradient(180deg, #070811 0%, #0b0d17 55%, #080910 100%);
+    radial-gradient(circle at 50% 14%, rgba(129, 140, 248, 0.14), transparent 24rem),
+    radial-gradient(circle at 50% 100%, rgba(16, 185, 129, 0.08), transparent 28rem),
+    linear-gradient(180deg, #070811 0%, #0b0d17 60%, #07080f 100%);
 }
 
 .sfl-loader-screen::before,
@@ -1197,110 +1198,125 @@ button { cursor: pointer; }
 }
 
 .sfl-loader-screen::before {
+  background: radial-gradient(circle at center, transparent 34%, rgba(0, 0, 0, 0.46) 100%);
+}
+
+.sfl-loader-screen::after {
   background:
     linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.03) 50%, transparent 100%),
     linear-gradient(180deg, rgba(255,255,255,0.02), transparent 30%, transparent 70%, rgba(255,255,255,0.02));
   mask: linear-gradient(180deg, transparent, black 18%, black 82%, transparent);
 }
 
-.sfl-loader-screen::after {
-  background: radial-gradient(circle at center, transparent 38%, rgba(0, 0, 0, 0.44) 100%);
-}
-
-.sfl-loader-frame {
-  position: absolute;
-  inset: 1.4rem;
-  border: 1px solid rgba(255, 255, 255, 0.06);
-  border-radius: 28px;
-  box-shadow:
-    inset 0 0 0 1px rgba(129, 140, 248, 0.06),
-    0 24px 60px rgba(0, 0, 0, 0.38);
-}
-
-.sfl-loader-beam {
+.sfl-loader-aurora {
   position: absolute;
   top: 50%;
-  width: 32rem;
+  width: 28rem;
   height: 18rem;
   border-radius: 999px;
-  filter: blur(18px);
-  opacity: 0.48;
+  filter: blur(22px);
+  opacity: 0.42;
   pointer-events: none;
 }
 
-.sfl-loader-beam-left {
+.sfl-loader-aurora-left {
   left: -8rem;
-  background: radial-gradient(circle, rgba(129, 140, 248, 0.16), transparent 70%);
-  animation: sfl-loader-beam-left 4.5s ease-in-out infinite;
+  background: radial-gradient(circle, rgba(129, 140, 248, 0.18), transparent 70%);
+  animation: sfl-loader-aurora-left 4.8s ease-in-out infinite;
 }
 
-.sfl-loader-beam-right {
+.sfl-loader-aurora-right {
   right: -8rem;
-  background: radial-gradient(circle, rgba(16, 185, 129, 0.14), transparent 70%);
-  animation: sfl-loader-beam-right 4.8s ease-in-out infinite;
+  background: radial-gradient(circle, rgba(16, 185, 129, 0.16), transparent 70%);
+  animation: sfl-loader-aurora-right 5.1s ease-in-out infinite;
 }
 
-.sfl-loader-shell {
+.sfl-loader-center {
   position: relative;
   z-index: 2;
-  width: min(42rem, calc(100vw - 3rem));
   display: grid;
-  gap: 1.5rem;
   justify-items: center;
-  padding: clamp(1.75rem, 4vw, 2.5rem);
-  border-radius: 30px;
-  background: linear-gradient(180deg, rgba(255,255,255,0.05), rgba(255,255,255,0.02));
+  gap: 1.5rem;
+  animation: sfl-loader-center-in 420ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.sfl-loader-core {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: clamp(12rem, 28vw, 18rem);
+  aspect-ratio: 1;
+}
+
+.sfl-loader-ring {
+  position: absolute;
+  border-radius: 50%;
+}
+
+.sfl-loader-ring-outer {
+  inset: 0;
   border: 1px solid rgba(255,255,255,0.08);
   box-shadow:
-    inset 0 1px 0 rgba(255,255,255,0.08),
-    0 18px 48px rgba(0,0,0,0.42),
-    0 0 0 1px rgba(129,140,248,0.05);
-  backdrop-filter: blur(18px);
-  -webkit-backdrop-filter: blur(18px);
-  animation: sfl-loader-shell-in 420ms cubic-bezier(0.22, 1, 0.36, 1) both;
+    inset 0 0 0 1px rgba(129,140,248,0.05),
+    0 0 48px rgba(129,140,248,0.12);
 }
 
-.sfl-loader-status {
-  font-family: var(--font-display), sans-serif;
-  font-size: 0.68rem;
-  font-weight: 700;
-  letter-spacing: 0.28em;
-  text-transform: uppercase;
-  color: rgba(232, 234, 246, 0.52);
+.sfl-loader-ring-outer::before {
+  content: "";
+  position: absolute;
+  inset: 0.55rem;
+  border-radius: inherit;
+  border-top: 2px solid rgba(129,140,248,0.95);
+  border-right: 2px solid rgba(16,185,129,0.7);
+  border-left: 2px solid transparent;
+  border-bottom: 2px solid transparent;
+  animation: sfl-loader-spin 3.4s linear infinite;
 }
 
-.sfl-loader-brand {
-  display: grid;
-  gap: 1.15rem;
-  justify-items: center;
-  text-align: center;
+.sfl-loader-ring-inner {
+  inset: 1.4rem;
+  border: 1px solid rgba(255,255,255,0.06);
+  box-shadow: inset 0 0 24px rgba(255,255,255,0.03);
+}
+
+.sfl-loader-ring-inner::before {
+  content: "";
+  position: absolute;
+  inset: 0.45rem;
+  border-radius: inherit;
+  border-top: 2px solid rgba(255,255,255,0.84);
+  border-left: 2px solid rgba(129,140,248,0.46);
+  border-right: 2px solid transparent;
+  border-bottom: 2px solid transparent;
+  animation: sfl-loader-spin-reverse 2.2s linear infinite;
 }
 
 .sfl-loader-logo-wrap {
   position: relative;
+  z-index: 2;
   width: clamp(5.75rem, 14vw, 7rem);
   height: clamp(5.75rem, 14vw, 7rem);
   display: grid;
   place-items: center;
-  border-radius: 26px;
+  border-radius: 50%;
   background:
     linear-gradient(180deg, rgba(255,255,255,0.08), rgba(255,255,255,0.02)),
     radial-gradient(circle at 30% 25%, rgba(255,255,255,0.18), rgba(6,8,16,0.94));
-  border: 1px solid rgba(255,255,255,0.09);
+  border: 1px solid rgba(255,255,255,0.08);
   box-shadow:
-    inset 0 1px 0 rgba(255,255,255,0.09),
+    inset 0 1px 0 rgba(255,255,255,0.08),
     0 0 0 1px rgba(129,140,248,0.08),
     0 18px 34px rgba(0,0,0,0.45),
-    0 0 38px rgba(129,140,248,0.14);
-  animation: sfl-loader-logo-pulse 2.8s ease-in-out infinite;
+    0 0 36px rgba(129,140,248,0.18);
+  animation: sfl-loader-logo-pulse 2.6s ease-in-out infinite;
 }
 
 .sfl-loader-logo-wrap::after {
   content: "";
   position: absolute;
   inset: -0.9rem;
-  border-radius: 32px;
-  background: radial-gradient(circle, rgba(129,140,248,0.18), transparent 70%);
+  border-radius: inherit;
+  background: radial-gradient(circle, rgba(129,140,248,0.16), transparent 70%);
   filter: blur(14px);
   z-index: -1;
 }
@@ -1315,11 +1331,13 @@ button { cursor: pointer; }
 .sfl-loader-text {
   display: grid;
   gap: 0.35rem;
+  justify-items: center;
+  text-align: center;
 }
 
 .sfl-loader-wordmark {
   font-family: var(--font-display), sans-serif;
-  font-size: clamp(3.1rem, 8vw, 5rem);
+  font-size: clamp(3.1rem, 8vw, 4.8rem);
   font-weight: 800;
   line-height: 0.95;
   letter-spacing: 0.22em;
@@ -1346,56 +1364,7 @@ button { cursor: pointer; }
   animation: sfl-loader-fade-up 560ms ease 200ms both;
 }
 
-.sfl-loader-accent {
-  position: relative;
-  width: min(24rem, 76vw);
-  height: 1.25rem;
-}
-
-.sfl-loader-accent-line,
-.sfl-loader-accent-glow {
-  position: absolute;
-  left: 50%;
-  transform: translateX(-50%);
-  border-radius: 999px;
-}
-
-.sfl-loader-accent-line {
-  top: 0.55rem;
-  width: 100%;
-  height: 1px;
-  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.12), rgba(129,140,248,0.65), rgba(16,185,129,0.55), transparent);
-}
-
-.sfl-loader-accent-glow {
-  top: 0.32rem;
-  width: 28%;
-  height: 0.45rem;
-  background: linear-gradient(90deg, rgba(129,140,248,0), rgba(129,140,248,0.92), rgba(16,185,129,0.78), rgba(129,140,248,0));
-  filter: blur(10px);
-  animation: sfl-loader-glide 2s cubic-bezier(0.65, 0, 0.35, 1) infinite;
-}
-
-.sfl-loader-bar {
-  width: min(22rem, 76vw);
-  height: 0.3rem;
-  overflow: hidden;
-  border-radius: 999px;
-  background: rgba(255,255,255,0.06);
-  box-shadow: inset 0 0 0 1px rgba(255,255,255,0.05);
-}
-
-.sfl-loader-bar-fill {
-  display: block;
-  width: 38%;
-  height: 100%;
-  border-radius: inherit;
-  background: linear-gradient(90deg, rgba(129,140,248,0), rgba(129,140,248,1), rgba(16,185,129,0.92), rgba(129,140,248,0));
-  box-shadow: 0 0 16px rgba(129,140,248,0.5);
-  animation: sfl-loader-progress 1.45s cubic-bezier(0.65, 0, 0.35, 1) infinite;
-}
-
-@keyframes sfl-loader-shell-in {
+@keyframes sfl-loader-center-in {
   from {
     opacity: 0;
     transform: translateY(18px) scale(0.98);
@@ -1434,10 +1403,10 @@ button { cursor: pointer; }
   0%, 100% {
     transform: scale(1);
     box-shadow:
-      inset 0 1px 0 rgba(255,255,255,0.09),
+      inset 0 1px 0 rgba(255,255,255,0.08),
       0 0 0 1px rgba(129,140,248,0.08),
       0 18px 34px rgba(0,0,0,0.45),
-      0 0 38px rgba(129,140,248,0.14);
+      0 0 36px rgba(129,140,248,0.18);
   }
   50% {
     transform: scale(1.03);
@@ -1445,26 +1414,26 @@ button { cursor: pointer; }
       inset 0 1px 0 rgba(255,255,255,0.12),
       0 0 0 1px rgba(129,140,248,0.12),
       0 22px 40px rgba(0,0,0,0.5),
-      0 0 54px rgba(129,140,248,0.22);
+      0 0 54px rgba(129,140,248,0.26);
   }
 }
 
-@keyframes sfl-loader-progress {
-  0% { transform: translateX(-140%); }
-  100% { transform: translateX(320%); }
+@keyframes sfl-loader-spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
 }
 
-@keyframes sfl-loader-glide {
-  0% { transform: translateX(-150%); }
-  100% { transform: translateX(150%); }
+@keyframes sfl-loader-spin-reverse {
+  from { transform: rotate(360deg); }
+  to { transform: rotate(0deg); }
 }
 
-@keyframes sfl-loader-beam-left {
+@keyframes sfl-loader-aurora-left {
   0%, 100% { transform: translate3d(0, 0, 0) scale(1); }
   50% { transform: translate3d(2rem, 1.2rem, 0) scale(1.08); }
 }
 
-@keyframes sfl-loader-beam-right {
+@keyframes sfl-loader-aurora-right {
   0%, 100% { transform: translate3d(0, 0, 0) scale(1); }
   50% { transform: translate3d(-2rem, -1.1rem, 0) scale(1.06); }
 }
@@ -1474,15 +1443,12 @@ button { cursor: pointer; }
     padding: 1rem;
   }
 
-  .sfl-loader-frame {
-    inset: 0.75rem;
-    border-radius: 22px;
+  .sfl-loader-core {
+    width: min(72vw, 16rem);
   }
 
-  .sfl-loader-shell {
-    width: min(100%, 32rem);
-    border-radius: 24px;
-    padding: 1.5rem 1.1rem;
+  .sfl-loader-ring-inner {
+    inset: 1.1rem;
   }
 
   .sfl-loader-wordmark {
@@ -1497,7 +1463,7 @@ button { cursor: pointer; }
     font-size: 0.8rem;
   }
 
-  .sfl-loader-beam {
+  .sfl-loader-aurora {
     width: 18rem;
     height: 12rem;
   }
@@ -1832,4 +1798,5 @@ button { cursor: pointer; }
   0%, 100% { transform: translate(0, 0); }
   50%       { transform: translate(-1%, -1%); }
 }
+
 
