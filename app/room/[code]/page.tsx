@@ -333,6 +333,7 @@ export default async function RoomPage({
             phase={snapshot.auctionState?.phase ?? "WAITING"}
             currentUserId={snapshot.user?.id ?? null}
             isAdmin={snapshot.currentMember.isAdmin}
+            scrollable={false}
           />
         </div>
 

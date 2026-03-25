@@ -208,6 +208,7 @@ export function SquadBoard({
   phase,
   currentUserId,
   isAdmin = false,
+  scrollable = true,
 }: {
   teams: Team[];
   squads: SquadEntry[];
@@ -216,13 +217,17 @@ export function SquadBoard({
   phase: AuctionPhase;
   currentUserId: string | null;
   isAdmin?: boolean;
+  scrollable?: boolean;
 }) {
   const playerById = new Map(players.map((p) => [p.id, p]));
 
   return (
     <div className="panel squad-board-panel">
       <h2>Squads</h2>
-      <div className="squad-board">
+      <div
+        className="squad-board"
+        style={scrollable ? undefined : { maxHeight: "none", overflowY: "visible" }}
+      >
         {teams.map((team) => {
           const entries = squads.filter((s) => s.teamId === team.id);
           const isOwner = currentUserId !== null && team.ownerUserId === currentUserId;

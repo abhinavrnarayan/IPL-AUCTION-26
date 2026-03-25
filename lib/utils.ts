@@ -17,19 +17,25 @@ export function generateRoomCode() {
 }
 
 export function formatCurrencyShort(value: number) {
+  const compact = (amount: number) => {
+    if (amount % 1 === 0) return String(amount);
+    const fixed = amount.toFixed(2);
+    return fixed.replace(/\.?0+$/, "");
+  };
+
   if (value >= 10_000_000) {
     const crore = value / 10_000_000;
-    return `Rs.${crore % 1 === 0 ? crore : crore.toFixed(1)}Cr`;
+    return `Rs.${compact(crore)}Cr`;
   }
 
   if (value >= 100_000) {
     const lakh = value / 100_000;
-    return `Rs.${lakh % 1 === 0 ? lakh : lakh.toFixed(1)}L`;
+    return `Rs.${compact(lakh)}L`;
   }
 
   if (value >= 1_000) {
     const thousand = value / 1_000;
-    return `Rs.${thousand % 1 === 0 ? thousand : thousand.toFixed(1)}K`;
+    return `Rs.${compact(thousand)}K`;
   }
 
   return `Rs.${value}`;
@@ -42,19 +48,25 @@ export function formatIncrement(value: number) {
 }
 
 export function formatAmountInput(value: number) {
+  const compact = (amount: number) => {
+    if (amount % 1 === 0) return String(amount);
+    const fixed = amount.toFixed(2);
+    return fixed.replace(/\.?0+$/, "");
+  };
+
   if (value >= 10_000_000) {
     const cr = value / 10_000_000;
-    return `${cr % 1 === 0 ? cr : cr.toFixed(1)}Cr`;
+    return `${compact(cr)}Cr`;
   }
 
   if (value >= 100_000) {
     const lakh = value / 100_000;
-    return `${lakh % 1 === 0 ? lakh : lakh.toFixed(1)}L`;
+    return `${compact(lakh)}L`;
   }
 
   if (value >= 1_000) {
     const thousand = value / 1_000;
-    return `${thousand % 1 === 0 ? thousand : thousand.toFixed(1)}K`;
+    return `${compact(thousand)}K`;
   }
 
   return String(value);
