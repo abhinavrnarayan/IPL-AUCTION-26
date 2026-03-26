@@ -987,6 +987,23 @@ export function AuctionRoomClient({ snapshot }: { snapshot: AuctionSnapshot }) {
           </div>
         </header>
 
+        {myOwnedTeam && (
+          <div className="auction-mobile-team-strip">
+            <div className="auction-mobile-team-main">
+              <span className="auction-mobile-team-code">
+                {myOwnedTeam.shortCode?.slice(0, 4).toUpperCase() ?? "TEAM"}
+              </span>
+              <div className="auction-mobile-team-copy">
+                <strong>{myOwnedTeam.name}</strong>
+                <span className="subtle">Your team</span>
+              </div>
+            </div>
+            <div className="auction-mobile-team-purse">
+              {formatCurrencyShort(myOwnedTeam.purseRemaining)}
+            </div>
+          </div>
+        )}
+
         {soldTickerItems.length > 0 && (
           <SoldPlayerShowcase items={soldTickerItems} variant="ticker" />
         )}
