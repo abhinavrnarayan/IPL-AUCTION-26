@@ -17,10 +17,12 @@ export function SoldPlayerShowcase({
   items,
   title,
   variant,
+  showDetail = true,
 }: {
   items: SoldShowcaseItem[];
   title?: string;
   variant: "ticker" | "cards";
+  showDetail?: boolean;
 }) {
   const orderedItems = useMemo(
     () => [...items].sort((left, right) => right.amount - left.amount || left.playerName.localeCompare(right.playerName)),
@@ -96,7 +98,7 @@ export function SoldPlayerShowcase({
         </div>
       </div>
 
-      {selectedItem ? (
+      {showDetail && selectedItem ? (
         <div className="sold-showcase-detail">
           <div>
             <div className="sold-showcase-detail-title">{selectedItem.playerName}</div>

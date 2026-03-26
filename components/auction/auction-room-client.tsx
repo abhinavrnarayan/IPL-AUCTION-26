@@ -988,7 +988,7 @@ export function AuctionRoomClient({ snapshot }: { snapshot: AuctionSnapshot }) {
         </header>
 
         {soldTickerItems.length > 0 && (
-          <SoldPlayerShowcase items={soldTickerItems} variant="ticker" />
+          <SoldPlayerShowcase items={soldTickerItems} showDetail={false} variant="ticker" />
         )}
 
         {/* MAIN BODY */}
