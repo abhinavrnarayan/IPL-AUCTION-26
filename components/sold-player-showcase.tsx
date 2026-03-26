@@ -31,18 +31,53 @@ export function SoldPlayerShowcase({
   const [selectedId, setSelectedId] = useState<string | null>(orderedItems[0]?.id ?? null);
   const [isPaused, setIsPaused] = useState(false);
   const resumeTimerRef = useRef<number | null>(null);
+  const frameRef = useRef<number | null>(null);
+  const lastFrameRef = useRef<number | null>(null);
+  const offsetRef = useRef(0);
+  const trackRef = useRef<HTMLDivElement | null>(null);
 
   const selectedItem =
     orderedItems.find((item) => item.id === selectedId) ?? orderedItems[0] ?? null;
   const renderedItems = useMemo(() => [...orderedItems, ...orderedItems], [orderedItems]);
 
   useEffect(() => {
+    const track = trackRef.current;
+    if (!track || orderedItems.length === 0) return;
+
+    const pixelsPerSecond = variant === "ticker" ? 10 : 8;
+
+    const step = (time: number) => {
+      const segmentWidth = track.scrollWidth / 2;
+      if (lastFrameRef.current === null) {
+        lastFrameRef.current = time;
+      }
+
+      const deltaMs = time - lastFrameRef.current;
+      lastFrameRef.current = time;
+
+      if (!isPaused && segmentWidth > 0) {
+        offsetRef.current += (pixelsPerSecond * deltaMs) / 1000;
+        if (offsetRef.current >= segmentWidth) {
+          offsetRef.current -= segmentWidth;
+        }
+        track.style.transform = `translateX(-${offsetRef.current}px)`;
+      }
+
+      frameRef.current = window.requestAnimationFrame(step);
+    };
+
+    frameRef.current = window.requestAnimationFrame(step);
+
     return () => {
       if (resumeTimerRef.current !== null) {
         window.clearTimeout(resumeTimerRef.current);
       }
+      if (frameRef.current !== null) {
+        window.cancelAnimationFrame(frameRef.current);
+      }
+      lastFrameRef.current = null;
     };
-  }, []);
+  }, [isPaused, orderedItems.length, variant]);
 
   function pauseAutoScroll() {
     setIsPaused(true);
@@ -77,7 +112,7 @@ export function SoldPlayerShowcase({
           onPointerDown={pauseAutoScroll}
           onTouchStart={pauseAutoScroll}
         >
-          <div className="sold-showcase-track">
+          <div className="sold-showcase-track" ref={trackRef}>
             {renderedItems.map((item, index) => (
               <button
                 className={`sold-showcase-item${selectedItem?.id === item.id ? " active" : ""}`}
