@@ -44,7 +44,7 @@ export function SoldPlayerShowcase({
     const track = trackRef.current;
     if (!track || orderedItems.length === 0) return;
 
-    const pixelsPerSecond = variant === "ticker" ? 10 : 8;
+    const pixelsPerSecond = variant === "ticker" ? 13 : 10;
 
     const step = (time: number) => {
       const segmentWidth = track.scrollWidth / 2;
