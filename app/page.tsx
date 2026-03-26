@@ -22,7 +22,7 @@ export default function HomePage() {
         <p className="subtle">
           SFL, St. Thomas Fantasy League, is a fantasy game built for creating
           IPL teams through auctions, shaping squads with strategy, and then
-          battling it out after the auction is done.
+          battling it out after the auction is done. It is actually GAMBLING.
         </p>
         <div className="stats-strip">
           <div className="stat-tile">

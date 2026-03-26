@@ -853,7 +853,7 @@ button { cursor: pointer; }
   gap: 0.85rem;
   width: max-content;
   padding-block: 0.15rem;
-  animation: sold-showcase-scroll 420s linear infinite;
+  animation: sold-showcase-scroll 720s linear infinite;
   will-change: transform;
 }
 
