@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 
 import { formatCurrencyShort } from "@/lib/utils";
 
@@ -28,18 +28,49 @@ export function SoldPlayerShowcase({
   );
   const [selectedId, setSelectedId] = useState<string | null>(orderedItems[0]?.id ?? null);
   const scrollerRef = useRef<HTMLDivElement | null>(null);
+  const autoScrollRef = useRef<number | null>(null);
+  const pauseUntilRef = useRef(0);
 
   const selectedItem =
     orderedItems.find((item) => item.id === selectedId) ?? orderedItems[0] ?? null;
+  const renderedItems = useMemo(() => [...orderedItems, ...orderedItems], [orderedItems]);
 
-  function scrollByAmount(direction: "left" | "right") {
+  useEffect(() => {
     const node = scrollerRef.current;
-    if (!node) return;
-    const amount = Math.max(220, Math.floor(node.clientWidth * 0.72));
-    node.scrollBy({
-      left: direction === "left" ? -amount : amount,
-      behavior: "smooth",
-    });
+    if (!node || orderedItems.length < 2) return;
+
+    const resetToStart = () => {
+      node.scrollLeft = 0;
+    };
+
+    resetToStart();
+
+    const step = () => {
+      const segmentWidth = node.scrollWidth / 2;
+      if (Date.now() >= pauseUntilRef.current) {
+        node.scrollLeft += variant === "ticker" ? 0.35 : 0.25;
+      }
+
+      if (node.scrollLeft >= segmentWidth) {
+        node.scrollLeft -= segmentWidth;
+      } else if (node.scrollLeft <= 0 && Date.now() < pauseUntilRef.current) {
+        node.scrollLeft = segmentWidth;
+      }
+
+      autoScrollRef.current = window.requestAnimationFrame(step);
+    };
+
+    autoScrollRef.current = window.requestAnimationFrame(step);
+
+    return () => {
+      if (autoScrollRef.current !== null) {
+        window.cancelAnimationFrame(autoScrollRef.current);
+      }
+    };
+  }, [orderedItems, variant]);
+
+  function pauseAutoScroll() {
+    pauseUntilRef.current = Date.now() + 2500;
   }
 
   if (orderedItems.length === 0) {
@@ -58,21 +89,23 @@ export function SoldPlayerShowcase({
       ) : null}
 
       <div className="sold-showcase-slider">
-        <button
-          aria-label="Scroll sold players left"
-          className="sold-showcase-nav"
-          onClick={() => scrollByAmount("left")}
-          type="button"
+        <div
+          className="sold-showcase-scroller"
+          onMouseEnter={pauseAutoScroll}
+          onPointerDown={pauseAutoScroll}
+          onScroll={pauseAutoScroll}
+          onTouchStart={pauseAutoScroll}
+          ref={scrollerRef}
         >
-          ‹
-        </button>
-        <div className="sold-showcase-scroller" ref={scrollerRef}>
           <div className="sold-showcase-track">
-            {orderedItems.map((item) => (
+            {renderedItems.map((item, index) => (
               <button
                 className={`sold-showcase-item${selectedItem?.id === item.id ? " active" : ""}`}
-                key={item.id}
-                onClick={() => setSelectedId(item.id)}
+                key={`${item.id}-${index}`}
+                onClick={() => {
+                  pauseAutoScroll();
+                  setSelectedId(item.id);
+                }}
                 type="button"
               >
                 <span className="sold-showcase-badge">SOLD</span>
@@ -83,14 +116,6 @@ export function SoldPlayerShowcase({
             ))}
           </div>
         </div>
-        <button
-          aria-label="Scroll sold players right"
-          className="sold-showcase-nav"
-          onClick={() => scrollByAmount("right")}
-          type="button"
-        >
-          ›
-        </button>
       </div>
 
       {selectedItem ? (
