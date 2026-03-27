@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 
-import { resolveExpiredAuction } from "@/lib/domain/auction";
+import { resolveExpiredAuction, shuffleItems } from "@/lib/domain/auction";
 import { AppError } from "@/lib/domain/errors";
 import { handleRouteError } from "@/lib/server/api";
 import { isMissingColumnError, omitOptionalColumns } from "@/lib/server/auction-state";
@@ -131,6 +131,22 @@ export async function POST(
     let finalRound = resolution.nextRound;
 
     if (!resolution.nextPlayerId && unsoldPlayers.length > 0) {
+      const shuffledUnsoldPlayers = shuffleItems(unsoldPlayers);
+      const orderResults = await Promise.all(
+        shuffledUnsoldPlayers.map((player, index) =>
+          admin
+            .from("players")
+            .update({ order_index: index + 1 })
+            .eq("id", player.id)
+            .eq("room_id", room.id),
+        ),
+      );
+      const orderError = orderResults.find((result) => result.error)?.error ?? null;
+
+      if (orderError) {
+        throw new AppError(orderError.message, 500, "ROUND_REORDER_FAILED");
+      }
+
       const { error: recycleError } = await admin
         .from("players")
         .update({ status: "AVAILABLE" })
@@ -143,7 +159,7 @@ export async function POST(
 
       finalRound = resolution.nextRound + 1;
       finalPhase = "LIVE";
-      finalPlayerId = unsoldPlayers[0]?.id ?? null;
+      finalPlayerId = shuffledUnsoldPlayers[0]?.id ?? null;
       finalExpiresAt = new Date(Date.now() + room.timerSeconds * 1000).toISOString();
       finalLastEvent = "ROUND_STARTED";
     } else if (!resolution.nextPlayerId) {

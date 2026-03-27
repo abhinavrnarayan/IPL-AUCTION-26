@@ -131,6 +131,14 @@ export function AuctionRoomClient({ snapshot }: { snapshot: AuctionSnapshot }) {
   const soldCount = localPlayers.filter((p) => p.status === "SOLD").length;
   const unsoldCount = localPlayers.filter((p) => p.status === "UNSOLD").length;
   const hasAvailablePlayers = localPlayers.some((p) => p.status === "AVAILABLE");
+  const auctionPoolPlayers = localPlayers
+    .filter(
+      (player) =>
+        player.status === "AVAILABLE" ||
+        player.id === localAuctionState.currentPlayerId,
+    )
+    .slice()
+    .sort((left, right) => left.name.localeCompare(right.name));
   const franchise =
     (currentPlayer?.stats?.["franchise"] as string | undefined) ??
     (currentPlayer?.stats?.["team"] as string | undefined) ??
@@ -1135,6 +1143,49 @@ export function AuctionRoomClient({ snapshot }: { snapshot: AuctionSnapshot }) {
                 </strong>
                 Current bid
               </div>
+            </div>
+
+            <div className="panel">
+              <details>
+                <summary
+                  style={{
+                    cursor: "pointer",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "space-between",
+                    gap: "1rem",
+                    listStyle: "none",
+                  }}
+                >
+                  <div>
+                    <h3 style={{ margin: 0 }}>Auction pool</h3>
+                    <div className="subtle" style={{ fontSize: "0.82rem", marginTop: "0.2rem" }}>
+                      See everyone still in the auction without revealing the live order.
+                    </div>
+                  </div>
+                  <span className="pill">{auctionPoolPlayers.length} players</span>
+                </summary>
+                <div className="pill-row" style={{ marginTop: "1rem" }}>
+                  {auctionPoolPlayers.length === 0 ? (
+                    <div className="empty-state" style={{ width: "100%" }}>
+                      No players left in the auction pool.
+                    </div>
+                  ) : (
+                    auctionPoolPlayers.map((player) => (
+                      <span
+                        className={`pill${player.id === localAuctionState.currentPlayerId ? " highlight" : ""}`}
+                        key={player.id}
+                        style={{ fontSize: "0.8rem" }}
+                      >
+                        {player.name}
+                        <span style={{ opacity: 0.7, marginLeft: "0.35rem" }}>
+                          {player.role}
+                        </span>
+                      </span>
+                    ))
+                  )}
+                </div>
+              </details>
             </div>
 
             {/* ROUND_END â€” admin picks players for next round */}

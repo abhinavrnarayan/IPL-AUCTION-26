@@ -1,6 +1,7 @@
 import { revalidatePath } from "next/cache";
 import { NextResponse } from "next/server";
 
+import { shuffleItems } from "@/lib/domain/auction";
 import { AppError } from "@/lib/domain/errors";
 import { startNextRoundSchema } from "@/lib/domain/schemas";
 import { readJson, handleRouteError } from "@/lib/server/api";
@@ -32,6 +33,32 @@ export async function POST(
 
     const nextRound = auctionState.currentRound + 1;
 
+    const { data: selectedPlayers, error: selectedPlayersError } = await admin
+      .from("players")
+      .select("id")
+      .eq("room_id", room.id)
+      .in("id", playerIds);
+
+    if (selectedPlayersError) {
+      throw new AppError(selectedPlayersError.message, 500, "PLAYER_FETCH_FAILED");
+    }
+
+    const shuffledSelectedPlayers = shuffleItems(selectedPlayers ?? []);
+    const reorderedResults = await Promise.all(
+      shuffledSelectedPlayers.map((player, index) =>
+        admin
+          .from("players")
+          .update({ order_index: index + 1 })
+          .eq("id", player.id)
+          .eq("room_id", room.id),
+      ),
+    );
+    const reorderError = reorderedResults.find((result) => result.error)?.error ?? null;
+
+    if (reorderError) {
+      throw new AppError(reorderError.message, 500, "PLAYER_REORDER_FAILED");
+    }
+
     // Reset selected players back to AVAILABLE
     const { error: playerError } = await admin
       .from("players")
@@ -43,16 +70,7 @@ export async function POST(
       throw new AppError(playerError.message, 500, "PLAYER_RESET_FAILED");
     }
 
-    // Fetch first player in the new round order
-    const { data: firstPlayerRows } = await admin
-      .from("players")
-      .select("id, order_index")
-      .eq("room_id", room.id)
-      .in("id", playerIds)
-      .order("order_index")
-      .limit(1);
-
-    const firstPlayer = firstPlayerRows?.[0] ?? null;
+    const firstPlayer = shuffledSelectedPlayers[0] ?? null;
 
     if (!firstPlayer) {
       throw new AppError("No players found for next round.", 400, "NO_PLAYERS");

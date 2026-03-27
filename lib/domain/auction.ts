@@ -10,6 +10,17 @@ import type {
 
 export const BID_INCREMENTS = [1_000_000, 2_500_000, 5_000_000, 10_000_000] as const;
 
+export function shuffleItems<T>(items: T[]) {
+  const shuffled = [...items];
+
+  for (let index = shuffled.length - 1; index > 0; index -= 1) {
+    const swapIndex = Math.floor(Math.random() * (index + 1));
+    [shuffled[index], shuffled[swapIndex]] = [shuffled[swapIndex], shuffled[index]];
+  }
+
+  return shuffled;
+}
+
 export function getAllowedIncrements(currentBid: number | null): number[] {
   if (currentBid === null) return [];
   if (currentBid >= 10_000_000) return [2_500_000, 5_000_000, 10_000_000];

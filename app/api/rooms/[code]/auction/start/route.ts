@@ -1,7 +1,7 @@
 import { revalidatePath } from "next/cache";
 import { NextResponse } from "next/server";
 
-import { buildStartingAuctionState } from "@/lib/domain/auction";
+import { buildStartingAuctionState, shuffleItems } from "@/lib/domain/auction";
 import { AppError } from "@/lib/domain/errors";
 import { handleRouteError } from "@/lib/server/api";
 import { requireApiUser, syncUserProfileFromAuthUser } from "@/lib/server/auth";
@@ -51,9 +51,38 @@ export async function POST(
           )
         : players;
 
+    const availablePlayers = refreshedPlayers.filter(
+      (player) => player.status === "AVAILABLE",
+    );
+    const shuffledAvailablePlayers = shuffleItems(availablePlayers);
+
+    if (shuffledAvailablePlayers.length > 0) {
+      const { error: orderError } = await Promise.all(
+        shuffledAvailablePlayers.map((player, index) =>
+          admin
+            .from("players")
+            .update({ order_index: index + 1 })
+            .eq("id", player.id)
+            .eq("room_id", room.id),
+        ),
+      ).then((results) => ({
+        error: results.find((result) => result.error)?.error ?? null,
+      }));
+
+      if (orderError) {
+        throw new AppError(orderError.message, 500, "PLAYER_REORDER_FAILED");
+      }
+    }
+
     const nextState = buildStartingAuctionState({
       room,
-      players: refreshedPlayers,
+      players: [
+        ...shuffledAvailablePlayers.map((player, index) => ({
+          ...player,
+          orderIndex: index + 1,
+        })),
+        ...refreshedPlayers.filter((player) => player.status !== "AVAILABLE"),
+      ],
       now: new Date(),
     });
 
