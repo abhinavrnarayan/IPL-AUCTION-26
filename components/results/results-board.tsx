@@ -1,4 +1,4 @@
-import { scorePlayer } from "@/lib/domain/scoring";
+ï»¿import { scorePlayer } from "@/lib/domain/scoring";
 import type { ResultsSnapshot } from "@/lib/domain/types";
 import { formatCurrency, formatCurrencyShort } from "@/lib/utils";
 
@@ -95,7 +95,7 @@ export function ResultsBoard({ snapshot }: { snapshot: ResultsSnapshot }) {
                 <div>
                   <strong>{teamScore.teamName}</strong>
                   <div className="subtle" style={{ fontSize: "0.8rem", marginTop: "0.18rem" }}>
-                    {teamScore.shortCode} • {teamScore.squadCount} players
+                    {teamScore.shortCode} â€¢ {teamScore.squadCount} players
                   </div>
                 </div>
                 <div className="results-leader-stat">
@@ -125,7 +125,7 @@ export function ResultsBoard({ snapshot }: { snapshot: ResultsSnapshot }) {
                 <div>
                   <strong>{player.playerName}</strong>
                   <div className="subtle" style={{ fontSize: "0.8rem", marginTop: "0.2rem" }}>
-                    {player.teamCode} • {player.role}
+                    {player.teamCode} â€¢ {player.role}
                   </div>
                 </div>
                 <div className="results-scorer-points">{player.points} pts</div>
@@ -143,7 +143,7 @@ export function ResultsBoard({ snapshot }: { snapshot: ResultsSnapshot }) {
           </div>
           {topTeam ? (
             <span className="pill">
-              Winning squad: {topTeam.teamName} • {topTeam.totalPoints} pts
+              Winning squad: {topTeam.teamName} â€¢ {topTeam.totalPoints} pts
             </span>
           ) : null}
         </div>
@@ -155,7 +155,7 @@ export function ResultsBoard({ snapshot }: { snapshot: ResultsSnapshot }) {
                   <div className="results-team-chip">{teamScore.shortCode}</div>
                   <h3 style={{ margin: "0.55rem 0 0.15rem" }}>{teamScore.teamName}</h3>
                   <div className="subtle" style={{ fontSize: "0.82rem" }}>
-                    Rank #{teamScore.rank} • {teamScore.squadCount} players
+                    Rank #{teamScore.rank} â€¢ {teamScore.squadCount} players
                   </div>
                 </div>
                 <div className="results-team-total">
@@ -178,7 +178,7 @@ export function ResultsBoard({ snapshot }: { snapshot: ResultsSnapshot }) {
                       <div>
                         <strong>{entry.player?.name ?? "Unknown player"}</strong>
                         <div className="subtle" style={{ fontSize: "0.78rem", marginTop: "0.15rem" }}>
-                          {entry.player?.role ?? "Player"} • Bought for {formatCurrencyShort(entry.purchasePrice)}
+                          {entry.player?.role ?? "Player"} â€¢ Bought for {formatCurrencyShort(entry.purchasePrice)}
                         </div>
                       </div>
                       <div className="results-player-points">{entry.points} pts</div>
@@ -255,3 +255,4 @@ export function ResultsBoard({ snapshot }: { snapshot: ResultsSnapshot }) {
     </div>
   );
 }
+
