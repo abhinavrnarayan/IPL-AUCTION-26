@@ -1,6 +1,8 @@
 ﻿import Link from "next/link";
 import { SiteLogo } from "@/components/site-logo";
 
+import { CricsheetSyncButton } from "@/components/room/cricsheet-sync-button";
+import { WebscrapeSyncPanel } from "@/components/room/webscrape-sync-panel";
 import { ImportResultsForm } from "@/components/room/import-results-form";
 import { MyTeamPanel } from "@/components/room/my-team-panel";
 import { ReadinessPanel } from "@/components/room/readiness-panel";
@@ -301,6 +303,33 @@ export default async function RoomPage({
             Upload a completed auction sheet to fill teams, players, and squads in one step.
           </p>
           <ImportResultsForm roomCode={snapshot.room.code} />
+        </section>
+      )}
+
+      {snapshot.currentMember.isAdmin && (
+        <section className="panel" style={{ marginTop: "1rem", borderColor: "rgba(56,189,248,0.2)", background: "rgba(56,189,248,0.03)" }}>
+          <span className="eyebrow">Live scoring</span>
+          <h2 style={{ marginTop: "0.4rem", marginBottom: "0.15rem" }}>Sync Cricsheet data</h2>
+          <p className="subtle" style={{ marginBottom: "1rem" }}>
+            Pull ball-by-ball match data from cricsheet.org to calculate fantasy points for every
+            player in this room using the rules in RULES.MD. Run after each match day to refresh
+            scores.
+          </p>
+          <CricsheetSyncButton roomCode={snapshot.room.code} />
+        </section>
+      )}
+
+      {snapshot.currentMember.isAdmin && (
+        <section className="panel" style={{ marginTop: "1rem", borderColor: "rgba(99,220,120,0.2)", background: "rgba(99,220,120,0.03)" }}>
+          <span className="eyebrow">Live scoring — API</span>
+          <h2 style={{ marginTop: "0.4rem", marginBottom: "0.15rem" }}>Live Web Sync</h2>
+          <p className="subtle" style={{ marginBottom: "1rem" }}>
+            Fetch IPL match scorecards from cricket APIs (CricketData.org, RapidAPI Cricbuzz).
+            Compare scores from each source side-by-side and accept the most accurate one per match.
+            Configure <span className="mono">CRICKETDATA_API_KEY</span> or{" "}
+            <span className="mono">RAPIDAPI_KEY</span> in your environment to enable.
+          </p>
+          <WebscrapeSyncPanel roomCode={snapshot.room.code} />
         </section>
       )}
 

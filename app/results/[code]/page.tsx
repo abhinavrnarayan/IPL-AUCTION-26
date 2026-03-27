@@ -2,6 +2,7 @@ import Link from "next/link";
 import { SiteLogo } from "@/components/site-logo";
 
 import { ResultsBoard } from "@/components/results/results-board";
+import { ResultsExportBar } from "@/components/results/results-export-bar";
 import { hasServiceRoleEnv } from "@/lib/config";
 import { requireSessionUser } from "@/lib/server/auth";
 import { getResultsSnapshot } from "@/lib/server/queries";
@@ -64,6 +65,9 @@ export default async function ResultsPage({
             Auction
           </Link>
         </div>
+      </div>
+      <div style={{ display: "flex", justifyContent: "flex-end", padding: "0 0 0.5rem" }}>
+        <ResultsExportBar snapshot={snapshot} />
       </div>
       <ResultsBoard snapshot={snapshot} />
     </main>
