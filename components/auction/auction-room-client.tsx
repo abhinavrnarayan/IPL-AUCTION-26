@@ -90,9 +90,11 @@ export function AuctionRoomClient({ snapshot }: { snapshot: AuctionSnapshot }) {
   const [pausePending, setPausePending] = useState(false);
   const [resumePending, setResumePending] = useState(false);
   const [advancePending, setAdvancePending] = useState(false);
+  const [endRoundPending, setEndRoundPending] = useState(false);
   const [optimisticPhase, setOptimisticPhase] = useState<string | null>(null);
   const [chatOpen, setChatOpen] = useState(false);
   const [squadOpen, setSquadOpen] = useState(false);
+  const [endRoundConfirmOpen, setEndRoundConfirmOpen] = useState(false);
   const [resultOverlay, setResultOverlay] = useState<{
     kind: "SOLD" | "UNSOLD";
     playerName: string;
@@ -554,10 +556,7 @@ export function AuctionRoomClient({ snapshot }: { snapshot: AuctionSnapshot }) {
   }
 
   async function handleEndRound() {
-    const msg = hasAvailablePlayers
-      ? "End the round? All remaining players will be marked unsold and the auction will complete."
-      : "Close the auction window? No further changes will be possible.";
-    if (!window.confirm(msg)) return;
+    setEndRoundPending(true);
     try {
       const res = await fetch(
         `/api/rooms/${snapshot.room.code}/auction/end-round`,
@@ -565,10 +564,13 @@ export function AuctionRoomClient({ snapshot }: { snapshot: AuctionSnapshot }) {
       );
       const payload = (await res.json()) as { error?: string };
       if (!res.ok) throw new Error(payload.error ?? "Failed to end round.");
+      setEndRoundConfirmOpen(false);
       channelRef.current?.send({ type: "broadcast", event: "REFRESH_ROOM" });
       refreshRoom();
     } catch (err) {
       setActionError(toErrorMessage(err));
+    } finally {
+      setEndRoundPending(false);
     }
   }
 
@@ -771,6 +773,52 @@ export function AuctionRoomClient({ snapshot }: { snapshot: AuctionSnapshot }) {
                 to <strong>{resultOverlay.teamName}</strong> for <strong>{formatCurrencyShort(resultOverlay.price)}</strong>
               </span>
             )}
+          </div>
+        </div>
+      )}
+
+      {endRoundConfirmOpen && (
+        <div className="app-modal-backdrop" onClick={() => setEndRoundConfirmOpen(false)}>
+          <div
+            className="app-modal"
+            onClick={(event) => event.stopPropagation()}
+            role="dialog"
+            aria-modal="true"
+          >
+            <div className="app-modal-head">
+              <h3 style={{ margin: 0 }}>
+                {hasAvailablePlayers ? "End round" : "Complete auction"}
+              </h3>
+            </div>
+            <p className="subtle" style={{ margin: 0, lineHeight: 1.6 }}>
+              {hasAvailablePlayers
+                ? "All remaining available players will be marked unsold and the auction will be completed."
+                : "This will complete the auction now. You can still start the auction again later if you want another round."}
+            </p>
+            <div className="app-modal-actions">
+              <button
+                className="button ghost"
+                disabled={endRoundPending}
+                onClick={() => setEndRoundConfirmOpen(false)}
+                type="button"
+              >
+                Cancel
+              </button>
+              <button
+                className="button danger"
+                disabled={endRoundPending}
+                onClick={() => void handleEndRound()}
+                type="button"
+              >
+                {endRoundPending
+                  ? hasAvailablePlayers
+                    ? "Ending..."
+                    : "Completing..."
+                  : hasAvailablePlayers
+                  ? "End round"
+                  : "Complete auction"}
+              </button>
+            </div>
           </div>
         </div>
       )}
@@ -980,10 +1028,11 @@ export function AuctionRoomClient({ snapshot }: { snapshot: AuctionSnapshot }) {
                   <button
                     className="button danger"
                     style={{ minHeight: "34px", padding: "0.35rem 0.8rem", fontSize: "0.82rem" }}
-                    onClick={() => void handleEndRound()}
+                    disabled={endRoundPending}
+                    onClick={() => setEndRoundConfirmOpen(true)}
                     type="button"
                   >
-                    {hasAvailablePlayers ? "End round" : "Close window"}
+                    {hasAvailablePlayers ? "End round" : "Complete auction"}
                   </button>
                 )}
               </>
