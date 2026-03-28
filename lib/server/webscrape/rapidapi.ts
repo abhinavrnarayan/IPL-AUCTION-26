@@ -202,17 +202,54 @@ export async function fetchMatchScorecard(
   };
 }
 
+// ── Fallback: find IPL matches via recent-matches endpoint ────────────────────
+// Used when the series-category search can't find IPL (e.g. early in the season).
+
+interface CricbuzzRecentMatchWrapper {
+  seriesName?: string;
+  matches?: CricbuzzMatch[];
+}
+
+interface CricbuzzTypeMatch {
+  matchType?: string;
+  seriesMatches?: Array<{ seriesAdWrapper?: CricbuzzRecentMatchWrapper }>;
+}
+
+async function findIPLMatchesViaRecent(season: string): Promise<CricbuzzMatch[]> {
+  const data = await get<{ typeMatches?: CricbuzzTypeMatch[] }>("/matches/v1/recent");
+  const matches: CricbuzzMatch[] = [];
+  for (const tm of data?.typeMatches ?? []) {
+    for (const sm of tm?.seriesMatches ?? []) {
+      const w = sm?.seriesAdWrapper;
+      if (w?.seriesName && isIPLSeries(w.seriesName, season)) {
+        matches.push(...(w.matches ?? []));
+      }
+    }
+  }
+  return matches;
+}
+
 // ── Main entry point ──────────────────────────────────────────────────────────
 
 export async function fetchIPLMatchesFromRapidAPI(
   season: string,
   onProgress?: (done: number, total: number) => void,
 ): Promise<NormalizedMatch[]> {
-  const seriesId = await findIPLSeriesId(season);
-  const allMatches = await listSeriesMatches(seriesId);
-  const completed = allMatches.filter(
-    (m) => m.matchInfo?.state?.toLowerCase() === "complete",
-  );
+  // Try series-based lookup first, fall back to recent-matches if not found
+  let completed: CricbuzzMatch[] = [];
+  try {
+    const seriesId = await findIPLSeriesId(season);
+    const allMatches = await listSeriesMatches(seriesId);
+    completed = allMatches.filter(
+      (m) => m.matchInfo?.state?.toLowerCase() === "complete",
+    );
+  } catch {
+    // Series not found in category listings — try recent matches feed
+    const recent = await findIPLMatchesViaRecent(season);
+    completed = recent.filter(
+      (m) => m.matchInfo?.state?.toLowerCase() === "complete",
+    );
+  }
 
   const results: NormalizedMatch[] = [];
   for (let i = 0; i < completed.length; i++) {
