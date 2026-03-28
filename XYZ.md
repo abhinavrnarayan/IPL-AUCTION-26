@@ -153,3 +153,40 @@ MOD   app/results/[code]/page.tsx        (added ResultsExportBar)
 MOD   .env.example                       (added 3 new API key vars)
 MOD   package.json                       (added adm-zip)
 ```
+
+---
+
+# Session Changelog (2026-03-28)
+
+## What Was Changed
+
+### 5. Cricsheet Sync — Per-Match `match_results` Pipeline
+
+**Problem:** `cricsheet-sync` previously aggregated all matches and wrote totals directly to `players.stats`, overwriting webscrape data and preventing per-match review.
+
+**Fix:** Cricsheet data now flows through the same admin-review pipeline as webscrape data.
+
+| File | Change |
+|------|--------|
+| `lib/server/cricsheet.ts` | Added `processZipPerMatch()` — processes each match JSON file in isolation and returns one `CricsheetMatchEntry` per match in `PlayerMatchStats` wire format. Added `accumulatorToMatchStats()` helper to convert a single-match `CricsheetAccumulator` → `PlayerMatchStats`. |
+| `app/api/rooms/[code]/cricsheet-sync/route.ts` | **Rewritten.** No longer writes to `players.stats`. Instead upserts one `match_results` row per match with `source="cricsheet"`, `accepted=false`. Re-running is safe — updates stats on existing rows but preserves `accepted=true` decisions. |
+
+#### Flow after this change
+
+```
+cricsheet-sync POST
+  → processZipPerMatch()
+  → match_results rows (source="cricsheet", accepted=false)
+  → Admin reviews in match comparison UI (same as webscrape)
+  → webscrape-accept POST (accept decision)
+  → aggregates ALL accepted rows (any source) → players.stats
+```
+
+#### Files Changed
+
+```
+MOD   lib/server/cricsheet.ts              (added processZipPerMatch, CricsheetMatchEntry, accumulatorToMatchStats)
+MOD   app/api/rooms/[code]/cricsheet-sync/route.ts  (full rewrite — uses match_results pipeline)
+```
+
+> **Note:** No DB migration needed. The existing `match_results` table already has `source`, `match_date`, `season`, and `accepted` columns. No changes to `webscrape-accept` or `webscrape-preview` — they already handle any source.

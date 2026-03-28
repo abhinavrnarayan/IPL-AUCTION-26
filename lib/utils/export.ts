@@ -42,7 +42,7 @@ export async function exportToExcel(
   filename: string,
 ): Promise<void> {
   // Dynamic import so xlsx isn't bundled server-side
-  const XLSX = (await import("xlsx")).default;
+  const XLSX = await import("xlsx");
 
   const wsData = [
     columns.map((c) => c.header),
@@ -69,7 +69,7 @@ export async function exportToExcelMultiSheet(
   sheets: Array<{ name: string; rows: Row[]; columns: ExportColumn[] }>,
   filename: string,
 ): Promise<void> {
-  const XLSX = (await import("xlsx")).default;
+  const XLSX = await import("xlsx");
   const wb = XLSX.utils.book_new();
 
   for (const sheet of sheets) {

@@ -12,6 +12,7 @@
 import AdmZip from "adm-zip";
 
 import type { PlayerStats } from "@/lib/domain/scoring";
+import type { PlayerMatchStats } from "@/lib/server/webscrape/parser";
 
 // ── Cricsheet JSON shape ──────────────────────────────────────────────────────
 
@@ -290,6 +291,138 @@ export interface ProcessZipResult {
   matchesProcessed: number;
   matchesSkipped: number;
   seasons: string[];
+}
+
+// ── Per-match player stats (for match_results table) ─────────────────────────
+
+export interface CricsheetMatchEntry {
+  /** Unique match id derived from the ZIP entry name (no extension). */
+  matchId: string;
+  /** ISO date string of the first match date, e.g. "2026-03-15" */
+  matchDate: string;
+  /** Season string, e.g. "2026" */
+  season: string;
+  /** Player stats in the PlayerMatchStats wire format used by match_results. */
+  playerStats: Record<string, PlayerMatchStats>;
+}
+
+/**
+ * Convert a CricsheetAccumulator (season aggregate) into the PlayerMatchStats
+ * format used by the match_results table / webscrape-accept route.
+ *
+ * Note: CricsheetAccumulator stores per-match non-linear bonuses inline
+ * because processMatch() already computes them from per-match data.
+ * We map them directly.
+ */
+function accumulatorToMatchStats(
+  acc: CricsheetAccumulator,
+): PlayerMatchStats {
+  const dismissed = acc.ducks > 0 || acc.matches_played > 0; // approximation – duck means dismissed at 0
+  return {
+    runs: acc.runs,
+    balls_faced: acc.balls_faced,
+    fours: acc.fours,
+    sixes: acc.sixes,
+    dismissed: acc.ducks > 0,      // true if they got a duck this match (0 & dismissed)
+    balls_bowled: acc.balls_bowled,
+    runs_conceded: acc.runs_conceded,
+    wickets: acc.wickets,
+    maiden_overs: acc.maiden_overs,
+    lbw_bowled_wickets: acc.lbw_bowled_wickets,
+    catches: acc.catches,
+    stumpings: acc.stumpings,
+    run_outs: acc.run_outs_indirect + acc.run_outs_direct,
+    appeared: acc.lineup_appearances > 0 || acc.substitute_appearances > 0,
+    milestone_runs_pts: acc.milestone_runs_pts,
+    sr_pts: acc.sr_pts,
+    duck_penalty: acc.ducks > 0 ? -2 : 0,
+    milestone_wkts_pts: acc.milestone_wkts_pts,
+    economy_pts: acc.economy_pts,
+    catch_bonus_pts: acc.catch_bonus_pts,
+  };
+}
+
+export interface ProcessZipPerMatchResult {
+  matches: CricsheetMatchEntry[];
+  matchesProcessed: number;
+  matchesSkipped: number;
+  seasons: string[];
+}
+
+/**
+ * Parse a Cricsheet ZIP buffer and return ONE entry PER MATCH.
+ * Each entry contains per-player stats in the PlayerMatchStats wire format
+ * so they can be upserted directly into match_results.
+ *
+ * @param zipBuffer  Raw bytes of the Cricsheet IPL JSON zip
+ * @param season     If supplied, only process matches for this season (e.g. "2026")
+ */
+export function processZipPerMatch(
+  zipBuffer: Buffer,
+  season?: string,
+): ProcessZipPerMatchResult {
+  const zip = new AdmZip(zipBuffer);
+  const entries = zip.getEntries();
+
+  const matches: CricsheetMatchEntry[] = [];
+  const seenSeasons = new Set<string>();
+  let matchesProcessed = 0;
+  let matchesSkipped = 0;
+
+  for (const entry of entries) {
+    if (entry.isDirectory || !entry.entryName.endsWith(".json")) continue;
+
+    let match: CricsheetMatch;
+    try {
+      match = JSON.parse(entry.getData().toString("utf8")) as CricsheetMatch;
+    } catch {
+      matchesSkipped += 1;
+      continue;
+    }
+
+    // Season filter
+    const matchSeason = String(match.info.season ?? "");
+    if (season && matchSeason !== season) {
+      matchesSkipped += 1;
+      continue;
+    }
+
+    // Must be an IPL match
+    const eventName = (match.info.event?.name ?? match.info.competition ?? "").toLowerCase();
+    if (!eventName.includes("indian premier league") && !eventName.includes("ipl")) {
+      matchesSkipped += 1;
+      continue;
+    }
+
+    if (matchSeason) seenSeasons.add(matchSeason);
+
+    // Process this match in isolation
+    const matchStats = new Map<string, CricsheetAccumulator>();
+    processMatch(match, matchStats);
+
+    // Convert to PlayerMatchStats shape
+    const playerStats: Record<string, PlayerMatchStats> = {};
+    for (const [name, acc] of matchStats) {
+      playerStats[name] = accumulatorToMatchStats(acc);
+    }
+
+    // Derive a stable matchId from the entry filename (without extension)
+    const matchId = entry.entryName
+      .replace(/^.*\//, "")  // strip directory prefix
+      .replace(/\.json$/, ""); // strip extension
+
+    const matchDate = (match.info.dates ?? [])[0] ?? matchSeason;
+
+    matches.push({ matchId, matchDate, season: matchSeason, playerStats });
+    matchesProcessed += 1;
+  }
+
+  return {
+    matches,
+    matchesProcessed,
+    matchesSkipped,
+    seasons: Array.from(seenSeasons).sort(),
+  };
 }
 
 /**
