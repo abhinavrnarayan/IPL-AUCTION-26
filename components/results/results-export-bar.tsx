@@ -1,53 +1,44 @@
-"use client";
+﻿"use client";
 
-import { ExportButton } from "@/components/ui/export-button";
-import type { ResultsSnapshot } from "@/lib/domain/types";
 import { scorePlayer } from "@/lib/domain/scoring";
+import type { ResultsSnapshot } from "@/lib/domain/types";
 import { formatCurrencyShort } from "@/lib/utils";
 import { downloadPngFromSvg, downloadSimplePdf } from "@/lib/utils/report-export";
+import { ExportButton } from "@/components/ui/export-button";
 
 const LEADERBOARD_COLS = [
   { key: "rank", header: "Rank" },
   { key: "teamName", header: "Team" },
   { key: "totalPoints", header: "Total Points" },
-  { key: "remainingPurse", header: "Purse Remaining" },
-  { key: "squadCount", header: "Players" },
 ];
 
 const PLAYERS_COLS = [
-  { key: "rank", header: "Rank" },
   { key: "playerName", header: "Player" },
-  { key: "role", header: "Role" },
   { key: "team", header: "Team" },
+  { key: "role", header: "Role" },
   { key: "points", header: "Points" },
-  { key: "purchasePrice", header: "Purchase Price" },
 ];
 
 export function ResultsExportBar({ snapshot }: { snapshot: ResultsSnapshot }) {
-  const teamById = new Map(snapshot.teams.map((t) => [t.id, t]));
+  const teamById = new Map(snapshot.teams.map((team) => [team.id, team]));
 
   function getLeaderboardRows() {
-    return snapshot.leaderboard.map((ts, i) => ({
-      rank: i + 1,
-      teamName: ts.teamName,
-      totalPoints: ts.totalPoints,
-      remainingPurse: ts.remainingPurse,
-      squadCount: ts.squadCount,
+    return snapshot.leaderboard.map((teamScore, index) => ({
+      rank: index + 1,
+      teamName: teamScore.teamName,
+      totalPoints: teamScore.totalPoints,
     }));
   }
 
   function getPlayerRows() {
     return snapshot.squads
-      .map((entry, i) => ({
-        rank: i + 1,
+      .map((entry) => ({
         playerName: entry.player?.name ?? "Unknown",
-        role: entry.player?.role ?? "",
         team: teamById.get(entry.teamId)?.name ?? "",
+        role: entry.player?.role ?? "",
         points: entry.player ? scorePlayer(entry.player) : 0,
-        purchasePrice: entry.purchasePrice,
       }))
-      .sort((a, b) => b.points - a.points)
-      .map((row, i) => ({ ...row, rank: i + 1 }));
+      .sort((left, right) => right.points - left.points || left.playerName.localeCompare(right.playerName));
   }
 
   function getTeamPlayerSheets() {
@@ -82,12 +73,11 @@ export function ResultsExportBar({ snapshot }: { snapshot: ResultsSnapshot }) {
         const y = headerHeight + index * rowHeight;
         return `
           <rect x="36" y="${y}" width="${width - 72}" height="58" rx="20" fill="rgba(20,22,40,0.96)" stroke="rgba(107,114,255,0.22)" />
-          <text x="68" y="${y + 36}" font-size="22" font-weight="700" fill="#8b92ff">#${index + 1}</text>
-          <text x="145" y="${y + 32}" font-size="24" font-weight="700" fill="#f4f5ff">${team.teamName}</text>
-          <text x="145" y="${y + 52}" font-size="15" fill="#97a0c6">${team.squadCount} players</text>
-          <text x="${width - 300}" y="${y + 31}" font-size="16" fill="#97a0c6">Purse left</text>
-          <text x="${width - 300}" y="${y + 52}" font-size="22" font-weight="700" fill="#25d69b">${formatCurrencyShort(team.remainingPurse)}</text>
-          <text x="${width - 120}" y="${y + 42}" text-anchor="end" font-size="28" font-weight="800" fill="#f4f5ff">${team.totalPoints}</text>
+          <circle cx="78" cy="${y + 29}" r="19" fill="rgba(93,104,255,0.16)" stroke="rgba(117,127,255,0.34)" />
+          <text x="78" y="${y + 36}" text-anchor="middle" font-size="19" font-weight="800" fill="#8b92ff">${index + 1}</text>
+          <text x="122" y="${y + 35}" font-size="25" font-weight="700" fill="#f4f5ff">${team.teamName}</text>
+          <rect x="${width - 220}" y="${y + 11}" width="150" height="36" rx="18" fill="rgba(24,214,151,0.12)" stroke="rgba(24,214,151,0.26)" />
+          <text x="${width - 145}" y="${y + 35}" text-anchor="middle" font-size="22" font-weight="800" fill="#25d69b">${team.totalPoints} pts</text>
         `;
       })
       .join("");
@@ -121,8 +111,7 @@ export function ResultsExportBar({ snapshot }: { snapshot: ResultsSnapshot }) {
 
   function handleLeaderboardPdf() {
     const lines = snapshot.leaderboard.map(
-      (team, index) =>
-        `#${index + 1}  ${team.teamName}  |  ${team.totalPoints} pts  |  ${team.squadCount} players  |  Purse ${formatCurrencyShort(team.remainingPurse)}`,
+      (team, index) => `#${index + 1}  ${team.teamName}  |  ${team.totalPoints} pts`,
     );
     downloadSimplePdf(
       `${snapshot.room.name}-team-rankings.pdf`,
@@ -132,14 +121,33 @@ export function ResultsExportBar({ snapshot }: { snapshot: ResultsSnapshot }) {
   }
 
   function handleTeamPlayersPdf() {
-    const lines = getTeamPlayerSheets().flatMap(({ team, rank, players }) => [
-      `Rank #${rank} - ${team.name}`,
-      ...players.map(
+    const topTenPlayers = snapshot.squads
+      .map((entry) => ({
+        playerName: entry.player?.name ?? "Unknown player",
+        teamName: teamById.get(entry.teamId)?.name ?? "Unknown team",
+        points: entry.player ? scorePlayer(entry.player) : 0,
+      }))
+      .sort((left, right) => right.points - left.points || left.playerName.localeCompare(right.playerName))
+      .slice(0, 10);
+
+    const lines = [
+      "Top 10 players",
+      ...topTenPlayers.map(
         (player, index) =>
-          `  ${index + 1}. ${player.name} | ${player.role} | ${player.points} pts | Bought ${formatCurrencyShort(player.price)}`,
+          `#${index + 1}  ${player.playerName}  |  ${player.teamName}  |  ${player.points} pts`,
       ),
       "",
-    ]);
+      "Team leaderboards",
+      "",
+      ...getTeamPlayerSheets().flatMap(({ team, rank, players }) => [
+        `Rank #${rank} - ${team.name}`,
+        ...players.map(
+          (player, index) =>
+            `  ${index + 1}. ${player.name} | ${player.role} | ${player.points} pts | Bought ${formatCurrencyShort(player.price)}`,
+        ),
+        "",
+      ]),
+    ];
 
     downloadSimplePdf(
       `${snapshot.room.name}-team-player-points.pdf`,
@@ -149,7 +157,7 @@ export function ResultsExportBar({ snapshot }: { snapshot: ResultsSnapshot }) {
   }
 
   return (
-    <div style={{ display: "flex", gap: "0.5rem", alignItems: "center", flexWrap: "wrap" }}>
+    <div className="results-export-bar">
       <ExportButton
         getData={getLeaderboardRows}
         columns={LEADERBOARD_COLS}
