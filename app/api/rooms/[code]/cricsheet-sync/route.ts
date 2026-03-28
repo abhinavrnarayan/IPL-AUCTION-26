@@ -55,6 +55,24 @@ function buildUuidMap(): Map<string, string> {
 
 const CRICSHEET_UUID_MAP = buildUuidMap();
 
+/** Fallback: normalised short name → full name (for JSONs without registry.people). */
+function buildShortNameMap(): Map<string, string> {
+  const map = new Map<string, string>();
+  try {
+    const raw = fs.readFileSync(path.join(process.cwd(), "final_mapping.json"), "utf8");
+    const entries = JSON.parse(raw) as Record<string, MappingEntry>;
+    for (const { short_name, full_name } of Object.values(entries)) {
+      if (short_name && full_name) {
+        const key = short_name.toLowerCase().replace(/\./g, "").replace(/\s+/g, " ").trim();
+        map.set(key, full_name);
+      }
+    }
+  } catch { /* silent — UUID map already logged the error */ }
+  return map;
+}
+
+const CRICSHEET_SHORT_MAP = buildShortNameMap();
+
 export const dynamic = "force-dynamic";
 
 // ── Name normalisation ────────────────────────────────────────────────────────
@@ -236,8 +254,8 @@ export async function POST(
     // Single .json file → one match; .zip file (or auto-fetch) → all matches
     const isJsonUpload = uploadedFilename.toLowerCase().endsWith(".json");
     const { matches, matchesProcessed, matchesSkipped, seasons } = isJsonUpload
-      ? processSingleMatchJson(fileBuffer, uploadedFilename, season, CRICSHEET_UUID_MAP)
-      : processZipPerMatch(fileBuffer, season, CRICSHEET_UUID_MAP);
+      ? processSingleMatchJson(fileBuffer, uploadedFilename, season, CRICSHEET_UUID_MAP, CRICSHEET_SHORT_MAP)
+      : processZipPerMatch(fileBuffer, season, CRICSHEET_UUID_MAP, CRICSHEET_SHORT_MAP);
 
     if (matchesProcessed === 0) {
       return NextResponse.json(
@@ -323,10 +341,16 @@ export async function POST(
       normToOriginal.set(normaliseName(name), name);
     }
 
-    // Fetch room players and update stats
+    // Build full_name → uuid reverse map so we can store the UUID after a name match
+    const fullNameToUuid = new Map<string, string>();
+    for (const [uuid, fullName] of CRICSHEET_UUID_MAP) {
+      fullNameToUuid.set(fullName, uuid);
+    }
+
+    // Fetch room players (include cricsheet_uuid for UUID-first matching)
     const { data: players, error: playersErr } = await admin
       .from("players")
-      .select("id, name, stats")
+      .select("id, name, stats, cricsheet_uuid")
       .eq("room_id", room.id);
 
     if (playersErr) throw new AppError(playersErr.message, 500, "DB_QUERY_FAILED");
@@ -338,13 +362,18 @@ export async function POST(
       const playerName = String(player.name);
       const normKey = normaliseName(playerName);
 
+      // 0 — UUID match (stored from a previous sync — perfectly stable, no string matching)
+      let statsKey: string | undefined;
+      const storedUuid = player.cricsheet_uuid as string | null | undefined;
+      if (storedUuid) {
+        const fullName = CRICSHEET_UUID_MAP.get(storedUuid);
+        if (fullName && aggregated[fullName] !== undefined) statsKey = fullName;
+      }
+
       // 1 — exact normalised match
-      let statsKey = normToOriginal.get(normKey);
+      if (!statsKey) statsKey = normToOriginal.get(normKey);
 
       // 2 — initial-based match for stats keys in "B Kumar" / "KH Pandya" format
-      //     Guards against misattribution when nameMap wasn't applied:
-      //     "KH Pandya" can only match a DB player whose first name starts with K,
-      //     so Hardik Pandya (H) is never given Krunal's (K) stats.
       if (!statsKey) {
         const initCandidates = Array.from(normToOriginal.entries()).filter(
           ([k]) => isShortNameFormat(k) && matchesShortName(k, normKey),
@@ -371,7 +400,7 @@ export async function POST(
       const agg = aggregated[statsKey]!;
       const existing = (player.stats ?? {}) as Record<string, unknown>;
 
-      // Overlay aggregated stats, preserve metadata (ipl_team, crisheet_name, etc.)
+      // Overlay aggregated stats, preserve metadata (ipl_team, etc.)
       const newStats: Record<string, unknown> = {
         ...existing,
         runs: agg.runs,
@@ -397,9 +426,14 @@ export async function POST(
         matches_played: agg.matches_played,
       };
 
+      // Store UUID on first successful match so future syncs use UUID directly
+      const resolvedUuid = fullNameToUuid.get(statsKey);
+      const updatePayload: Record<string, unknown> = { stats: newStats };
+      if (resolvedUuid && !storedUuid) updatePayload.cricsheet_uuid = resolvedUuid;
+
       await admin
         .from("players")
-        .update({ stats: newStats })
+        .update(updatePayload)
         .eq("id", player.id as string);
 
       matched += 1;
