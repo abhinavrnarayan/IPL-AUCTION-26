@@ -58,6 +58,8 @@ interface CricsheetMatch {
     teams?: string[];
     players?: Record<string, string[]>; // team name → player names (announced XI)
     dates?: string[];
+    /** Cricsheet built-in registry: maps each player's in-game name → their UUID. */
+    registry?: { people?: Record<string, string> };
   };
   innings?: CricsheetInning[];
 }
@@ -95,24 +97,29 @@ function getOrCreate(
 
 // ── Single-match processor ────────────────────────────────────────────────────
 
-/**
- * Normalise a Cricsheet short name for map lookup.
- * Matches the normalisation used in cricsheet-sync/route.ts when building the map.
- */
-function normShort(name: string): string {
-  return name.toLowerCase().replace(/\./g, "").replace(/\s+/g, " ").trim();
-}
-
 export function processMatch(
   match: CricsheetMatch,
   allStats: Map<string, CricsheetAccumulator>,
-  /** Optional: normalised-short-name → full name. When supplied, all player
-   *  names are translated to their canonical full names before being stored. */
-  nameMap?: Map<string, string>,
+  /** Optional: Cricsheet registry UUID → canonical full name (from final_mapping.json).
+   *  Each Cricsheet match JSON includes info.registry.people which maps the player's
+   *  in-game name to their UUID.  This map then resolves UUID → full name — exact and
+   *  unambiguous, with no string normalisation required. */
+  uuidMap?: Map<string, string>,
 ): void {
-  /** Resolve a Cricsheet short name to the full name if a mapping exists. */
-  const resolve = (name: string): string =>
-    nameMap?.get(normShort(name)) ?? name;
+  // Per-match registry: player's Cricsheet name → their UUID
+  const registry = match.info.registry?.people ?? {};
+
+  /** Resolve a Cricsheet player name to the canonical full name via UUID lookup. */
+  const resolve = (name: string): string => {
+    if (uuidMap) {
+      const uuid = registry[name];
+      if (uuid) {
+        const full = uuidMap.get(uuid);
+        if (full) return full;
+      }
+    }
+    return name;
+  };
 
   const innings = match.innings ?? [];
 
@@ -373,13 +380,13 @@ export interface ProcessZipPerMatchResult {
  * @param jsonBuffer  Raw bytes of a single Cricsheet match JSON file
  * @param filename    Original filename (used to derive matchId, e.g. "1234567.json")
  * @param season      If supplied and the match season doesn't match, returns 0 processed
- * @param nameMap     Optional short-name → full-name translation map
+ * @param uuidMap     Optional UUID → full-name map (from final_mapping.json)
  */
 export function processSingleMatchJson(
   jsonBuffer: Buffer,
   filename: string,
   season?: string,
-  nameMap?: Map<string, string>,
+  uuidMap?: Map<string, string>,
 ): ProcessZipPerMatchResult {
   let match: CricsheetMatch;
   try {
@@ -399,7 +406,7 @@ export function processSingleMatchJson(
   }
 
   const matchStats = new Map<string, CricsheetAccumulator>();
-  processMatch(match, matchStats, nameMap);
+  processMatch(match, matchStats, uuidMap);
 
   const playerStats: Record<string, PlayerMatchStats> = {};
   for (const [name, acc] of matchStats) {
@@ -432,7 +439,7 @@ export function processSingleMatchJson(
 export function processZipPerMatch(
   zipBuffer: Buffer,
   season?: string,
-  nameMap?: Map<string, string>,
+  uuidMap?: Map<string, string>,
 ): ProcessZipPerMatchResult {
   const zip = new AdmZip(zipBuffer);
   const entries = zip.getEntries();
@@ -471,7 +478,7 @@ export function processZipPerMatch(
 
     // Process this match in isolation
     const matchStats = new Map<string, CricsheetAccumulator>();
-    processMatch(match, matchStats, nameMap);
+    processMatch(match, matchStats, uuidMap);
 
     // Convert to PlayerMatchStats shape
     const playerStats: Record<string, PlayerMatchStats> = {};
@@ -507,7 +514,7 @@ export function processZipPerMatch(
 export function processZip(
   zipBuffer: Buffer,
   season?: string,
-  nameMap?: Map<string, string>,
+  uuidMap?: Map<string, string>,
 ): ProcessZipResult {
   const zip = new AdmZip(zipBuffer);
   const entries = zip.getEntries();
@@ -544,7 +551,7 @@ export function processZip(
 
     if (matchSeason) seenSeasons.add(matchSeason);
 
-    processMatch(match, stats, nameMap);
+    processMatch(match, stats, uuidMap);
     matchesProcessed += 1;
   }
 

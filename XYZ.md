@@ -297,3 +297,61 @@ supabase/match-results.sql
 ```
 
 Run it once in Supabase Dashboard → SQL Editor. All other changes write to existing columns (`players.stats` jsonb, `match_results` table). No new tables, columns, or indexes are required for any of the changes above.
+
+---
+
+# Session Changelog (2026-03-28 — Part 3)
+
+## What Was Changed
+
+### 8. Cricsheet Player Matching — UUID-Based Name Resolution
+
+**Problem:** The short-name normalisation approach (`"kh pandya"` → lookup → `"Krunal Pandya"`) was still wrong in critical cases:
+
+- `"KH Pandya"` was being attributed to Hardik Pandya instead of Krunal Pandya via the surname fallback
+- `"B Kumar"` was ambiguous between Bhuvneshwar, Mukesh, and Ashwani Kumar
+- Players like `"Sumit Kumar"` (Shivang Kumar) and `"Shivam Singh"` (Shashank Singh) — where the short name and full name share no common words — were impossible to match by string normalisation alone
+
+**Root cause:** String normalisation can never be fully reliable. The Cricsheet short name is just a convention and is not guaranteed to share initials or structure with the canonical full name.
+
+**Fix:** Use the UUID registry built into every Cricsheet match JSON.
+
+Every Cricsheet match file contains `info.registry.people` — a map of the player's in-game name → their unique Cricsheet UUID. Since `final_mapping.json` is also keyed by these same UUIDs, the resolution becomes exact and unambiguous:
+
+```
+Cricsheet ball data:  "KH Pandya" (batter field)
+       ↓
+info.registry.people: "KH Pandya" → "5b8c830e"
+       ↓
+final_mapping.json:   "5b8c830e" → full_name: "Krunal Pandya"
+       ↓
+match_results key:    "Krunal Pandya"  ← exact DB match
+```
+
+This handles cases that were previously impossible:
+
+| Cricsheet name | Full name | Why normalisation failed |
+|---|---|---|
+| `KH Pandya` | Krunal Pandya | Surname fallback misattributed to Hardik |
+| `B Kumar` | Bhuvneshwar Kumar | Ambiguous with 3 other Kumars |
+| `Sumit Kumar` | Shivang Kumar | Completely different first name |
+| `Shivam Singh` | Shashank Singh | Completely different first name |
+| `S Sandeep Warrier` | Sandeep Sharma | Nothing in common except first initial |
+
+**Verified:** 16/16 simulation test cases pass, including all tricky cases above.
+
+| File | Change |
+|------|--------|
+| `lib/server/cricsheet.ts` | Added `registry?: { people?: Record<string, string> }` to `CricsheetMatch.info`. Changed `processMatch()` parameter from `nameMap` to `uuidMap`. `resolve()` now does: `registry[name]` → UUID → `uuidMap.get(uuid)` → full name. Updated `processZipPerMatch`, `processSingleMatchJson`, `processZip` signatures to `uuidMap`. |
+| `app/api/rooms/[code]/cricsheet-sync/route.ts` | Replaced `buildNameMap()` with `buildUuidMap()` — top-level keys of `final_mapping.json` are the UUIDs, so map is `uuid → full_name`. Renamed `CRICSHEET_NAME_MAP` → `CRICSHEET_UUID_MAP`. Added error logging if `final_mapping.json` fails to load. |
+
+**Also added (same session):** Initial-based matching helpers `isShortNameFormat` + `matchesShortName` in the route as a secondary fallback for the DB-player-to-stats matching step. These guard against misattribution even if any name slips through the UUID translation (e.g. a player not in `final_mapping.json`).
+
+#### Files Changed
+
+```
+MOD   lib/server/cricsheet.ts              (UUID registry lookup in processMatch)
+MOD   app/api/rooms/[code]/cricsheet-sync/route.ts  (buildUuidMap, CRICSHEET_UUID_MAP, initial-based fallback)
+```
+
+> **No DB changes required.** The UUID translation happens entirely at parse time — stats are stored under full names as before.

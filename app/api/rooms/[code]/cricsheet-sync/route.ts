@@ -34,28 +34,26 @@ import { getSupabaseAdminClient } from "@/lib/supabase/admin";
 
 interface MappingEntry { short_name: string; full_name: string; }
 
-function buildNameMap(): Map<string, string> {
+function buildUuidMap(): Map<string, string> {
   const map = new Map<string, string>();
   try {
     const raw = fs.readFileSync(
       path.join(process.cwd(), "final_mapping.json"),
       "utf8",
     );
+    // Top-level keys ARE the Cricsheet registry UUIDs — map uuid → full_name directly.
     const entries = JSON.parse(raw) as Record<string, MappingEntry>;
-    for (const { short_name, full_name } of Object.values(entries)) {
-      if (short_name && full_name) {
-        // Normalise: lowercase, strip dots, collapse spaces
-        const key = short_name.toLowerCase().replace(/\./g, "").replace(/\s+/g, " ").trim();
-        map.set(key, full_name);
-      }
+    for (const [uuid, { full_name }] of Object.entries(entries)) {
+      if (uuid && full_name) map.set(uuid, full_name);
     }
-  } catch {
-    // File missing or malformed — matching falls back to normalised string logic
+    console.log(`[cricsheet-sync] UUID map loaded: ${map.size} entries from final_mapping.json`);
+  } catch (err) {
+    console.error("[cricsheet-sync] failed to load final_mapping.json — player names will not be translated:", err);
   }
   return map;
 }
 
-const CRICSHEET_NAME_MAP = buildNameMap();
+const CRICSHEET_UUID_MAP = buildUuidMap();
 
 export const dynamic = "force-dynamic";
 
@@ -67,6 +65,55 @@ function normaliseName(name: string): string {
     .replace(/\./g, "")
     .replace(/\s+/g, " ")
     .trim();
+}
+
+/**
+ * Returns true if a normalised stats key looks like a Cricsheet short-name:
+ * first token is 1–2 characters (initials), e.g. "b kumar", "kh pandya".
+ */
+function isShortNameFormat(normKey: string): boolean {
+  const parts = normKey.split(" ");
+  return parts.length >= 2 && (parts[0]?.length ?? 0) <= 2;
+}
+
+/**
+ * Match a DB player's normalised full name against a short-name stats key.
+ *
+ * Rules:
+ *  1. Surnames must be identical.
+ *  2. Each character in the stats-key initials must match the first letter of
+ *     the corresponding name part in the DB player (only as many as the DB
+ *     player has — middle-name initials in Cricsheet are ignored when the DB
+ *     name has no middle name).
+ *
+ * Examples:
+ *   "kh pandya" vs "krunal pandya"   → true  (K=K, surname pandya=pandya)
+ *   "kh pandya" vs "hardik pandya"   → false (K≠H)
+ *   "hh pandya" vs "hardik pandya"   → true  (H=H)
+ *   "b kumar"   vs "bhuvneshwar kumar" → true  (B=B)
+ *   "b kumar"   vs "mukesh kumar"    → false (B≠M)
+ *   "b kumar"   vs "ashwani kumar"   → false (B≠A)
+ */
+function matchesShortName(statsNormKey: string, dbNormKey: string): boolean {
+  const sParts = statsNormKey.split(" ");
+  const dParts = dbNormKey.split(" ");
+  if (sParts.length < 2 || dParts.length < 2) return false;
+
+  // Surnames must match exactly
+  if (sParts[sParts.length - 1] !== dParts[dParts.length - 1]) return false;
+
+  // Initials string from stats key, e.g. "kh" or "b"
+  const sInitials = sParts.slice(0, -1).join("");
+  // First-name parts from DB player, e.g. ["krunal"] or ["bhuvneshwar"]
+  const dFirstNames = dParts.slice(0, -1);
+
+  // Check each initial against the corresponding DB name part
+  // Only check as many as the DB player has first-name parts (skip extra middle-name initials)
+  const checkLen = Math.min(sInitials.length, dFirstNames.length);
+  for (let i = 0; i < checkLen; i++) {
+    if (sInitials[i] !== dFirstNames[i]![0]) return false;
+  }
+  return true;
 }
 
 // ── Aggregate PlayerMatchStats → season PlayerStats ───────────────────────────
@@ -189,8 +236,8 @@ export async function POST(
     // Single .json file → one match; .zip file (or auto-fetch) → all matches
     const isJsonUpload = uploadedFilename.toLowerCase().endsWith(".json");
     const { matches, matchesProcessed, matchesSkipped, seasons } = isJsonUpload
-      ? processSingleMatchJson(fileBuffer, uploadedFilename, season, CRICSHEET_NAME_MAP)
-      : processZipPerMatch(fileBuffer, season, CRICSHEET_NAME_MAP);
+      ? processSingleMatchJson(fileBuffer, uploadedFilename, season, CRICSHEET_UUID_MAP)
+      : processZipPerMatch(fileBuffer, season, CRICSHEET_UUID_MAP);
 
     if (matchesProcessed === 0) {
       return NextResponse.json(
@@ -294,7 +341,18 @@ export async function POST(
       // 1 — exact normalised match
       let statsKey = normToOriginal.get(normKey);
 
-      // 2 — surname fallback (unambiguous only)
+      // 2 — initial-based match for stats keys in "B Kumar" / "KH Pandya" format
+      //     Guards against misattribution when nameMap wasn't applied:
+      //     "KH Pandya" can only match a DB player whose first name starts with K,
+      //     so Hardik Pandya (H) is never given Krunal's (K) stats.
+      if (!statsKey) {
+        const initCandidates = Array.from(normToOriginal.entries()).filter(
+          ([k]) => isShortNameFormat(k) && matchesShortName(k, normKey),
+        );
+        if (initCandidates.length === 1) statsKey = initCandidates[0]![1];
+      }
+
+      // 3 — surname fallback (unambiguous only, last resort)
       if (!statsKey) {
         const surname = normKey.split(" ").pop() ?? "";
         if (surname.length >= 3) {
