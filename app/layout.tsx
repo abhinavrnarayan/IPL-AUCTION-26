@@ -19,6 +19,10 @@ const bodyFont = Inter({
 export const metadata: Metadata = {
   title: "SFL | St. Thomas Fantasy League",
   description: "A live fantasy IPL auction game for building teams, running rooms, and tracking results.",
+  icons: {
+    icon: "/images/sfl.png",
+    apple: "/images/sfl.png",
+  },
 };
 
 export default function RootLayout({
