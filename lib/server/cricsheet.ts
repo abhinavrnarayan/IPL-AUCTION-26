@@ -109,12 +109,14 @@ export function processMatch(
   // Per-match registry: player's Cricsheet name → their UUID
   const registry = match.info.registry?.people ?? {};
 
-  /** Resolve a Cricsheet player name to the canonical full name via UUID lookup. */
+  /** Resolve a Cricsheet player name to the canonical full name via UUID lookup.
+   *  Cricsheet registry stores full UUIDs (e.g. "ba607b88-c4f7-...") but
+   *  final_mapping.json uses only the first 8 hex chars as the key — so we slice. */
   const resolve = (name: string): string => {
     if (uuidMap) {
-      const uuid = registry[name];
-      if (uuid) {
-        const full = uuidMap.get(uuid);
+      const fullUuid = registry[name];
+      if (fullUuid) {
+        const full = uuidMap.get(fullUuid.slice(0, 8));
         if (full) return full;
       }
     }
@@ -341,7 +343,6 @@ export interface CricsheetMatchEntry {
 function accumulatorToMatchStats(
   acc: CricsheetAccumulator,
 ): PlayerMatchStats {
-  const dismissed = acc.ducks > 0 || acc.matches_played > 0; // approximation – duck means dismissed at 0
   return {
     runs: acc.runs,
     balls_faced: acc.balls_faced,
