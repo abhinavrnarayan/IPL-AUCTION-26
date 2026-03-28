@@ -1,0 +1,1426 @@
+[
+  {
+    "Rank": 1,
+    "Player": "Hardik Pandya",
+    "Role": "All-Rounder",
+    "Team": "MALABAR MAGIC",
+    "Points": 0,
+    "Purchase Price": 292500000
+  },
+  {
+    "Rank": 2,
+    "Player": "Will Jacks",
+    "Role": "All-Rounder",
+    "Team": "MALABAR MAGIC",
+    "Points": 0,
+    "Purchase Price": 210000000
+  },
+  {
+    "Rank": 3,
+    "Player": "Vaibhav Sooryavanshi",
+    "Role": "Batsman",
+    "Team": "MALABAR MAGIC",
+    "Points": 0,
+    "Purchase Price": 190000000
+  },
+  {
+    "Rank": 4,
+    "Player": "Jitesh Sharma",
+    "Role": "Wicketkeeper",
+    "Team": "MALABAR MAGIC",
+    "Points": 0,
+    "Purchase Price": 117500000
+  },
+  {
+    "Rank": 5,
+    "Player": "Shubman Gill",
+    "Role": "Batsman",
+    "Team": "MALABAR MAGIC",
+    "Points": 0,
+    "Purchase Price": 102500000
+  },
+  {
+    "Rank": 6,
+    "Player": "Kuldeep Yadav",
+    "Role": "Bowler",
+    "Team": "MALABAR MAGIC",
+    "Points": 0,
+    "Purchase Price": 100000000
+  },
+  {
+    "Rank": 7,
+    "Player": "Devdutt Padikkal",
+    "Role": "Batsman",
+    "Team": "MALABAR MAGIC",
+    "Points": 0,
+    "Purchase Price": 97500000
+  },
+  {
+    "Rank": 8,
+    "Player": "Marco Jansen",
+    "Role": "All-Rounder",
+    "Team": "MALABAR MAGIC",
+    "Points": 0,
+    "Purchase Price": 62500000
+  },
+  {
+    "Rank": 9,
+    "Player": "Naman Dhir",
+    "Role": "Batsman",
+    "Team": "MALABAR MAGIC",
+    "Points": 0,
+    "Purchase Price": 50000000
+  },
+  {
+    "Rank": 10,
+    "Player": "Rachin Ravindra",
+    "Role": "All-Rounder",
+    "Team": "MALABAR MAGIC",
+    "Points": 0,
+    "Purchase Price": 45000000
+  },
+  {
+    "Rank": 11,
+    "Player": "Shahrukh Khan",
+    "Role": "All-Rounder",
+    "Team": "MALABAR MAGIC",
+    "Points": 0,
+    "Purchase Price": 30000000
+  },
+  {
+    "Rank": 12,
+    "Player": "Shardul Thakur",
+    "Role": "All-Rounder",
+    "Team": "MALABAR MAGIC",
+    "Points": 0,
+    "Purchase Price": 22500000
+  },
+  {
+    "Rank": 13,
+    "Player": "Ashwani Kumar",
+    "Role": "Bowler",
+    "Team": "MALABAR MAGIC",
+    "Points": 0,
+    "Purchase Price": 20000000
+  },
+  {
+    "Rank": 14,
+    "Player": "Krunal Pandya",
+    "Role": "All-Rounder",
+    "Team": "MALABAR MAGIC",
+    "Points": 0,
+    "Purchase Price": 12500000
+  },
+  {
+    "Rank": 15,
+    "Player": "Corbin Bosch",
+    "Role": "All-Rounder",
+    "Team": "MALABAR MAGIC",
+    "Points": 0,
+    "Purchase Price": 7500000
+  },
+  {
+    "Rank": 16,
+    "Player": "Ryan Rickelton",
+    "Role": "Wicketkeeper",
+    "Team": "MALABAR MAGIC",
+    "Points": 0,
+    "Purchase Price": 5000000
+  },
+  {
+    "Rank": 17,
+    "Player": "Quinton de Kock",
+    "Role": "Wicketkeeper",
+    "Team": "MALABAR MAGIC",
+    "Points": 0,
+    "Purchase Price": 2500000
+  },
+  {
+    "Rank": 18,
+    "Player": "Vignesh Puthur",
+    "Role": "Bowler",
+    "Team": "MALABAR MAGIC",
+    "Points": 0,
+    "Purchase Price": 2500000
+  },
+  {
+    "Rank": 19,
+    "Player": "Kagiso Rabada",
+    "Role": "Bowler",
+    "Team": "MALABAR MAGIC",
+    "Points": 0,
+    "Purchase Price": 2500000
+  },
+  {
+    "Rank": 20,
+    "Player": "Dushmantha Chameera",
+    "Role": "Bowler",
+    "Team": "MALABAR MAGIC",
+    "Points": 0,
+    "Purchase Price": 2500000
+  },
+  {
+    "Rank": 21,
+    "Player": "Trent Boult",
+    "Role": "Bowler",
+    "Team": "Alimukkk warriors",
+    "Points": 0,
+    "Purchase Price": 407500000
+  },
+  {
+    "Rank": 22,
+    "Player": "Nicholas Pooran",
+    "Role": "Wicketkeeper",
+    "Team": "Alimukkk warriors",
+    "Points": 0,
+    "Purchase Price": 160000000
+  },
+  {
+    "Rank": 23,
+    "Player": "MS Dhoni",
+    "Role": "Wicketkeeper",
+    "Team": "Alimukkk warriors",
+    "Points": 0,
+    "Purchase Price": 117500000
+  },
+  {
+    "Rank": 24,
+    "Player": "Tim David",
+    "Role": "Batsman",
+    "Team": "Alimukkk warriors",
+    "Points": 0,
+    "Purchase Price": 100000000
+  },
+  {
+    "Rank": 25,
+    "Player": "Tilak Varma",
+    "Role": "Batsman",
+    "Team": "Alimukkk warriors",
+    "Points": 0,
+    "Purchase Price": 95000000
+  },
+  {
+    "Rank": 26,
+    "Player": "Mitchell Starc",
+    "Role": "Bowler",
+    "Team": "Alimukkk warriors",
+    "Points": 0,
+    "Purchase Price": 75000000
+  },
+  {
+    "Rank": 27,
+    "Player": "Shimron Hetmyer",
+    "Role": "Batsman",
+    "Team": "Alimukkk warriors",
+    "Points": 0,
+    "Purchase Price": 60000000
+  },
+  {
+    "Rank": 28,
+    "Player": "Ravindra Jadeja",
+    "Role": "All-Rounder",
+    "Team": "Alimukkk warriors",
+    "Points": 0,
+    "Purchase Price": 52500000
+  },
+  {
+    "Rank": 29,
+    "Player": "Rinku Singh",
+    "Role": "Batsman",
+    "Team": "Alimukkk warriors",
+    "Points": 0,
+    "Purchase Price": 50000000
+  },
+  {
+    "Rank": 30,
+    "Player": "Prasidh Krishna",
+    "Role": "Bowler",
+    "Team": "Alimukkk warriors",
+    "Points": 0,
+    "Purchase Price": 45000000
+  },
+  {
+    "Rank": 31,
+    "Player": "Nehal Wadhera",
+    "Role": "Batsman",
+    "Team": "Alimukkk warriors",
+    "Points": 0,
+    "Purchase Price": 35000000
+  },
+  {
+    "Rank": 32,
+    "Player": "Khaleel Ahmed",
+    "Role": "Bowler",
+    "Team": "Alimukkk warriors",
+    "Points": 0,
+    "Purchase Price": 27500000
+  },
+  {
+    "Rank": 33,
+    "Player": "Matthew Breetzke",
+    "Role": "Wicketkeeper",
+    "Team": "Alimukkk warriors",
+    "Points": 0,
+    "Purchase Price": 22500000
+  },
+  {
+    "Rank": 34,
+    "Player": "Sam Curran",
+    "Role": "All-Rounder",
+    "Team": "Alimukkk warriors",
+    "Points": 0,
+    "Purchase Price": 10000000
+  },
+  {
+    "Rank": 35,
+    "Player": "Nitish Rana",
+    "Role": "Batsman",
+    "Team": "Alimukkk warriors",
+    "Points": 0,
+    "Purchase Price": 10000000
+  },
+  {
+    "Rank": 36,
+    "Player": "Xavier Bartlett",
+    "Role": "Bowler",
+    "Team": "Alimukkk warriors",
+    "Points": 0,
+    "Purchase Price": 5000000
+  },
+  {
+    "Rank": 37,
+    "Player": "Onkar Tukaram Tarmale",
+    "Role": "Bowler",
+    "Team": "Alimukkk warriors",
+    "Points": 0,
+    "Purchase Price": 5000000
+  },
+  {
+    "Rank": 38,
+    "Player": "Harsh Dubey",
+    "Role": "All-Rounder",
+    "Team": "Alimukkk warriors",
+    "Points": 0,
+    "Purchase Price": 2500000
+  },
+  {
+    "Rank": 39,
+    "Player": "Danish Malewar",
+    "Role": "All-Rounder",
+    "Team": "Alimukkk warriors",
+    "Points": 0,
+    "Purchase Price": 2500000
+  },
+  {
+    "Rank": 40,
+    "Player": "Prashant Solanki",
+    "Role": "Bowler",
+    "Team": "Alimukkk warriors",
+    "Points": 0,
+    "Purchase Price": 2500000
+  },
+  {
+    "Rank": 41,
+    "Player": "Mitchell Santner",
+    "Role": "All-Rounder",
+    "Team": "Goated Super Kings",
+    "Points": 0,
+    "Purchase Price": 287500000
+  },
+  {
+    "Rank": 42,
+    "Player": "Shreyas Iyer",
+    "Role": "Batsman",
+    "Team": "Goated Super Kings",
+    "Points": 0,
+    "Purchase Price": 207500000
+  },
+  {
+    "Rank": 43,
+    "Player": "Azmatullah Omarzai",
+    "Role": "All-Rounder",
+    "Team": "Goated Super Kings",
+    "Points": 0,
+    "Purchase Price": 160000000
+  },
+  {
+    "Rank": 44,
+    "Player": "Noor Ahmad",
+    "Role": "Bowler",
+    "Team": "Goated Super Kings",
+    "Points": 0,
+    "Purchase Price": 155000000
+  },
+  {
+    "Rank": 45,
+    "Player": "Ruturaj Gaikwad",
+    "Role": "Batsman",
+    "Team": "Goated Super Kings",
+    "Points": 0,
+    "Purchase Price": 150000000
+  },
+  {
+    "Rank": 46,
+    "Player": "Prabhsimran Singh",
+    "Role": "Wicketkeeper",
+    "Team": "Goated Super Kings",
+    "Points": 0,
+    "Purchase Price": 80000000
+  },
+  {
+    "Rank": 47,
+    "Player": "Riyan Parag",
+    "Role": "All-Rounder",
+    "Team": "Goated Super Kings",
+    "Points": 0,
+    "Purchase Price": 60000000
+  },
+  {
+    "Rank": 48,
+    "Player": "Mukesh Kumar",
+    "Role": "Bowler",
+    "Team": "Goated Super Kings",
+    "Points": 0,
+    "Purchase Price": 52500000
+  },
+  {
+    "Rank": 49,
+    "Player": "Kyle Jamieson",
+    "Role": "Bowler",
+    "Team": "Goated Super Kings",
+    "Points": 0,
+    "Purchase Price": 47500000
+  },
+  {
+    "Rank": 50,
+    "Player": "Shivam Dube",
+    "Role": "All-Rounder",
+    "Team": "Goated Super Kings",
+    "Points": 0,
+    "Purchase Price": 47500000
+  },
+  {
+    "Rank": 51,
+    "Player": "Kartik Tyagi",
+    "Role": "Bowler",
+    "Team": "Goated Super Kings",
+    "Points": 0,
+    "Purchase Price": 35000000
+  },
+  {
+    "Rank": 52,
+    "Player": "Josh Hazlewood",
+    "Role": "Bowler",
+    "Team": "Goated Super Kings",
+    "Points": 0,
+    "Purchase Price": 30000000
+  },
+  {
+    "Rank": 53,
+    "Player": "Anuj Rawat",
+    "Role": "Wicketkeeper",
+    "Team": "Goated Super Kings",
+    "Points": 0,
+    "Purchase Price": 22500000
+  },
+  {
+    "Rank": 54,
+    "Player": "Sakib Hussain",
+    "Role": "Bowler",
+    "Team": "Goated Super Kings",
+    "Points": 0,
+    "Purchase Price": 15000000
+  },
+  {
+    "Rank": 55,
+    "Player": "Tom Banton",
+    "Role": "Wicketkeeper",
+    "Team": "Goated Super Kings",
+    "Points": 0,
+    "Purchase Price": 12500000
+  },
+  {
+    "Rank": 56,
+    "Player": "Vipraj Nigam",
+    "Role": "Bowler",
+    "Team": "Goated Super Kings",
+    "Points": 0,
+    "Purchase Price": 7500000
+  },
+  {
+    "Rank": 57,
+    "Player": "Jordan Cox",
+    "Role": "Wicketkeeper",
+    "Team": "Goated Super Kings",
+    "Points": 0,
+    "Purchase Price": 2500000
+  },
+  {
+    "Rank": 58,
+    "Player": "Rovman Powell",
+    "Role": "Batsman",
+    "Team": "Goated Super Kings",
+    "Points": 0,
+    "Purchase Price": 2500000
+  },
+  {
+    "Rank": 59,
+    "Player": "Arshad Khan",
+    "Role": "All-Rounder",
+    "Team": "Goated Super Kings",
+    "Points": 0,
+    "Purchase Price": 2500000
+  },
+  {
+    "Rank": 60,
+    "Player": "Yash Thakur",
+    "Role": "Bowler",
+    "Team": "Goated Super Kings",
+    "Points": 0,
+    "Purchase Price": 2500000
+  },
+  {
+    "Rank": 61,
+    "Player": "Travis Head",
+    "Role": "Batsman",
+    "Team": "Mumbai Indians",
+    "Points": 0,
+    "Purchase Price": 212500000
+  },
+  {
+    "Rank": 62,
+    "Player": "Shashank Singh",
+    "Role": "All-Rounder",
+    "Team": "Mumbai Indians",
+    "Points": 0,
+    "Purchase Price": 170000000
+  },
+  {
+    "Rank": 63,
+    "Player": "Sunil Narine",
+    "Role": "All-Rounder",
+    "Team": "Mumbai Indians",
+    "Points": 0,
+    "Purchase Price": 122500000
+  },
+  {
+    "Rank": 64,
+    "Player": "Finn Allen",
+    "Role": "Batsman",
+    "Team": "Mumbai Indians",
+    "Points": 0,
+    "Purchase Price": 120000000
+  },
+  {
+    "Rank": 65,
+    "Player": "Heinrich Klaasen",
+    "Role": "Wicketkeeper",
+    "Team": "Mumbai Indians",
+    "Points": 0,
+    "Purchase Price": 120000000
+  },
+  {
+    "Rank": 66,
+    "Player": "Dewald Brevis",
+    "Role": "Batsman",
+    "Team": "Mumbai Indians",
+    "Points": 0,
+    "Purchase Price": 117500000
+  },
+  {
+    "Rank": 67,
+    "Player": "Bhuvneshwar Kumar",
+    "Role": "Bowler",
+    "Team": "Mumbai Indians",
+    "Points": 0,
+    "Purchase Price": 112500000
+  },
+  {
+    "Rank": 68,
+    "Player": "Mohammed Shami",
+    "Role": "Bowler",
+    "Team": "Mumbai Indians",
+    "Points": 0,
+    "Purchase Price": 75000000
+  },
+  {
+    "Rank": 69,
+    "Player": "Matt Henry",
+    "Role": "Bowler",
+    "Team": "Mumbai Indians",
+    "Points": 0,
+    "Purchase Price": 70000000
+  },
+  {
+    "Rank": 70,
+    "Player": "Deepak Chahar",
+    "Role": "Bowler",
+    "Team": "Mumbai Indians",
+    "Points": 0,
+    "Purchase Price": 67500000
+  },
+  {
+    "Rank": 71,
+    "Player": "Tim Seifert",
+    "Role": "Wicketkeeper",
+    "Team": "Mumbai Indians",
+    "Points": 0,
+    "Purchase Price": 62500000
+  },
+  {
+    "Rank": 72,
+    "Player": "Varun Chakaravarthy",
+    "Role": "Bowler",
+    "Team": "Mumbai Indians",
+    "Points": 0,
+    "Purchase Price": 62500000
+  },
+  {
+    "Rank": 73,
+    "Player": "Ashutosh Sharma",
+    "Role": "All-Rounder",
+    "Team": "Mumbai Indians",
+    "Points": 0,
+    "Purchase Price": 57500000
+  },
+  {
+    "Rank": 74,
+    "Player": "Pathum Nissanka",
+    "Role": "Batsman",
+    "Team": "Mumbai Indians",
+    "Points": 0,
+    "Purchase Price": 37500000
+  },
+  {
+    "Rank": 75,
+    "Player": "Pat Cummins",
+    "Role": "Bowler",
+    "Team": "Mumbai Indians",
+    "Points": 0,
+    "Purchase Price": 20000000
+  },
+  {
+    "Rank": 76,
+    "Player": "Tristan Stubbs",
+    "Role": "Wicketkeeper",
+    "Team": "Mumbai Indians",
+    "Points": 0,
+    "Purchase Price": 2500000
+  },
+  {
+    "Rank": 77,
+    "Player": "Axar Patel",
+    "Role": "All-Rounder",
+    "Team": "Mumbai Indians",
+    "Points": 0,
+    "Purchase Price": 2500000
+  },
+  {
+    "Rank": 78,
+    "Player": "AM Ghazanfar",
+    "Role": "Bowler",
+    "Team": "Mumbai Indians",
+    "Points": 0,
+    "Purchase Price": 2500000
+  },
+  {
+    "Rank": 79,
+    "Player": "Abishek Porel",
+    "Role": "Wicketkeeper",
+    "Team": "Mumbai Indians",
+    "Points": 0,
+    "Purchase Price": 26000000
+  },
+  {
+    "Rank": 80,
+    "Player": "Abhishek Sharma",
+    "Role": "All-Rounder",
+    "Team": "Wayanad Tarzans",
+    "Points": 0,
+    "Purchase Price": 365000000
+  },
+  {
+    "Rank": 81,
+    "Player": "Urvil Patel",
+    "Role": "Wicketkeeper",
+    "Team": "Wayanad Tarzans",
+    "Points": 0,
+    "Purchase Price": 227500000
+  },
+  {
+    "Rank": 82,
+    "Player": "Aiden Markram",
+    "Role": "Batsman",
+    "Team": "Wayanad Tarzans",
+    "Points": 0,
+    "Purchase Price": 220000000
+  },
+  {
+    "Rank": 83,
+    "Player": "Priyansh Arya",
+    "Role": "Batsman",
+    "Team": "Wayanad Tarzans",
+    "Points": 0,
+    "Purchase Price": 212500000
+  },
+  {
+    "Rank": 84,
+    "Player": "Nitish Kumar Reddy",
+    "Role": "All-Rounder",
+    "Team": "Wayanad Tarzans",
+    "Points": 0,
+    "Purchase Price": 75000000
+  },
+  {
+    "Rank": 85,
+    "Player": "Lungi Ngidi",
+    "Role": "Bowler",
+    "Team": "Wayanad Tarzans",
+    "Points": 0,
+    "Purchase Price": 60000000
+  },
+  {
+    "Rank": 86,
+    "Player": "Avesh Khan",
+    "Role": "Bowler",
+    "Team": "Wayanad Tarzans",
+    "Points": 0,
+    "Purchase Price": 50000000
+  },
+  {
+    "Rank": 87,
+    "Player": "Ravi Bishnoi",
+    "Role": "Bowler",
+    "Team": "Wayanad Tarzans",
+    "Points": 0,
+    "Purchase Price": 45000000
+  },
+  {
+    "Rank": 88,
+    "Player": "Ayush Badoni",
+    "Role": "All-Rounder",
+    "Team": "Wayanad Tarzans",
+    "Points": 0,
+    "Purchase Price": 40000000
+  },
+  {
+    "Rank": 89,
+    "Player": "Anshul Kamboj",
+    "Role": "All-Rounder",
+    "Team": "Wayanad Tarzans",
+    "Points": 0,
+    "Purchase Price": 35000000
+  },
+  {
+    "Rank": 90,
+    "Player": "Tushar Deshpande",
+    "Role": "Bowler",
+    "Team": "Wayanad Tarzans",
+    "Points": 0,
+    "Purchase Price": 30000000
+  },
+  {
+    "Rank": 91,
+    "Player": "Dhruv Jurel",
+    "Role": "Wicketkeeper",
+    "Team": "Wayanad Tarzans",
+    "Points": 0,
+    "Purchase Price": 25000000
+  },
+  {
+    "Rank": 92,
+    "Player": "Kuldeep Sen",
+    "Role": "Bowler",
+    "Team": "Wayanad Tarzans",
+    "Points": 0,
+    "Purchase Price": 22500000
+  },
+  {
+    "Rank": 93,
+    "Player": "Ramandeep Singh",
+    "Role": "All-Rounder",
+    "Team": "Wayanad Tarzans",
+    "Points": 0,
+    "Purchase Price": 22500000
+  },
+  {
+    "Rank": 94,
+    "Player": "Ravisrinivasan Sai Kishore",
+    "Role": "All-Rounder",
+    "Team": "Wayanad Tarzans",
+    "Points": 0,
+    "Purchase Price": 2500000
+  },
+  {
+    "Rank": 95,
+    "Player": "Angkrish Raghuvanshi",
+    "Role": "Batsman",
+    "Team": "Wayanad Tarzans",
+    "Points": 0,
+    "Purchase Price": 2500000
+  },
+  {
+    "Rank": 96,
+    "Player": "Manish Pandey",
+    "Role": "Batsman",
+    "Team": "Wayanad Tarzans",
+    "Points": 0,
+    "Purchase Price": 23000000
+  },
+  {
+    "Rank": 97,
+    "Player": "Kamindu Mendis",
+    "Role": "All-Rounder",
+    "Team": "Wayanad Tarzans",
+    "Points": 0,
+    "Purchase Price": 2500000
+  },
+  {
+    "Rank": 98,
+    "Player": "Mukesh Choudhary",
+    "Role": "Bowler",
+    "Team": "Wayanad Tarzans",
+    "Points": 0,
+    "Purchase Price": 2500000
+  },
+  {
+    "Rank": 99,
+    "Player": "Raj Bawa",
+    "Role": "All-Rounder",
+    "Team": "Wayanad Tarzans",
+    "Points": 0,
+    "Purchase Price": 2500000
+  },
+  {
+    "Rank": 100,
+    "Player": "David Miller",
+    "Role": "Batsman",
+    "Team": "Kerala Indians",
+    "Points": 0,
+    "Purchase Price": 250000000
+  },
+  {
+    "Rank": 101,
+    "Player": "Sherfane Rutherford",
+    "Role": "All-Rounder",
+    "Team": "Kerala Indians",
+    "Points": 0,
+    "Purchase Price": 155000000
+  },
+  {
+    "Rank": 102,
+    "Player": "Josh Inglis",
+    "Role": "Wicketkeeper",
+    "Team": "Kerala Indians",
+    "Points": 0,
+    "Purchase Price": 135000000
+  },
+  {
+    "Rank": 103,
+    "Player": "Rohit Sharma",
+    "Role": "Batsman",
+    "Team": "Kerala Indians",
+    "Points": 0,
+    "Purchase Price": 112500000
+  },
+  {
+    "Rank": 104,
+    "Player": "Jamie Overton",
+    "Role": "All-Rounder",
+    "Team": "Kerala Indians",
+    "Points": 0,
+    "Purchase Price": 110000000
+  },
+  {
+    "Rank": 105,
+    "Player": "Suyash Sharma",
+    "Role": "Bowler",
+    "Team": "Kerala Indians",
+    "Points": 0,
+    "Purchase Price": 102500000
+  },
+  {
+    "Rank": 106,
+    "Player": "Glenn Phillips",
+    "Role": "All-Rounder",
+    "Team": "Kerala Indians",
+    "Points": 0,
+    "Purchase Price": 102500000
+  },
+  {
+    "Rank": 107,
+    "Player": "Nuwan Thushara",
+    "Role": "Bowler",
+    "Team": "Kerala Indians",
+    "Points": 0,
+    "Purchase Price": 52500000
+  },
+  {
+    "Rank": 108,
+    "Player": "Anrich Nortje",
+    "Role": "Bowler",
+    "Team": "Kerala Indians",
+    "Points": 0,
+    "Purchase Price": 47500000
+  },
+  {
+    "Rank": 109,
+    "Player": "Swapnil Singh",
+    "Role": "All-Rounder",
+    "Team": "Kerala Indians",
+    "Points": 0,
+    "Purchase Price": 40000000
+  },
+  {
+    "Rank": 110,
+    "Player": "Mayank Markande",
+    "Role": "Bowler",
+    "Team": "Kerala Indians",
+    "Points": 0,
+    "Purchase Price": 37500000
+  },
+  {
+    "Rank": 111,
+    "Player": "Kwena Maphaka",
+    "Role": "Bowler",
+    "Team": "Kerala Indians",
+    "Points": 0,
+    "Purchase Price": 7500000
+  },
+  {
+    "Rank": 112,
+    "Player": "Umran Malik",
+    "Role": "Bowler",
+    "Team": "Kerala Indians",
+    "Points": 0,
+    "Purchase Price": 2000000
+  },
+  {
+    "Rank": 113,
+    "Player": "Nathan Ellis",
+    "Role": "Bowler",
+    "Team": "Kerala Indians",
+    "Points": 0,
+    "Purchase Price": 2000000
+  },
+  {
+    "Rank": 114,
+    "Player": "Adam Milne",
+    "Role": "Bowler",
+    "Team": "Kerala Indians",
+    "Points": 0,
+    "Purchase Price": 2000000
+  },
+  {
+    "Rank": 115,
+    "Player": "Jasprit Bumrah",
+    "Role": "Bowler",
+    "Team": "Kerala Indians",
+    "Points": 0,
+    "Purchase Price": 175000000
+  },
+  {
+    "Rank": 116,
+    "Player": "Lockie Ferguson",
+    "Role": "Bowler",
+    "Team": "Kerala Indians",
+    "Points": 0,
+    "Purchase Price": 2500000
+  },
+  {
+    "Rank": 117,
+    "Player": "Sameer Rizvi",
+    "Role": "Batsman",
+    "Team": "Kerala Indians",
+    "Points": 0,
+    "Purchase Price": 2500000
+  },
+  {
+    "Rank": 118,
+    "Player": "Sarfaraz Khan",
+    "Role": "Batsman",
+    "Team": "Kerala Indians",
+    "Points": 0,
+    "Purchase Price": 20500000
+  },
+  {
+    "Rank": 119,
+    "Player": "Akeal Hosein",
+    "Role": "Bowler",
+    "Team": "Kerala Indians",
+    "Points": 0,
+    "Purchase Price": 30500000
+  },
+  {
+    "Rank": 120,
+    "Player": "Mohammed Siraj",
+    "Role": "Bowler",
+    "Team": "Super Chargers",
+    "Points": 0,
+    "Purchase Price": 2000000
+  },
+  {
+    "Rank": 121,
+    "Player": "Ishan Kishan",
+    "Role": "Wicketkeeper",
+    "Team": "Super Chargers",
+    "Points": 0,
+    "Purchase Price": 215000000
+  },
+  {
+    "Rank": 122,
+    "Player": "Yashasvi Jaiswal",
+    "Role": "Batsman",
+    "Team": "Super Chargers",
+    "Points": 0,
+    "Purchase Price": 180000000
+  },
+  {
+    "Rank": 123,
+    "Player": "Cameron Green",
+    "Role": "All-Rounder",
+    "Team": "Super Chargers",
+    "Points": 0,
+    "Purchase Price": 165000000
+  },
+  {
+    "Rank": 124,
+    "Player": "Rashid Khan",
+    "Role": "All-Rounder",
+    "Team": "Super Chargers",
+    "Points": 0,
+    "Purchase Price": 157500000
+  },
+  {
+    "Rank": 125,
+    "Player": "Ayush Mhatre",
+    "Role": "Batsman",
+    "Team": "Super Chargers",
+    "Points": 0,
+    "Purchase Price": 90000000
+  },
+  {
+    "Rank": 126,
+    "Player": "Kartik Sharma",
+    "Role": "Wicketkeeper",
+    "Team": "Super Chargers",
+    "Points": 0,
+    "Purchase Price": 87500000
+  },
+  {
+    "Rank": 127,
+    "Player": "Rishabh Pant",
+    "Role": "Wicketkeeper",
+    "Team": "Super Chargers",
+    "Points": 0,
+    "Purchase Price": 70000000
+  },
+  {
+    "Rank": 128,
+    "Player": "Prashant Veer",
+    "Role": "Bowler",
+    "Team": "Super Chargers",
+    "Points": 0,
+    "Purchase Price": 65000000
+  },
+  {
+    "Rank": 129,
+    "Player": "Jacob Duffy",
+    "Role": "Bowler",
+    "Team": "Super Chargers",
+    "Points": 0,
+    "Purchase Price": 52500000
+  },
+  {
+    "Rank": 130,
+    "Player": "Harpreet Brar",
+    "Role": "Bowler",
+    "Team": "Super Chargers",
+    "Points": 0,
+    "Purchase Price": 35000000
+  },
+  {
+    "Rank": 131,
+    "Player": "Kumar Kushagra",
+    "Role": "Wicketkeeper",
+    "Team": "Super Chargers",
+    "Points": 0,
+    "Purchase Price": 30000000
+  },
+  {
+    "Rank": 132,
+    "Player": "Auqib Nabi Dar",
+    "Role": "All-Rounder",
+    "Team": "Super Chargers",
+    "Points": 0,
+    "Purchase Price": 22500000
+  },
+  {
+    "Rank": 133,
+    "Player": "Jofra Archer",
+    "Role": "Bowler",
+    "Team": "Super Chargers",
+    "Points": 0,
+    "Purchase Price": 20000000
+  },
+  {
+    "Rank": 134,
+    "Player": "Anukul Roy",
+    "Role": "All-Rounder",
+    "Team": "Super Chargers",
+    "Points": 0,
+    "Purchase Price": 20000000
+  },
+  {
+    "Rank": 135,
+    "Player": "Akash Maharaj Singh",
+    "Role": "Bowler",
+    "Team": "Super Chargers",
+    "Points": 0,
+    "Purchase Price": 7500000
+  },
+  {
+    "Rank": 136,
+    "Player": "Sushant Mishra",
+    "Role": "Bowler",
+    "Team": "Super Chargers",
+    "Points": 0,
+    "Purchase Price": 2500000
+  },
+  {
+    "Rank": 137,
+    "Player": "Cooper Connolly",
+    "Role": "All-Rounder",
+    "Team": "Super Chargers",
+    "Points": 0,
+    "Purchase Price": 2500000
+  },
+  {
+    "Rank": 138,
+    "Player": "Mayank Yadav",
+    "Role": "Bowler",
+    "Team": "Super Chargers",
+    "Points": 0,
+    "Purchase Price": 2500000
+  },
+  {
+    "Rank": 139,
+    "Player": "Vihaan Malhotra",
+    "Role": "Batsman",
+    "Team": "Super Chargers",
+    "Points": 0,
+    "Purchase Price": 2500000
+  },
+  {
+    "Rank": 140,
+    "Player": "Sanju Samson",
+    "Role": "Wicketkeeper",
+    "Team": "Kerala Blasters",
+    "Points": 0,
+    "Purchase Price": 410000000
+  },
+  {
+    "Rank": 141,
+    "Player": "Virat Kohli",
+    "Role": "Batsman",
+    "Team": "Kerala Blasters",
+    "Points": 0,
+    "Purchase Price": 170000000
+  },
+  {
+    "Rank": 142,
+    "Player": "Suryakumar Yadav",
+    "Role": "Batsman",
+    "Team": "Kerala Blasters",
+    "Points": 0,
+    "Purchase Price": 167500000
+  },
+  {
+    "Rank": 143,
+    "Player": "Yuzvendra Chahal",
+    "Role": "Bowler",
+    "Team": "Kerala Blasters",
+    "Points": 0,
+    "Purchase Price": 165000000
+  },
+  {
+    "Rank": 144,
+    "Player": "Mitchell Marsh",
+    "Role": "All-Rounder",
+    "Team": "Kerala Blasters",
+    "Points": 0,
+    "Purchase Price": 105000000
+  },
+  {
+    "Rank": 145,
+    "Player": "Marcus Stoinis",
+    "Role": "All-Rounder",
+    "Team": "Kerala Blasters",
+    "Points": 0,
+    "Purchase Price": 72500000
+  },
+  {
+    "Rank": 146,
+    "Player": "Washington Sundar",
+    "Role": "All-Rounder",
+    "Team": "Kerala Blasters",
+    "Points": 0,
+    "Purchase Price": 70000000
+  },
+  {
+    "Rank": 147,
+    "Player": "Venkatesh Iyer",
+    "Role": "All-Rounder",
+    "Team": "Kerala Blasters",
+    "Points": 0,
+    "Purchase Price": 70000000
+  },
+  {
+    "Rank": 148,
+    "Player": "Wanindu Hasaranga",
+    "Role": "All-Rounder",
+    "Team": "Kerala Blasters",
+    "Points": 0,
+    "Purchase Price": 50000000
+  },
+  {
+    "Rank": 149,
+    "Player": "Ajinkya Rahane",
+    "Role": "Batsman",
+    "Team": "Kerala Blasters",
+    "Points": 0,
+    "Purchase Price": 47500000
+  },
+  {
+    "Rank": 150,
+    "Player": "Akash Deep",
+    "Role": "Bowler",
+    "Team": "Kerala Blasters",
+    "Points": 0,
+    "Purchase Price": 32500000
+  },
+  {
+    "Rank": 151,
+    "Player": "Jason Holder",
+    "Role": "All-Rounder",
+    "Team": "Kerala Blasters",
+    "Points": 0,
+    "Purchase Price": 22500000
+  },
+  {
+    "Rank": 152,
+    "Player": "Abdul Samad",
+    "Role": "All-Rounder",
+    "Team": "Kerala Blasters",
+    "Points": 0,
+    "Purchase Price": 17500000
+  },
+  {
+    "Rank": 153,
+    "Player": "Mohsin Khan",
+    "Role": "Bowler",
+    "Team": "Kerala Blasters",
+    "Points": 0,
+    "Purchase Price": 17500000
+  },
+  {
+    "Rank": 154,
+    "Player": "Ishant Sharma",
+    "Role": "Bowler",
+    "Team": "Kerala Blasters",
+    "Points": 0,
+    "Purchase Price": 17500000
+  },
+  {
+    "Rank": 155,
+    "Player": "Aniket Verma",
+    "Role": "Batsman",
+    "Team": "Kerala Blasters",
+    "Points": 0,
+    "Purchase Price": 15000000
+  },
+  {
+    "Rank": 156,
+    "Player": "Vaibhav Arora",
+    "Role": "Bowler",
+    "Team": "Kerala Blasters",
+    "Points": 0,
+    "Purchase Price": 12500000
+  },
+  {
+    "Rank": 157,
+    "Player": "Ajay Jadav Mandal",
+    "Role": "All-Rounder",
+    "Team": "Kerala Blasters",
+    "Points": 0,
+    "Purchase Price": 5000000
+  },
+  {
+    "Rank": 158,
+    "Player": "Salil Arora",
+    "Role": "Wicketkeeper",
+    "Team": "Kerala Blasters",
+    "Points": 0,
+    "Purchase Price": 2500000
+  },
+  {
+    "Rank": 159,
+    "Player": "Mitchell Owen",
+    "Role": "All-Rounder",
+    "Team": "Kerala Blasters",
+    "Points": 0,
+    "Purchase Price": 2500000
+  },
+  {
+    "Rank": 160,
+    "Player": "Jacob Bethell",
+    "Role": "All-Rounder",
+    "Team": "ROYAL CHAMPIONS",
+    "Points": 0,
+    "Purchase Price": 390000000
+  },
+  {
+    "Rank": 161,
+    "Player": "Philip Salt",
+    "Role": "Wicketkeeper",
+    "Team": "ROYAL CHAMPIONS",
+    "Points": 0,
+    "Purchase Price": 192500000
+  },
+  {
+    "Rank": 162,
+    "Player": "T Natarajan",
+    "Role": "Bowler",
+    "Team": "ROYAL CHAMPIONS",
+    "Points": 0,
+    "Purchase Price": 185000000
+  },
+  {
+    "Rank": 163,
+    "Player": "Arshdeep Singh",
+    "Role": "Bowler",
+    "Team": "ROYAL CHAMPIONS",
+    "Points": 0,
+    "Purchase Price": 125000000
+  },
+  {
+    "Rank": 164,
+    "Player": "Sai Sudharsan",
+    "Role": "Batsman",
+    "Team": "ROYAL CHAMPIONS",
+    "Points": 0,
+    "Purchase Price": 80000000
+  },
+  {
+    "Rank": 165,
+    "Player": "Sandeep Sharma",
+    "Role": "Bowler",
+    "Team": "ROYAL CHAMPIONS",
+    "Points": 0,
+    "Purchase Price": 77500000
+  },
+  {
+    "Rank": 166,
+    "Player": "Jos Buttler",
+    "Role": "Wicketkeeper",
+    "Team": "ROYAL CHAMPIONS",
+    "Points": 0,
+    "Purchase Price": 72500000
+  },
+  {
+    "Rank": 167,
+    "Player": "Harshal Patel",
+    "Role": "Bowler",
+    "Team": "ROYAL CHAMPIONS",
+    "Points": 0,
+    "Purchase Price": 55000000
+  },
+  {
+    "Rank": 168,
+    "Player": "Rahul Chahar",
+    "Role": "Bowler",
+    "Team": "ROYAL CHAMPIONS",
+    "Points": 0,
+    "Purchase Price": 47500000
+  },
+  {
+    "Rank": 169,
+    "Player": "Rajat Patidar",
+    "Role": "Batsman",
+    "Team": "ROYAL CHAMPIONS",
+    "Points": 0,
+    "Purchase Price": 42500000
+  },
+  {
+    "Rank": 170,
+    "Player": "Rahul Tewatia",
+    "Role": "All-Rounder",
+    "Team": "ROYAL CHAMPIONS",
+    "Points": 0,
+    "Purchase Price": 37500000
+  },
+  {
+    "Rank": 171,
+    "Player": "Digvesh Singh Rathi",
+    "Role": "Bowler",
+    "Team": "ROYAL CHAMPIONS",
+    "Points": 0,
+    "Purchase Price": 15000000
+  },
+  {
+    "Rank": 172,
+    "Player": "Eshan Malinga",
+    "Role": "Bowler",
+    "Team": "ROYAL CHAMPIONS",
+    "Points": 0,
+    "Purchase Price": 5000000
+  },
+  {
+    "Rank": 173,
+    "Player": "Matheesha Pathirana",
+    "Role": "Bowler",
+    "Team": "ROYAL CHAMPIONS",
+    "Points": 0,
+    "Purchase Price": 2500000
+  },
+  {
+    "Rank": 174,
+    "Player": "Vijaykumar Vyshak",
+    "Role": "Bowler",
+    "Team": "ROYAL CHAMPIONS",
+    "Points": 0,
+    "Purchase Price": 2500000
+  },
+  {
+    "Rank": 175,
+    "Player": "KL Rahul",
+    "Role": "Wicketkeeper",
+    "Team": "ROYAL CHAMPIONS",
+    "Points": 0,
+    "Purchase Price": 2500000
+  },
+  {
+    "Rank": 176,
+    "Player": "Liam Livingstone",
+    "Role": "All-Rounder",
+    "Team": "ROYAL CHAMPIONS",
+    "Points": 0,
+    "Purchase Price": 2500000
+  },
+  {
+    "Rank": 177,
+    "Player": "Romario Shepherd",
+    "Role": "All-Rounder",
+    "Team": "ROYAL CHAMPIONS",
+    "Points": 0,
+    "Purchase Price": 148500000
+  },
+  {
+    "Rank": 178,
+    "Player": "Rasikh Salam Dar",
+    "Role": "Bowler",
+    "Team": "ROYAL CHAMPIONS",
+    "Points": 0,
+    "Purchase Price": 2500000
+  }
+]

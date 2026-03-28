@@ -1,0 +1,39 @@
+# Next.js
+.next
+out
+dist
+
+# Dependencies
+node_modules
+
+# Environment — never commit secrets
+.env
+.env.local
+.env*.local
+
+# Build artifacts
+tsconfig.tsbuildinfo
+
+# Netlify local cache
+.netlify
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+npm-debug.log*
+
+# IDE / tool folders
+.claude
+.orchids
+
+# Lock files not needed
+deno.lock
+skills-lock.json
+
+# Data files (upload via the UI, not git)
+*.xlsx
+*.xls
+*.zip

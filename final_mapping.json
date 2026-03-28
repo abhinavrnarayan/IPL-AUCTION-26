@@ -1,0 +1,949 @@
+{
+  "ba607b88": {
+    "short_name": "V Kohli",
+    "full_name": "Virat Kohli",
+    "team": "RCB"
+  },
+  "c740ea83": {
+    "short_name": "RM Patidar",
+    "full_name": "Rajat Patidar",
+    "team": "RCB"
+  },
+  "eaa76d3c": {
+    "short_name": "C Green",
+    "full_name": "Cameron Green",
+    "team": "KKR"
+  },
+  "c8f5f961": {
+    "short_name": "Anuj Rawat",
+    "full_name": "Anuj Rawat",
+    "team": "GT"
+  },
+  "119678fd": {
+    "short_name": "KV Sharma",
+    "full_name": "Kartik Sharma",
+    "team": "CSK"
+  },
+  "2f49c897": {
+    "short_name": "Mohammed Siraj",
+    "full_name": "Mohammed Siraj",
+    "team": "GT"
+  },
+  "7210d461": {
+    "short_name": "Yash Dayal",
+    "full_name": "Yash Dayal",
+    "team": "RCB"
+  },
+  "45a43fe2": {
+    "short_name": "RD Gaikwad",
+    "full_name": "Ruturaj Gaikwad",
+    "team": "CSK"
+  },
+  "29e95537": {
+    "short_name": "AM Rahane",
+    "full_name": "Ajinkya Rahane",
+    "team": "KKR"
+  },
+  "a4e37e47": {
+    "short_name": "S Dube",
+    "full_name": "Shivam Dube",
+    "team": "CSK"
+  },
+  "fe93fd9d": {
+    "short_name": "RA Jadeja",
+    "full_name": "Ravindra Jadeja",
+    "team": "RR"
+  },
+  "f89d3b11": {
+    "short_name": "Sameer Rizvi",
+    "full_name": "Sameer Rizvi",
+    "team": "DC"
+  },
+  "4a8a2e3b": {
+    "short_name": "MS Dhoni",
+    "full_name": "MS Dhoni",
+    "team": "CSK"
+  },
+  "23eeb873": {
+    "short_name": "DL Chahar",
+    "full_name": "Deepak Chahar",
+    "team": "MI"
+  },
+  "46a9bea1": {
+    "short_name": "TU Deshpande",
+    "full_name": "Tushar Deshpande",
+    "team": "RR"
+  },
+  "3d8feaf8": {
+    "short_name": "MR Marsh",
+    "full_name": "Mitchell Marsh",
+    "team": "LSG"
+  },
+  "919a3be2": {
+    "short_name": "RR Pant",
+    "full_name": "Rishabh Pant",
+    "team": "LSG"
+  },
+  "85b3fab2": {
+    "short_name": "T Stubbs",
+    "full_name": "Tristan Stubbs",
+    "team": "DC"
+  },
+  "2e171977": {
+    "short_name": "AR Patel",
+    "full_name": "Axar Patel",
+    "team": "DC"
+  },
+  "8998a68f": {
+    "short_name": "Sumit Kumar",
+    "full_name": "Shivang Kumar",
+    "team": "SRH"
+  },
+  "ad3b6e95": {
+    "short_name": "Abishek Porel",
+    "full_name": "Abishek Porel",
+    "team": "DC"
+  },
+  "8d2c70ad": {
+    "short_name": "Kuldeep Yadav",
+    "full_name": "Kuldeep Yadav",
+    "team": "DC"
+  },
+  "a2f46292": {
+    "short_name": "KK Ahmed",
+    "full_name": "Khaleel Ahmed",
+    "team": "CSK"
+  },
+  "5bb1a1c4": {
+    "short_name": "I Sharma",
+    "full_name": "Ishant Sharma",
+    "team": "GT"
+  },
+  "244048f6": {
+    "short_name": "Arshdeep Singh",
+    "full_name": "Arshdeep Singh",
+    "team": "PBKS"
+  },
+  "9418198b": {
+    "short_name": "P Simran Singh",
+    "full_name": "Prabhsimran Singh",
+    "team": "PBKS"
+  },
+  "e94915e6": {
+    "short_name": "SM Curran",
+    "full_name": "Sam Curran",
+    "team": "RR"
+  },
+  "800d2d97": {
+    "short_name": "JM Sharma",
+    "full_name": "Jitesh Sharma",
+    "team": "RCB"
+  },
+  "50c6bc2b": {
+    "short_name": "LS Livingstone",
+    "full_name": "Liam Livingstone",
+    "team": "SRH"
+  },
+  "26989d80": {
+    "short_name": "Shashank Singh",
+    "full_name": "Shashank Singh",
+    "team": "PBKS"
+  },
+  "c05edf8e": {
+    "short_name": "Harpreet Brar",
+    "full_name": "Harpreet Brar",
+    "team": "PBKS"
+  },
+  "f986ca1a": {
+    "short_name": "HV Patel",
+    "full_name": "Harshal Patel",
+    "team": "SRH"
+  },
+  "e62dd25d": {
+    "short_name": "K Rabada",
+    "full_name": "Kagiso Rabada",
+    "team": "GT"
+  },
+  "2ed569a0": {
+    "short_name": "RD Chahar",
+    "full_name": "Rahul Chahar",
+    "team": "CSK"
+  },
+  "9440ef41": {
+    "short_name": "Suyash Sharma",
+    "full_name": "Suyash Sharma",
+    "team": "RCB"
+  },
+  "3d284ca3": {
+    "short_name": "PD Salt",
+    "full_name": "Philip Salt",
+    "team": "RCB"
+  },
+  "9d430b40": {
+    "short_name": "SP Narine",
+    "full_name": "Sunil Narine",
+    "team": "KKR"
+  },
+  "a24be938": {
+    "short_name": "VR Iyer",
+    "full_name": "Venkatesh Iyer",
+    "team": "RCB"
+  },
+  "85ec8e33": {
+    "short_name": "SS Iyer",
+    "full_name": "Shreyas Iyer",
+    "team": "PBKS"
+  },
+  "fb2d1dda": {
+    "short_name": "N Rana",
+    "full_name": "Nitish Rana",
+    "team": "DC"
+  },
+  "3fb19989": {
+    "short_name": "MA Starc",
+    "full_name": "Mitchell Starc",
+    "team": "DC"
+  },
+  "77b1aa15": {
+    "short_name": "Harshit Rana",
+    "full_name": "Harshit Rana",
+    "team": "KKR"
+  },
+  "ce794613": {
+    "short_name": "T Natarajan",
+    "full_name": "T Natarajan",
+    "team": "DC"
+  },
+  "f29185a1": {
+    "short_name": "Abhishek Sharma",
+    "full_name": "Abhishek Sharma",
+    "team": "SRH"
+  },
+  "77255a9e": {
+    "short_name": "RA Tripathi",
+    "full_name": "Rahul Tripathi",
+    "team": "KKR"
+  },
+  "6a26221c": {
+    "short_name": "AK Markram",
+    "full_name": "Aiden Markram",
+    "team": "LSG"
+  },
+  "235c2bb6": {
+    "short_name": "H Klaasen",
+    "full_name": "Heinrich Klaasen",
+    "team": "SRH"
+  },
+  "8e514b4c": {
+    "short_name": "Abdul Samad",
+    "full_name": "Abdul Samad",
+    "team": "LSG"
+  },
+  "f9e6e7ef": {
+    "short_name": "Shahbaz Ahmed",
+    "full_name": "Shahbaz Ahmed",
+    "team": "LSG"
+  },
+  "81c36ee9": {
+    "short_name": "M Jansen",
+    "full_name": "Marco Jansen",
+    "team": "PBKS"
+  },
+  "ded9240e": {
+    "short_name": "PJ Cummins",
+    "full_name": "Pat Cummins",
+    "team": "SRH"
+  },
+  "2e81a32d": {
+    "short_name": "B Kumar",
+    "full_name": "Bhuvneshwar Kumar",
+    "team": "RCB"
+  },
+  "a9fd84fb": {
+    "short_name": "M Markande",
+    "full_name": "Mayank Markande",
+    "team": "MI"
+  },
+  "6c19c6e5": {
+    "short_name": "YBK Jaiswal",
+    "full_name": "Yashasvi Jaiswal",
+    "team": "RR"
+  },
+  "99b75528": {
+    "short_name": "JC Buttler",
+    "full_name": "Jos Buttler",
+    "team": "GT"
+  },
+  "a4cc73aa": {
+    "short_name": "SV Samson",
+    "full_name": "Sanju Samson",
+    "team": "CSK"
+  },
+  "04a418e8": {
+    "short_name": "R Parag",
+    "full_name": "Riyan Parag",
+    "team": "RR"
+  },
+  "48a1d7b7": {
+    "short_name": "SO Hetmyer",
+    "full_name": "Shimron Hetmyer",
+    "team": "RR"
+  },
+  "bcf325d2": {
+    "short_name": "Dhruv Jurel",
+    "full_name": "Dhruv Jurel",
+    "team": "RR"
+  },
+  "ce820073": {
+    "short_name": "Sandeep Sharma",
+    "full_name": "Sandeep Sharma",
+    "team": "RR"
+  },
+  "57ee1fde": {
+    "short_name": "YS Chahal",
+    "full_name": "Yuzvendra Chahal",
+    "team": "PBKS"
+  },
+  "eef2536f": {
+    "short_name": "Avesh Khan",
+    "full_name": "Avesh Khan",
+    "team": "LSG"
+  },
+  "a818c1be": {
+    "short_name": "TA Boult",
+    "full_name": "Trent Boult",
+    "team": "MI"
+  },
+  "465aa633": {
+    "short_name": "N Burger",
+    "full_name": "Nandre Burger",
+    "team": "RR"
+  },
+  "372455c4": {
+    "short_name": "Q de Kock",
+    "full_name": "Quinton de Kock",
+    "team": "MI"
+  },
+  "b17e2f24": {
+    "short_name": "KL Rahul",
+    "full_name": "KL Rahul",
+    "team": "DC"
+  },
+  "2c25d4f5": {
+    "short_name": "D Padikkal",
+    "full_name": "Devdutt Padikkal",
+    "team": "RCB"
+  },
+  "872b03f7": {
+    "short_name": "A Badoni",
+    "full_name": "Ayush Badoni",
+    "team": "LSG"
+  },
+  "3241e3fd": {
+    "short_name": "N Pooran",
+    "full_name": "Nicholas Pooran",
+    "team": "LSG"
+  },
+  "d9273ee7": {
+    "short_name": "MP Stoinis",
+    "full_name": "Marcus Stoinis",
+    "team": "PBKS"
+  },
+  "5b8c830e": {
+    "short_name": "KH Pandya",
+    "full_name": "Krunal Pandya",
+    "team": "RCB"
+  },
+  "df064e1a": {
+    "short_name": "Ravi Bishnoi",
+    "full_name": "Ravi Bishnoi",
+    "team": "RR"
+  },
+  "c33d8116": {
+    "short_name": "Mohsin Khan",
+    "full_name": "Mohsin Khan",
+    "team": "LSG"
+  },
+  "4b31f3a3": {
+    "short_name": "Yash Thakur",
+    "full_name": "Yash Thakur",
+    "team": "PBKS"
+  },
+  "b4b99816": {
+    "short_name": "Shubman Gill",
+    "full_name": "Shubman Gill",
+    "team": "GT"
+  },
+  "8f6dd463": {
+    "short_name": "Azmatullah Omarzai",
+    "full_name": "Azmatullah Omarzai",
+    "team": "PBKS"
+  },
+  "d67d5f00": {
+    "short_name": "DA Miller",
+    "full_name": "David Miller",
+    "team": "DC"
+  },
+  "39a2dfa8": {
+    "short_name": "R Tewatia",
+    "full_name": "Rahul Tewatia",
+    "team": "GT"
+  },
+  "5f547c8b": {
+    "short_name": "Rashid Khan",
+    "full_name": "Rashid Khan",
+    "team": "GT"
+  },
+  "c7a995d3": {
+    "short_name": "R Sai Kishore",
+    "full_name": "Ravisrinivasan Sai Kishore",
+    "team": "GT"
+  },
+  "65b6943c": {
+    "short_name": "L Wood",
+    "full_name": "Luke Wood",
+    "team": "GT"
+  },
+  "752f7486": {
+    "short_name": "Ishan Kishan",
+    "full_name": "Ishan Kishan",
+    "team": "SRH"
+  },
+  "fffa744b": {
+    "short_name": "Naman Dhir",
+    "full_name": "Naman Dhir",
+    "team": "MI"
+  },
+  "844e79d1": {
+    "short_name": "D Brevis",
+    "full_name": "Dewald Brevis",
+    "team": "CSK"
+  },
+  "b0482a1d": {
+    "short_name": "Tilak Varma",
+    "full_name": "Tilak Varma",
+    "team": "MI"
+  },
+  "f1f99156": {
+    "short_name": "TH David",
+    "full_name": "Tim David",
+    "team": "RCB"
+  },
+  "dbe50b21": {
+    "short_name": "HH Pandya",
+    "full_name": "Hardik Pandya",
+    "team": "MI"
+  },
+  "462411b3": {
+    "short_name": "JJ Bumrah",
+    "full_name": "Jasprit Bumrah",
+    "team": "MI"
+  },
+  "64839cb3": {
+    "short_name": "M Pathirana",
+    "full_name": "Matheesha Pathirana",
+    "team": "KKR"
+  },
+  "81c08fa3": {
+    "short_name": "Umran Malik",
+    "full_name": "Umran Malik",
+    "team": "KKR"
+  },
+  "12b610c2": {
+    "short_name": "TM Head",
+    "full_name": "Travis Head",
+    "team": "SRH"
+  },
+  "1e66c162": {
+    "short_name": "JD Unadkat",
+    "full_name": "Jaydev Unadkat",
+    "team": "SRH"
+  },
+  "107c26fb": {
+    "short_name": "KT Maphaka",
+    "full_name": "Kwena Maphaka",
+    "team": "RR"
+  },
+  "c5aef772": {
+    "short_name": "R Shepherd",
+    "full_name": "Romario Shepherd",
+    "team": "RCB"
+  },
+  "acdc62f5": {
+    "short_name": "A Nortje",
+    "full_name": "Anrich Nortje",
+    "team": "LSG"
+  },
+  "2cffab74": {
+    "short_name": "Mukesh Kumar",
+    "full_name": "Mukesh Kumar",
+    "team": "DC"
+  },
+  "54e52590": {
+    "short_name": "Vijaykumar Vyshak",
+    "full_name": "Vijaykumar Vyshak",
+    "team": "PBKS"
+  },
+  "e4cdf230": {
+    "short_name": "AS Roy",
+    "full_name": "Anukul Roy",
+    "team": "KKR"
+  },
+  "d7017798": {
+    "short_name": "A Raghuvanshi",
+    "full_name": "Angkrish Raghuvanshi",
+    "team": "KKR"
+  },
+  "b1ad996b": {
+    "short_name": "MP Yadav",
+    "full_name": "Mayank Yadav",
+    "team": "LSG"
+  },
+  "cf0ccafa": {
+    "short_name": "M Siddharth",
+    "full_name": "Manimaran Siddharth",
+    "team": "LSG"
+  },
+  "f19ccfad": {
+    "short_name": "Washington Sundar",
+    "full_name": "Washington Sundar",
+    "team": "GT"
+  },
+  "efc04be7": {
+    "short_name": "Noor Ahmad",
+    "full_name": "Noor Ahmad",
+    "team": "CSK"
+  },
+  "b8527c3d": {
+    "short_name": "Rasikh Salam",
+    "full_name": "Rasikh Salam Dar",
+    "team": "RCB"
+  },
+  "6b2ff18f": {
+    "short_name": "SB Dubey",
+    "full_name": "Shubham Dubey",
+    "team": "RR"
+  },
+  "7c3b3b78": {
+    "short_name": "VG Arora",
+    "full_name": "Vaibhav Arora",
+    "team": "KKR"
+  },
+  "84d9c311": {
+    "short_name": "Ashutosh Sharma",
+    "full_name": "Ashutosh Sharma",
+    "team": "DC"
+  },
+  "765a4731": {
+    "short_name": "Mukesh Choudhary",
+    "full_name": "Mukesh Choudhary",
+    "team": "CSK"
+  },
+  "aad0c365": {
+    "short_name": "Nithish Kumar Reddy",
+    "full_name": "Nitish Kumar Reddy",
+    "team": "SRH"
+  },
+  "271f83cd": {
+    "short_name": "SA Yadav",
+    "full_name": "Suryakumar Yadav",
+    "team": "MI"
+  },
+  "57ca01b3": {
+    "short_name": "Kumar Kushagra",
+    "full_name": "Kumar Kushagra",
+    "team": "GT"
+  },
+  "1abb78f8": {
+    "short_name": "SN Thakur",
+    "full_name": "Shardul Thakur",
+    "team": "MI"
+  },
+  "2e78f685": {
+    "short_name": "KR Sen",
+    "full_name": "Kuldeep Sen",
+    "team": "RR"
+  },
+  "9caf69a1": {
+    "short_name": "WG Jacks",
+    "full_name": "Will Jacks",
+    "team": "MI"
+  },
+  "0a67aec0": {
+    "short_name": "Akash Deep",
+    "full_name": "Akash Deep",
+    "team": "KKR"
+  },
+  "7a8bd078": {
+    "short_name": "S Gopal",
+    "full_name": "Shreyas Gopal",
+    "team": "CSK"
+  },
+  "650d5e49": {
+    "short_name": "R Powell",
+    "full_name": "Rovman Powell",
+    "team": "KKR"
+  },
+  "2f9d0389": {
+    "short_name": "LH Ferguson",
+    "full_name": "Lockie Ferguson",
+    "team": "PBKS"
+  },
+  "cdc6bdba": {
+    "short_name": "S Sandeep Warrier",
+    "full_name": "Sandeep Sharma",
+    "team": "RR"
+  },
+  "28c78fb3": {
+    "short_name": "Harpreet Singh",
+    "full_name": "Harnoor Singh",
+    "team": "PBKS"
+  },
+  "e84ac20c": {
+    "short_name": "MJ Henry",
+    "full_name": "Matt Henry",
+    "team": "CSK"
+  },
+  "ee1b6c27": {
+    "short_name": "N Thushara",
+    "full_name": "Nuwan Thushara",
+    "team": "RCB"
+  },
+  "d1a60072": {
+    "short_name": "N Wadhera",
+    "full_name": "Nehal Wadhera",
+    "team": "PBKS"
+  },
+  "983f2f61": {
+    "short_name": "Swapnil Singh",
+    "full_name": "Swapnil Singh",
+    "team": "RCB"
+  },
+  "2d140b79": {
+    "short_name": "AA Kulkarni",
+    "full_name": "Arshin Kulkarni",
+    "team": "LSG"
+  },
+  "93b4fc78": {
+    "short_name": "MK Pandey",
+    "full_name": "Manish Pandey",
+    "team": "KKR"
+  },
+  "025c4400": {
+    "short_name": "MJ Suthar",
+    "full_name": "Manav Suthar",
+    "team": "GT"
+  },
+  "e4a0deae": {
+    "short_name": "MJ Santner",
+    "full_name": "Mitchell Santner",
+    "team": "MI"
+  },
+  "4885bbe6": {
+    "short_name": "Yudhvir Singh",
+    "full_name": "Yudhvir Singh Charak",
+    "team": "RR"
+  },
+  "fcc21ace": {
+    "short_name": "A Kamboj",
+    "full_name": "Anshul Kamboj",
+    "team": "CSK"
+  },
+  "f0af99a7": {
+    "short_name": "D Ferreira",
+    "full_name": "Donovan Ferreira",
+    "team": "RR"
+  },
+  "5d2eea49": {
+    "short_name": "Kartik Tyagi",
+    "full_name": "Kartik Tyagi",
+    "team": "KKR"
+  },
+  "9eb1455b": {
+    "short_name": "NT Ellis",
+    "full_name": "Nathan Ellis",
+    "team": "CSK"
+  },
+  "44aac2f0": {
+    "short_name": "Arjun Tendulkar",
+    "full_name": "Arjun Tendulkar",
+    "team": "LSG"
+  },
+  "e1d9ae9c": {
+    "short_name": "Shivam Singh",
+    "full_name": "Shashank Singh",
+    "team": "PBKS"
+  },
+  "03806cf8": {
+    "short_name": "JR Hazlewood",
+    "full_name": "Josh Hazlewood",
+    "team": "RCB"
+  },
+  "a3b0600d": {
+    "short_name": "Aniket Verma",
+    "full_name": "Aniket Verma",
+    "team": "SRH"
+  },
+  "8cf9814c": {
+    "short_name": "Mohammed Shami",
+    "full_name": "Mohammed Shami",
+    "team": "LSG"
+  },
+  "5574750c": {
+    "short_name": "JC Archer",
+    "full_name": "Jofra Archer",
+    "team": "RR"
+  },
+  "1e030637": {
+    "short_name": "V Puthur",
+    "full_name": "Vignesh Puthur",
+    "team": "RR"
+  },
+  "e66732f8": {
+    "short_name": "RD Rickelton",
+    "full_name": "Ryan Rickelton",
+    "team": "MI"
+  },
+  "bafd0398": {
+    "short_name": "R Minz",
+    "full_name": "Robin Minz",
+    "team": "MI"
+  },
+  "13fc5c6d": {
+    "short_name": "DS Rathi",
+    "full_name": "Digvesh Singh Rathi",
+    "team": "LSG"
+  },
+  "80b2fb19": {
+    "short_name": "Prince Yadav",
+    "full_name": "Prince Yadav",
+    "team": "LSG"
+  },
+  "5ffc0565": {
+    "short_name": "V Nigam",
+    "full_name": "Vipraj Nigam",
+    "team": "DC"
+  },
+  "b5797845": {
+    "short_name": "Priyansh Arya",
+    "full_name": "Priyansh Arya",
+    "team": "PBKS"
+  },
+  "970ddd24": {
+    "short_name": "Suryansh Shedge",
+    "full_name": "Suryansh Shedge",
+    "team": "PBKS"
+  },
+  "d014d5ac": {
+    "short_name": "SE Rutherford",
+    "full_name": "Sherfane Rutherford",
+    "team": "MI"
+  },
+  "36619795": {
+    "short_name": "Zeeshan Ansari",
+    "full_name": "Zeeshan Ansari",
+    "team": "SRH"
+  },
+  "59559bc2": {
+    "short_name": "J Overton",
+    "full_name": "Jamie Overton",
+    "team": "CSK"
+  },
+  "d45c29b1": {
+    "short_name": "Ashwani Kumar",
+    "full_name": "Ashwani Kumar",
+    "team": "MI"
+  },
+  "ba6b2f91": {
+    "short_name": "RA Bawa",
+    "full_name": "Raj Bawa",
+    "team": "MI"
+  },
+  "ebcfef83": {
+    "short_name": "Himmat Singh",
+    "full_name": "Himmat Singh",
+    "team": "LSG"
+  },
+  "5750bcb4": {
+    "short_name": "E Malinga",
+    "full_name": "Eshan Malinga",
+    "team": "SRH"
+  },
+  "944533a5": {
+    "short_name": "KK Nair",
+    "full_name": "Karun Nair",
+    "team": "DC"
+  },
+  "989889ff": {
+    "short_name": "JP Inglis",
+    "full_name": "Josh Inglis",
+    "team": "LSG"
+  },
+  "3b53243a": {
+    "short_name": "XC Bartlett",
+    "full_name": "Xavier Bartlett",
+    "team": "PBKS"
+  },
+  "b2b4f545": {
+    "short_name": "A Mhatre",
+    "full_name": "Ayush Mhatre",
+    "team": "CSK"
+  },
+  "172dff15": {
+    "short_name": "C Bosch",
+    "full_name": "Corbin Bosch",
+    "team": "MI"
+  },
+  "3c55c703": {
+    "short_name": "JG Bethell",
+    "full_name": "Jacob Bethell",
+    "team": "RCB"
+  },
+  "f834dcfc": {
+    "short_name": "L Ngidi",
+    "full_name": "Lungi Ngidi",
+    "team": "DC"
+  },
+  "b483905d": {
+    "short_name": "Akash Singh",
+    "full_name": "Akash Maharaj Singh",
+    "team": "LSG"
+  },
+  "cf59b3f0": {
+    "short_name": "Urvil Patel",
+    "full_name": "Urvil Patel",
+    "team": "CSK"
+  },
+  "fb5f69e4": {
+    "short_name": "M Tiwari",
+    "full_name": "Madhav Tiwari",
+    "team": "DC"
+  },
+  "f2c936d7": {
+    "short_name": "MJ Owen",
+    "full_name": "Mitchell Owen",
+    "team": "PBKS"
+  },
+  "25228673": {
+    "short_name": "Harsh Dubey",
+    "full_name": "Harsh Dubey",
+    "team": "SRH"
+  },
+  "68c56d09": {
+    "short_name": "KA Jamieson",
+    "full_name": "Kyle Jamieson",
+    "team": "DC"
+  },
+  "35f173a0": {
+    "short_name": "MP Breetzke",
+    "full_name": "Matthew Breetzke",
+    "team": "LSG"
+  },
+  "d621b427": {
+    "short_name": "Musheer Khan",
+    "full_name": "Musheer Khan",
+    "team": "PBKS"
+  },
+  "ed5a5510": {
+    "short_name": "P Dubey",
+    "full_name": "Praveen Dubey",
+    "team": "PBKS"
+  },
+  "0a509d6b": {
+    "short_name": "RK Singh",
+    "full_name": "Rinku Singh",
+    "team": "KKR"
+  },
+  "5b7ab5a9": {
+    "short_name": "CV Varun",
+    "full_name": "Varun Chakaravarthy",
+    "team": "KKR"
+  },
+  "d5130a30": {
+    "short_name": "B Sai Sudharsan",
+    "full_name": "Sai Sudharsan",
+    "team": "GT"
+  },
+  "327b58d3": {
+    "short_name": "PVD Chameera",
+    "full_name": "Dushmantha Chameera",
+    "team": "DC"
+  },
+  "85e0cf10": {
+    "short_name": "M Prasidh Krishna",
+    "full_name": "Prasidh Krishna",
+    "team": "GT"
+  },
+  "ba5e1069": {
+    "short_name": "R Ravindra",
+    "full_name": "Rachin Ravindra",
+    "team": "KKR"
+  },
+  "be24ead0": {
+    "short_name": "Ramandeep Singh",
+    "full_name": "Ramandeep Singh",
+    "team": "KKR"
+  },
+  "740742ef": {
+    "short_name": "RG Sharma",
+    "full_name": "Rohit Sharma",
+    "team": "MI"
+  },
+  "7dcb9bc9": {
+    "short_name": "M Shahrukh Khan",
+    "full_name": "Shahrukh Khan",
+    "team": "GT"
+  },
+  "12314277": {
+    "short_name": "Arshad Khan",
+    "full_name": "Arshad Khan",
+    "team": "GT"
+  },
+  "470f446b": {
+    "short_name": "V Suryavanshi",
+    "full_name": "Vaibhav Sooryavanshi",
+    "team": "RR"
+  },
+  "350bb1b1": {
+    "short_name": "AF Milne",
+    "full_name": "Adam Milne",
+    "team": null,
+    "status": "verified_from_2023"
+  },
+  "4663bd23": {
+    "short_name": "TL Seifert",
+    "full_name": "Tim Seifert",
+    "team": null,
+    "status": "verified_from_2023"
+  },
+  "0f721006": {
+    "short_name": "JO Holder",
+    "full_name": "Jason Holder",
+    "team": null,
+    "status": "verified_from_2023"
+  },
+  "f088b960": {
+    "short_name": "SN Khan",
+    "full_name": "Sarfaraz Khan",
+    "team": null,
+    "status": "verified_from_2023"
+  },
+  "c695b423": {
+    "short_name": "PH Solanki",
+    "full_name": "Prashant Solanki",
+    "team": null,
+    "status": "verified_from_2023"
+  },
+  "9a46c4e5": {
+    "short_name": "GD Phillips",
+    "full_name": "Glenn Phillips",
+    "team": null,
+    "status": "verified_from_2023"
+  },
+  "4d7f517e": {
+    "short_name": "AJ Hosein",
+    "full_name": "Akeal Hosein",
+    "team": null,
+    "status": "verified_from_2023"
+  }
+}

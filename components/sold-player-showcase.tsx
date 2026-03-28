@@ -1,0 +1,169 @@
+﻿"use client";
+
+import { useEffect, useMemo, useRef, useState } from "react";
+
+import { formatCurrencyShort } from "@/lib/utils";
+
+export type SoldShowcaseItem = {
+  id: string;
+  playerName: string;
+  teamCode: string;
+  teamName?: string | null;
+  amount: number;
+  role?: string | null;
+};
+
+export function SoldPlayerShowcase({
+  items,
+  title,
+  variant,
+  showDetail = true,
+}: {
+  items: SoldShowcaseItem[];
+  title?: string;
+  variant: "ticker" | "cards";
+  showDetail?: boolean;
+}) {
+  const orderedItems = useMemo(
+    () => [...items].sort((left, right) => right.amount - left.amount || left.playerName.localeCompare(right.playerName)),
+    [items],
+  );
+  const [selectedId, setSelectedId] = useState<string | null>(orderedItems[0]?.id ?? null);
+  const [isPaused, setIsPaused] = useState(false);
+  const resumeTimerRef = useRef<number | null>(null);
+  const frameRef = useRef<number | null>(null);
+  const lastFrameRef = useRef<number | null>(null);
+  const offsetRef = useRef(0);
+  const trackRef = useRef<HTMLDivElement | null>(null);
+  const pausedRef = useRef(false);
+
+  const selectedItem =
+    orderedItems.find((item) => item.id === selectedId) ?? orderedItems[0] ?? null;
+  const loopItems = useMemo(() => {
+    const minItemCount = variant === "ticker" ? 10 : 8;
+    const repeated = [...orderedItems];
+
+    while (repeated.length < minItemCount && orderedItems.length > 0) {
+      repeated.push(...orderedItems);
+    }
+
+    return repeated;
+  }, [orderedItems, variant]);
+  const renderedItems = useMemo(() => [...loopItems, ...loopItems], [loopItems]);
+
+  useEffect(() => {
+    pausedRef.current = isPaused;
+  }, [isPaused]);
+
+  useEffect(() => {
+    const track = trackRef.current;
+    if (!track || orderedItems.length === 0) return;
+
+    const pixelsPerSecond = variant === "ticker" ? 30 : 24;
+    const segmentWidth = track.scrollWidth / 2;
+    offsetRef.current = 0;
+    track.style.transform = `translateX(-${offsetRef.current}px)`;
+
+    const step = (time: number) => {
+      if (lastFrameRef.current === null) {
+        lastFrameRef.current = time;
+      }
+
+      const deltaMs = time - lastFrameRef.current;
+      lastFrameRef.current = time;
+
+      if (!pausedRef.current && segmentWidth > 0) {
+        offsetRef.current += (pixelsPerSecond * deltaMs) / 1000;
+        if (offsetRef.current >= segmentWidth) {
+          offsetRef.current -= segmentWidth;
+        }
+        track.style.transform = `translateX(-${offsetRef.current}px)`;
+      }
+
+      frameRef.current = window.requestAnimationFrame(step);
+    };
+
+    frameRef.current = window.requestAnimationFrame(step);
+
+    return () => {
+      if (resumeTimerRef.current !== null) {
+        window.clearTimeout(resumeTimerRef.current);
+      }
+      if (frameRef.current !== null) {
+        window.cancelAnimationFrame(frameRef.current);
+      }
+      lastFrameRef.current = null;
+    };
+  }, [orderedItems.length, renderedItems.length, variant]);
+
+  function pauseAutoScroll() {
+    setIsPaused(true);
+    if (resumeTimerRef.current !== null) {
+      window.clearTimeout(resumeTimerRef.current);
+    }
+    resumeTimerRef.current = window.setTimeout(() => {
+      setIsPaused(false);
+    }, 2200);
+  }
+
+  if (orderedItems.length === 0) {
+    return null;
+  }
+
+  return (
+    <div className={`sold-showcase sold-showcase-${variant}`}>
+      {title ? (
+        <div className="sold-showcase-head">
+          <h3 style={{ margin: 0 }}>{title}</h3>
+          <span className="subtle" style={{ fontSize: "0.8rem" }}>
+            Highest sold prices first. Click any item for details.
+          </span>
+        </div>
+      ) : null}
+
+      <div className="sold-showcase-slider">
+        <div
+          className={`sold-showcase-marquee${isPaused ? " paused" : ""}`}
+          onMouseEnter={() => setIsPaused(true)}
+          onMouseLeave={() => setIsPaused(false)}
+          onPointerDown={pauseAutoScroll}
+          onTouchStart={pauseAutoScroll}
+        >
+          <div className="sold-showcase-track" ref={trackRef}>
+            {renderedItems.map((item, index) => (
+              <button
+                className={`sold-showcase-item${selectedItem?.id === item.id ? " active" : ""}`}
+                key={`${item.id}-${index}`}
+                onClick={() => {
+                  pauseAutoScroll();
+                  setSelectedId(item.id);
+                }}
+                type="button"
+              >
+                <span className="sold-showcase-badge">SOLD</span>
+                <strong>{item.playerName}</strong>
+                <span className="subtle">{item.teamCode}</span>
+                <span className="sold-showcase-price">{formatCurrencyShort(item.amount)}</span>
+              </button>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      {showDetail && selectedItem ? (
+        <div className="sold-showcase-detail">
+          <div>
+            <div className="sold-showcase-detail-title">{selectedItem.playerName}</div>
+            <div className="subtle" style={{ fontSize: "0.82rem" }}>
+              {selectedItem.teamName ?? selectedItem.teamCode}
+              {selectedItem.role ? ` • ${selectedItem.role}` : ""}
+            </div>
+          </div>
+          <div className="sold-showcase-detail-price">
+            {formatCurrencyShort(selectedItem.amount)}
+          </div>
+        </div>
+      ) : null}
+    </div>
+  );
+}
