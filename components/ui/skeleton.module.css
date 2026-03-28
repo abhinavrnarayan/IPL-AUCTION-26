@@ -1,0 +1,27 @@
+.skeleton {
+  display: inline-block;
+  background: linear-gradient(
+    90deg,
+    rgba(99, 102, 241, 0.06) 25%,
+    rgba(99, 102, 241, 0.16) 50%,
+    rgba(99, 102, 241, 0.06) 75%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 1.6s ease-in-out infinite;
+  border-radius: 6px;
+  min-height: 1em;
+}
+
+.rounded {
+  border-radius: 50%;
+}
+
+.block {
+  display: block;
+  width: 100%;
+}
+
+@keyframes shimmer {
+  0%   { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}

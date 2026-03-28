@@ -2,6 +2,7 @@ import type { ReactNode } from "react";
 import type { Metadata } from "next";
 import { Outfit, Inter } from "next/font/google";
 import IntroSplashWrapper from "@/components/intro-splash-wrapper";
+import { AmbientBackground } from "@/components/ambient-background";
 
 import "./globals.css";
 
@@ -33,6 +34,7 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <body className={`${displayFont.variable} ${bodyFont.variable}`}>
+        <AmbientBackground />
         <IntroSplashWrapper />
         {children}
       </body>

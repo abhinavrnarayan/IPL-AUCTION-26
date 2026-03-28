@@ -4,11 +4,11 @@ import { SiteLogo } from "@/components/site-logo";
 import { signOutAction } from "@/app/login/actions";
 import { CreateRoomForm } from "@/components/lobby/create-room-form";
 import { JoinRoomForm } from "@/components/lobby/join-room-form";
+import { RoomCardList } from "@/components/lobby/room-card-list";
 import { hasBrowserSupabaseEnv, hasServiceRoleEnv } from "@/lib/config";
 import { requireSessionUser } from "@/lib/server/auth";
 import { getLobbySnapshot } from "@/lib/server/queries";
 import { getSupabaseSchemaStatus } from "@/lib/supabase/schema";
-import { deriveRoleLabel, formatCurrency } from "@/lib/utils";
 
 export default async function LobbyPage() {
   const user = await requireSessionUser();
@@ -109,69 +109,7 @@ export default async function LobbyPage() {
 
       <section className="panel" style={{ marginTop: "1rem" }}>
         <h2>Your rooms</h2>
-        {snapshot.rooms.length === 0 ? (
-          <div className="empty-state">
-            No rooms yet. Create one above or join a room with a code.
-          </div>
-        ) : (
-          <div className="card-list">
-            {snapshot.rooms.map((summary) => (
-              <Link
-                key={summary.room.id}
-                className="room-card"
-                href={`/room/${summary.room.code}`}
-              >
-                <div className="header-row">
-                  <div>
-                    <strong>{summary.room.name}</strong>
-                    <div className="subtle mono">{summary.room.code}</div>
-                  </div>
-                  <div className="pill-row">
-                    <span className="pill">
-                      {deriveRoleLabel({
-                        isAdmin: summary.isAdmin,
-                        isPlayer: summary.isPlayer,
-                      })}
-                    </span>
-                    {summary.auctionPhase === "COMPLETED" ? (
-                      <span
-                        className="pill"
-                        style={{
-                          color: "#fcd34d",
-                          borderColor: "rgba(245,158,11,0.28)",
-                          background: "rgba(245,158,11,0.08)",
-                        }}
-                      >
-                        Auction complete
-                      </span>
-                    ) : null}
-                    <span className="pill highlight">
-                      {formatCurrency(summary.room.purse)}
-                    </span>
-                  </div>
-                </div>
-                <div className="stats-strip" style={{ marginTop: "0.9rem" }}>
-                  <div className="stat-tile">
-                    <strong>{summary.memberCount}</strong>
-                    Members
-                  </div>
-                  <div className="stat-tile">
-                    <strong>{summary.teamCount}</strong>
-                    Teams
-                  </div>
-                  <div className="stat-tile">
-                    <strong>{summary.room.squadSize}</strong>
-                    Squad size
-                  </div>
-                  <div className="stat-tile">
-                    <strong>{summary.room.timerSeconds}s</strong>
-                    Bid timer
-                  </div>
-                </div>
-              </Link>
-            ))}
-          </div>
-        )}
+        <RoomCardList rooms={snapshot.rooms} />
       </section>
     </main>
   );

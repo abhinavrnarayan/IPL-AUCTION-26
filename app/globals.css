@@ -27,6 +27,24 @@
 
   /* â”€â”€ Shadows â”€â”€ */
   --shadow: 0 12px 48px -8px rgba(0, 0, 0, 0.8);
+
+  /* -- Animation tokens -- */
+  --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+  --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
+  --ease-in-out: cubic-bezier(0.65, 0, 0.35, 1);
+  --duration-fast: 120ms;
+  --duration-normal: 220ms;
+  --duration-slow: 400ms;
+
+  /* -- Glassmorphism tokens -- */
+  --glass-bg: rgba(255, 255, 255, 0.032);
+  --glass-border: rgba(99, 102, 241, 0.15);
+  --shadow-glow: 0 0 28px rgba(99, 102, 241, 0.18);
+  --shadow-glow-emerald: 0 0 28px rgba(16, 185, 129, 0.18);
+
+  /* -- Ambient glow position (driven by AmbientBackground) -- */
+  --glow-x: 5%;
+  --glow-y: 0%;
 }
 
 /* â”€â”€ Reset â”€â”€ */
@@ -40,8 +58,8 @@ body {
   min-height: 100vh;
   color: var(--text);
   background:
-    radial-gradient(ellipse 55% 40% at 5% 0%, rgba(99, 102, 241, 0.09) 0%, transparent 60%),
-    radial-gradient(ellipse 45% 35% at 95% 100%, rgba(16, 185, 129, 0.09) 0%, transparent 55%),
+    radial-gradient(ellipse 60% 45% at var(--glow-x) var(--glow-y), rgba(99, 102, 241, 0.10) 0%, transparent 62%),
+    radial-gradient(ellipse 50% 40% at 95% 100%, rgba(16, 185, 129, 0.09) 0%, transparent 55%),
     var(--bg);
   font-family: var(--font-body), "Inter", -apple-system, sans-serif;
   -webkit-font-smoothing: antialiased;
@@ -126,15 +144,16 @@ button { cursor: pointer; }
    PANEL
 â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 .panel {
-  background: linear-gradient(148deg, rgba(99,102,241,0.05) 0%, rgba(13,13,22,0.7) 100%);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
-  border: 1px solid rgba(99, 102, 241, 0.13);
+  background: linear-gradient(148deg, rgba(99,102,241,0.055) 0%, rgba(13,13,22,0.72) 100%);
+  backdrop-filter: blur(20px) saturate(160%);
+  -webkit-backdrop-filter: blur(20px) saturate(160%);
+  border: 1px solid var(--glass-border);
   border-radius: 20px;
-  box-shadow: var(--shadow), inset 0 1px 0 rgba(255,255,255,0.05);
+  box-shadow: var(--shadow), inset 0 1px 0 rgba(255,255,255,0.06), inset 0 0 0 1px rgba(255,255,255,0.02);
   padding: 1.75rem;
-  transition: border-color 0.25s ease, box-shadow 0.25s ease, transform 0.25s ease;
+  transition: border-color 0.22s ease, box-shadow 0.22s ease, transform 0.22s var(--ease-out);
   position: relative;
+  will-change: transform;
 }
 
 /* Static top accent line */
@@ -197,8 +216,9 @@ button { cursor: pointer; }
   font-family: var(--font-display), sans-serif;
   font-weight: 700;
   letter-spacing: 0.01em;
-  transition: transform 0.2s ease, box-shadow 0.2s ease, filter 0.2s ease;
+  transition: transform var(--duration-fast) var(--ease-out), box-shadow 0.2s ease, filter 0.15s ease;
   box-shadow: 0 4px 14px rgba(99, 102, 241, 0.35), inset 0 1px 0 rgba(255,255,255,0.18);
+  will-change: transform;
 }
 
 .button:hover:not(:disabled) {
@@ -285,7 +305,10 @@ button { cursor: pointer; }
   outline: none;
   border-color: var(--primary-strong);
   background: rgba(0, 0, 0, 0.45);
-  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.14);
+  box-shadow:
+    0 0 0 3px rgba(99, 102, 241, 0.18),
+    0 0 20px rgba(99, 102, 241, 0.10);
+  transition: border-color 0.15s ease, box-shadow 0.18s ease, background 0.18s ease;
 }
 
 .textarea { min-height: 120px; resize: vertical; }
@@ -2755,4 +2778,119 @@ html {
 
 .export-menu-item:hover {
   background: rgba(104, 115, 255, 0.1);
+
+
+/* ─────────────────────────────────────────────────────
+   MICRO-INTERACTION ENHANCEMENTS
+───────────────────────────────────────────────────── */
+
+/* Bid flash — applied by JS when price updates */
+@keyframes bid-price-flash {
+  0%   { background: rgba(99, 102, 241, 0.22); box-shadow: 0 0 12px rgba(99,102,241,0.3); }
+  100% { background: transparent; box-shadow: none; }
+}
+.bid-flash {
+  animation: bid-price-flash 0.5s var(--ease-out) forwards;
+  border-radius: 6px;
+}
+
+/* stat-tile hover: defined in STATS STRIP section above */
+
+/* Room card glassmorphism upgrade */
+.room-card,
+.trade-card {
+  backdrop-filter: blur(12px) saturate(140%);
+  -webkit-backdrop-filter: blur(12px) saturate(140%);
+  transition: border-color 0.2s ease, transform 0.2s var(--ease-out), box-shadow 0.2s ease;
+}
+
+/* Input hover glow (before focus) */
+.input:hover:not(:focus),
+.select:hover:not(:focus) {
+  border-color: rgba(99, 102, 241, 0.24);
+}
+
+/* Pill hover pop */
+.pill {
+  transition: background 0.15s ease, border-color 0.15s ease;
+}
+
+/* Leader row hover */
+.results-leader-row {
+  transition: transform 0.15s var(--ease-out), background 0.15s ease, padding-left 0.15s ease;
+  border-radius: 10px;
+  padding: 0.6rem 0.75rem;
+}
+
+/* Eyebrow glow on hover */
+.eyebrow {
+  transition: background 0.18s ease, border-color 0.18s ease, box-shadow 0.18s ease;
+}
+.eyebrow:hover {
+  background: rgba(99, 102, 241, 0.16);
+  border-color: rgba(99, 102, 241, 0.35);
+  box-shadow: var(--shadow-glow);
+}
+
+
+/* ─────────────────────────────────────────────────────
+   MOBILE POLISH
+───────────────────────────────────────────────────── */
+
+/* Touch active feedback — feels native on mobile */
+@media (hover: none) {
+  .button:active:not(:disabled) {
+    transform: scale(0.97) translateY(0);
+    filter: brightness(0.95);
+  }
+  .room-card:active {
+    transform: scale(0.98);
+    border-color: rgba(99, 102, 241, 0.3);
+  }
+  .stat-tile:active {
+    transform: scale(0.97);
+  }
+}
+
+/* Larger touch targets on mobile */
+@media (max-width: 640px) {
+  .button {
+    min-height: 48px;
+    padding: 0.75rem 1.4rem;
+  }
+  .input, .select {
+    min-height: 48px;
+    font-size: 1rem; /* prevents iOS auto-zoom */
+  }
+  .auction-chat-emoji-row .button {
+    min-height: 44px;
+    min-width: 44px;
+    font-size: 1.3rem;
+  }
+  .bid-btn {
+    min-height: 52px;
+    font-size: 1rem;
+  }
+}
+
+/* Smooth momentum scrolling on scroll containers */
+.auction-chat-log,
+.sold-showcase-marquee,
+.results-leaderboard,
+.results-top-scorers,
+.card-list {
+  -webkit-overflow-scrolling: touch;
+  scroll-behavior: smooth;
+}
+
+/* Prevent text selection on tap for interactive elements */
+.button,
+.room-card,
+.stat-tile,
+.sold-showcase-item,
+.bid-row {
+  -webkit-tap-highlight-color: transparent;
+  -webkit-user-select: none;
+  user-select: none;
+
 }

@@ -1,6 +1,9 @@
-﻿"use client";
+"use client";
 
 import { useEffect, useRef, useState } from "react";
+import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
+
+import { spring } from "@/lib/animations";
 
 const quickChatEmojis = ["🔥", "👏", "😮", "😂", "💸", "🏏"];
 
@@ -23,6 +26,7 @@ export function AuctionChatPanel({
   onSendEmoji: (emoji: string) => Promise<void>;
   onSendMessage: (message: string) => Promise<void>;
 }) {
+  const reduced = useReducedMotion();
   const [messageInput, setMessageInput] = useState("");
   const [sending, setSending] = useState(false);
   const listRef = useRef<HTMLDivElement | null>(null);
@@ -56,14 +60,17 @@ export function AuctionChatPanel({
 
       <div className="auction-chat-emoji-row">
         {quickChatEmojis.map((emoji) => (
-          <button
+          <motion.button
             key={emoji}
             className="button ghost"
             onClick={() => void onSendEmoji(emoji)}
             type="button"
+            whileHover={reduced ? undefined : { scale: 1.2, y: -2 }}
+            whileTap={reduced ? undefined : { scale: 0.85 }}
+            transition={spring.bouncy}
           >
             {emoji}
-          </button>
+          </motion.button>
         ))}
       </div>
 
@@ -73,24 +80,29 @@ export function AuctionChatPanel({
             Start the chat. Messages and emoji reactions will appear here live.
           </div>
         ) : (
-          messages.map((message) => (
-            <div
-              className={`auction-chat-message${message.isOwn ? " own" : ""}`}
-              key={message.id}
-            >
-              <div className="auction-chat-meta">
-                <strong>{message.userName}</strong>
-                {message.userTag ? (
-                  <span className="pill" style={{ fontSize: "0.68rem", padding: "0.16rem 0.42rem" }}>
-                    {message.userTag}
-                  </span>
-                ) : null}
-              </div>
-              <div className={`auction-chat-bubble ${message.kind}`}>
-                {message.text}
-              </div>
-            </div>
-          ))
+          <AnimatePresence initial={false}>
+            {messages.map((message) => (
+              <motion.div
+                className={`auction-chat-message${message.isOwn ? " own" : ""}`}
+                key={message.id}
+                initial={reduced ? undefined : { opacity: 0, y: 10, scale: 0.97 }}
+                animate={reduced ? undefined : { opacity: 1, y: 0, scale: 1 }}
+                transition={{ ...spring.snappy, duration: 0.18 }}
+              >
+                <div className="auction-chat-meta">
+                  <strong>{message.userName}</strong>
+                  {message.userTag ? (
+                    <span className="pill" style={{ fontSize: "0.68rem", padding: "0.16rem 0.42rem" }}>
+                      {message.userTag}
+                    </span>
+                  ) : null}
+                </div>
+                <div className={`auction-chat-bubble ${message.kind}`}>
+                  {message.text}
+                </div>
+              </motion.div>
+            ))}
+          </AnimatePresence>
         )}
       </div>
 
@@ -109,16 +121,18 @@ export function AuctionChatPanel({
           type="text"
           value={messageInput}
         />
-        <button
+        <motion.button
           className="button secondary"
           disabled={sending || messageInput.trim().length === 0}
           onClick={() => void handleSubmit()}
           type="button"
+          whileHover={reduced ? undefined : { scale: 1.04 }}
+          whileTap={reduced ? undefined : { scale: 0.96 }}
+          transition={spring.snappy}
         >
           {sending ? "Sending..." : "Send"}
-        </button>
+        </motion.button>
       </div>
     </div>
   );
 }
-

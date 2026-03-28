@@ -1,9 +1,11 @@
-﻿"use client";
+"use client";
 
 import { useEffect, useState } from "react";
+import { motion, useReducedMotion } from "framer-motion";
 import { useRouter } from "next/navigation";
 
 import { getAllowedIncrements } from "@/lib/domain/auction";
+import { spring } from "@/lib/animations";
 import type { AuctionState, Player, RoomMember, Team } from "@/lib/domain/types";
 import { formatCurrencyShort, formatIncrement } from "@/lib/utils";
 
@@ -20,6 +22,37 @@ async function placeBid(
   const payload = (await response.json()) as { error?: string };
   if (!response.ok) return payload.error ?? "Bid failed.";
   return null;
+}
+
+function BidButton({
+  children,
+  disabled,
+  onClick,
+  style,
+  title,
+}: {
+  children: React.ReactNode;
+  disabled: boolean;
+  onClick: () => void;
+  style?: React.CSSProperties;
+  title?: string;
+}) {
+  const reduced = useReducedMotion();
+  return (
+    <motion.button
+      className="button"
+      disabled={disabled}
+      onClick={onClick}
+      style={style}
+      title={title}
+      type="button"
+      whileHover={reduced || disabled ? undefined : { scale: 1.04, y: -2 }}
+      whileTap={reduced || disabled ? undefined : { scale: 0.96, y: 0 }}
+      transition={spring.snappy}
+    >
+      {children}
+    </motion.button>
+  );
 }
 
 function IncrementButtons({
@@ -55,8 +88,7 @@ function IncrementButtons({
     const disabled = !isBiddingOpen || !currentPlayer || !canAfford || anyPending;
 
     return (
-      <button
-        className="button"
+      <BidButton
         disabled={disabled}
         onClick={async () => {
           onPendingChange(team.id);
@@ -69,10 +101,9 @@ function IncrementButtons({
           onPendingChange(null);
         }}
         style={{ width: "100%", marginTop: "0.5rem" }}
-        type="button"
       >
         {openPrice !== null ? `Open ${formatCurrencyShort(openPrice)}` : "Open bid"}
-      </button>
+      </BidButton>
     );
   }
 
@@ -84,8 +115,7 @@ function IncrementButtons({
         const disabled = !isBiddingOpen || !currentPlayer || isLeading || !canAfford || anyPending;
 
         return (
-          <button
-            className="button"
+          <BidButton
             disabled={disabled}
             key={inc}
             onClick={async () => {
@@ -100,10 +130,9 @@ function IncrementButtons({
             }}
             style={{ flex: "1", minWidth: "3.5rem", fontSize: "0.8rem" }}
             title={`Bid ${formatCurrencyShort(nextAmount)}`}
-            type="button"
           >
             +{formatIncrement(inc)}
-          </button>
+          </BidButton>
         );
       })}
     </div>
@@ -153,9 +182,10 @@ function AdminBidPanel({
           const isLeading = team.id === auctionState.currentTeamId;
 
           return (
-            <div
+            <motion.div
               className="room-card"
               key={team.id}
+              animate={isLeading ? { borderColor: "var(--accent)" } : {}}
               style={{ outline: isLeading ? "2px solid var(--accent, #4ade80)" : undefined }}
             >
               <div className="header-row" style={{ alignItems: "center" }}>
@@ -166,9 +196,15 @@ function AdminBidPanel({
                   </div>
                 </div>
                 {isLeading ? (
-                  <span className="pill highlight" style={{ fontSize: "0.75rem" }}>
+                  <motion.span
+                    className="pill highlight"
+                    initial={{ scale: 0.8, opacity: 0 }}
+                    animate={{ scale: 1, opacity: 1 }}
+                    transition={spring.bouncy}
+                    style={{ fontSize: "0.75rem" }}
+                  >
                     Leading
-                  </span>
+                  </motion.span>
                 ) : null}
               </div>
               <div className="subtle" style={{ marginTop: "0.25rem", fontSize: "0.85rem" }}>
@@ -185,7 +221,7 @@ function AdminBidPanel({
                 roomCode={roomCode}
                 team={team}
               />
-            </div>
+            </motion.div>
           );
         })}
       </div>
@@ -212,6 +248,7 @@ export function BidPanel({
   isBiddingOpen?: boolean;
 }) {
   const router = useRouter();
+  const reduced = useReducedMotion();
   const [teamId, setTeamId] = useState("");
   const [pending, setPending] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -294,33 +331,30 @@ export function BidPanel({
       {error ? <div className="notice warning" style={{ marginBottom: "0.5rem" }}>{error}</div> : null}
 
       {isFirstBid ? (
-        <button
-          className="button"
+        <BidButton
           disabled={!canBid || !isBiddingOpen || pending || !selectedTeam || selectedTeam.purseRemaining < (currentPlayer?.basePrice ?? 0)}
           onClick={() => void handleIncrementBid(undefined)}
           style={{ width: "100%" }}
-          type="button"
         >
           {pending ? "Submitting..." : `Open ${currentPlayer ? formatCurrencyShort(currentPlayer.basePrice) : "N/A"}`}
-        </button>
+        </BidButton>
       ) : (
         <div style={{ display: "flex", gap: "0.4rem", flexWrap: "wrap" }}>
           {allowedIncrements.map((inc) => {
             const nextAmount = (currentBid ?? 0) + inc;
             const canAfford = selectedTeam ? selectedTeam.purseRemaining >= nextAmount : false;
+            const disabled = !canBid || !isBiddingOpen || pending || !canAfford;
 
             return (
-              <button
-                className="button"
-                disabled={!canBid || !isBiddingOpen || pending || !canAfford}
+              <BidButton
+                disabled={disabled}
                 key={inc}
                 onClick={() => void handleIncrementBid(inc)}
                 style={{ flex: "1", minWidth: "3.5rem", fontSize: "0.85rem" }}
                 title={`Bid ${formatCurrencyShort(nextAmount)}`}
-                type="button"
               >
                 {pending ? "..." : `+${formatIncrement(inc)}`}
-              </button>
+              </BidButton>
             );
           })}
         </div>
