@@ -56,26 +56,14 @@ export function WebscrapeSyncPanel({ roomCode }: { roomCode: string }) {
   // Manual override state: matchId → { playerName → pts override }
   const [overrides, setOverrides] = useState<Record<string, Record<string, string>>>({});
   const [overrideEdit, setOverrideEdit] = useState<string | null>(null); // matchId with open editor
+  const [autoRefresh, setAutoRefresh] = useState(false);
+  const [nextRefreshIn, setNextRefreshIn] = useState(0);
 
-  // Load stored comparison on mount
-  useEffect(() => {
-    void loadStored();
-  }, [season]); // eslint-disable-line react-hooks/exhaustive-deps
+  const AUTO_REFRESH_INTERVAL = 10 * 60; // seconds
 
-  async function loadStored() {
-    try {
-      const res = await fetch(`/api/rooms/${roomCode}/webscrape-preview?season=${season}`);
-      const data = (await res.json()) as PreviewResponse;
-      if (data.ok && data.comparison) {
-        setComparison(data.comparison);
-        setProviders(data.providers ?? []);
-      }
-    } catch {
-      // silently ignore on initial load
-    }
-  }
+  // ── Callbacks (defined before effects that depend on them) ───────────────────
 
-  async function handleFetch() {
+  const handleFetch = useCallback(async () => {
     setFetching(true);
     setFetchError(null);
     try {
@@ -100,7 +88,42 @@ export function WebscrapeSyncPanel({ roomCode }: { roomCode: string }) {
     } finally {
       setFetching(false);
     }
-  }
+  }, [roomCode, season]);
+
+  // ── Effects ──────────────────────────────────────────────────────────────────
+
+  // Load stored comparison on mount / season change
+  useEffect(() => {
+    async function loadStored() {
+      try {
+        const res = await fetch(`/api/rooms/${roomCode}/webscrape-preview?season=${season}`);
+        const data = (await res.json()) as PreviewResponse;
+        if (data.ok && data.comparison) {
+          setComparison(data.comparison);
+          setProviders(data.providers ?? []);
+        }
+      } catch { /* silently ignore on initial load */ }
+    }
+    void loadStored();
+  }, [roomCode, season]);
+
+  // Auto-refresh: 10-minute countdown + trigger
+  useEffect(() => {
+    if (!autoRefresh) { setNextRefreshIn(0); return; }
+    setNextRefreshIn(AUTO_REFRESH_INTERVAL);
+
+    const tick = setInterval(() => {
+      setNextRefreshIn((s) => {
+        if (s <= 1) {
+          void handleFetch();
+          return AUTO_REFRESH_INTERVAL;
+        }
+        return s - 1;
+      });
+    }, 1000);
+
+    return () => clearInterval(tick);
+  }, [autoRefresh, handleFetch]);
 
   async function handleAccept(matchId: string, source: string) {
     setAccepting(matchId);
@@ -257,6 +280,20 @@ export function WebscrapeSyncPanel({ roomCode }: { roomCode: string }) {
             />
           </div>
         )}
+        {/* Auto-refresh toggle */}
+        <label style={{ display: "flex", alignItems: "center", gap: 6, marginTop: "auto", cursor: "pointer", fontSize: "0.85rem" }}>
+          <input
+            checked={autoRefresh}
+            onChange={(e) => setAutoRefresh(e.target.checked)}
+            type="checkbox"
+          />
+          Auto-refresh
+          {autoRefresh && nextRefreshIn > 0 && (
+            <span className="subtle" style={{ fontSize: "0.78rem" }}>
+              (next in {Math.floor(nextRefreshIn / 60)}:{String(nextRefreshIn % 60).padStart(2, "0")})
+            </span>
+          )}
+        </label>
         {lastFetched && (
           <span className="subtle" style={{ fontSize: "0.78rem", marginTop: "auto" }}>
             Last fetched: {lastFetched}

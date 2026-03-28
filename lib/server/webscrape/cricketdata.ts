@@ -12,7 +12,8 @@ import {
   type ScorecardBowlingRow,
 } from "./parser";
 
-const BASE = "https://api.cricketdata.org";
+// CricAPI.com — the correct endpoint for accounts registered at cricketdata.org
+const BASE = "https://api.cricapi.com/v1";
 
 async function get<T>(path: string): Promise<T> {
   const key = process.env.CRICKETDATA_API_KEY;
