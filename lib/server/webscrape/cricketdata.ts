@@ -41,15 +41,24 @@ interface CricketDataSeries {
   endDate: string;
 }
 
+function isIPLSeries(name: string, season: string): boolean {
+  const n = name.toLowerCase();
+  const hasIpl = n.includes("indian premier league") || n.includes(" ipl ") ||
+    n.startsWith("ipl ") || n.endsWith(" ipl") || n === "ipl";
+  const hasSeason = name.includes(season);
+  return hasIpl && hasSeason;
+}
+
 export async function findIPLSeriesId(season: string): Promise<string> {
-  const data = await get<CricketDataSeries[]>("/series?offset=0");
-  const series = (Array.isArray(data) ? data : []).find(
-    (s) =>
-      s.name?.toLowerCase().includes("indian premier league") &&
-      (s.name.includes(season) || s.startDate?.startsWith(season)),
-  );
-  if (!series) throw new Error(`IPL ${season} series not found on CricketData.org`);
-  return series.id;
+  // Paginate through results — IPL may not be on the first page
+  for (const offset of [0, 25, 50, 75]) {
+    const data = await get<CricketDataSeries[]>(`/series?offset=${offset}`);
+    const list = Array.isArray(data) ? data : [];
+    if (list.length === 0) break; // no more pages
+    const series = list.find((s) => isIPLSeries(s.name ?? "", season));
+    if (series) return series.id;
+  }
+  throw new Error(`IPL ${season} series not found on CricketData.org`);
 }
 
 // ── List matches in series ────────────────────────────────────────────────────
