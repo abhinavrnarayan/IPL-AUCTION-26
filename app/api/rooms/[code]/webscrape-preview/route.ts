@@ -36,11 +36,12 @@ export async function POST(
     // Check at least one provider is configured
     const providers = availableProviders();
     if (!providers.some((p) => p.configured)) {
-      throw new AppError(
-        "No cricket API keys configured. Add CRICKETDATA_API_KEY or RAPIDAPI_KEY to your environment.",
-        400,
-        "NO_PROVIDERS",
-      );
+      return NextResponse.json({
+        ok: false,
+        error: "No cricket API keys configured.",
+        detail: "Add CRICKETDATA_API_KEY or RAPIDAPI_KEY to your .env.local file.",
+        providers,
+      }, { status: 400 });
     }
 
     // Fetch from available providers
@@ -50,7 +51,7 @@ export async function POST(
       return NextResponse.json({
         ok: false,
         error: `No completed IPL ${season} matches found.`,
-        errors,
+        errors,   // shows per-provider error messages
         providers,
       }, { status: 404 });
     }

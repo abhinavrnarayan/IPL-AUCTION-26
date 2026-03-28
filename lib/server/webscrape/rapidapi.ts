@@ -44,23 +44,39 @@ interface CricbuzzSeriesCategory {
   seriesMapProto?: Array<{ series?: CricbuzzSeriesItem[] }>;
 }
 
-export async function findIPLSeriesId(season: string): Promise<string> {
-  const data = await get<CricbuzzSeriesCategory>("/series/v1/domestic");
+function isIPLSeries(name: string, season: string): boolean {
+  const n = name.toLowerCase();
+  const hasIpl = n.includes("indian premier league") || n.includes(" ipl ") ||
+    n.startsWith("ipl ") || n.endsWith(" ipl") || n === "ipl";
+  return hasIpl && name.includes(season);
+}
 
-  const allSeries: CricbuzzSeriesItem[] = [];
+function extractSeries(data: CricbuzzSeriesCategory): CricbuzzSeriesItem[] {
+  const list: CricbuzzSeriesItem[] = [];
   for (const block of data?.seriesMapProto ?? []) {
     for (const s of block.series ?? []) {
-      allSeries.push(s);
+      list.push(s);
+    }
+  }
+  return list;
+}
+
+export async function findIPLSeriesId(season: string): Promise<string> {
+  // IPL is a T20 league — try /league first, then domestic as fallback
+  const categories = ["league", "domestic", "international"];
+  const errors: string[] = [];
+
+  for (const cat of categories) {
+    try {
+      const data = await get<CricbuzzSeriesCategory>(`/series/v1/${cat}`);
+      const found = extractSeries(data).find((s) => isIPLSeries(s.name ?? "", season));
+      if (found) return String(found.id);
+    } catch (e) {
+      errors.push(`${cat}: ${String(e)}`);
     }
   }
 
-  const found = allSeries.find(
-    (s) =>
-      s.name?.toLowerCase().includes("indian premier league") &&
-      s.name.includes(season),
-  );
-  if (!found) throw new Error(`IPL ${season} series not found on RapidAPI/Cricbuzz`);
-  return String(found.id);
+  throw new Error(`IPL ${season} series not found on RapidAPI/Cricbuzz (tried: ${categories.join(", ")})`);
 }
 
 // ── List matches ──────────────────────────────────────────────────────────────
@@ -76,14 +92,26 @@ interface CricbuzzMatch {
 }
 
 export async function listSeriesMatches(seriesId: string): Promise<CricbuzzMatch[]> {
-  const data = await get<{ matchDetails?: Array<{ matchDetailsMap?: { match?: CricbuzzMatch[] } }> }>(
-    `/series/v1/${seriesId}`,
-  );
+  const data = await get<{
+    matchDetails?: Array<{
+      matchDetailsMap?: Record<string, { match?: CricbuzzMatch[] }> | { match?: CricbuzzMatch[] };
+    }>;
+  }>(`/series/v1/${seriesId}`);
 
   const matches: CricbuzzMatch[] = [];
   for (const block of data?.matchDetails ?? []) {
-    for (const m of block?.matchDetailsMap?.match ?? []) {
-      matches.push(m);
+    const map = block?.matchDetailsMap;
+    if (!map) continue;
+    // matchDetailsMap may be keyed by match label or have a direct "match" array
+    if (Array.isArray((map as { match?: CricbuzzMatch[] }).match)) {
+      matches.push(...((map as { match: CricbuzzMatch[] }).match));
+    } else {
+      // Iterate all values — each may contain a match array
+      for (const val of Object.values(map)) {
+        if (val && Array.isArray((val as { match?: CricbuzzMatch[] }).match)) {
+          matches.push(...((val as { match: CricbuzzMatch[] }).match));
+        }
+      }
     }
   }
   return matches;
