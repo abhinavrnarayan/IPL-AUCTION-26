@@ -171,6 +171,63 @@ function aggregateToPlayerStats(
   return season;
 }
 
+function buildSeasonStatsPayload(
+  existing: Record<string, unknown>,
+  stats?: PlayerStats,
+): Record<string, unknown> {
+  const source = stats ?? {
+    runs: 0,
+    balls_faced: 0,
+    fours: 0,
+    sixes: 0,
+    ducks: 0,
+    wickets: 0,
+    balls_bowled: 0,
+    runs_conceded: 0,
+    dot_balls: 0,
+    maiden_overs: 0,
+    lbw_bowled_wickets: 0,
+    catches: 0,
+    stumpings: 0,
+    run_outs_direct: 0,
+    run_outs_indirect: 0,
+    milestone_runs_pts: 0,
+    milestone_wkts_pts: 0,
+    sr_pts: 0,
+    economy_pts: 0,
+    catch_bonus_pts: 0,
+    lineup_appearances: 0,
+    substitute_appearances: 0,
+    matches_played: 0,
+  };
+
+  return {
+    ...existing,
+    runs: source.runs ?? 0,
+    balls_faced: source.balls_faced ?? 0,
+    fours: source.fours ?? 0,
+    sixes: source.sixes ?? 0,
+    ducks: source.ducks ?? 0,
+    wickets: source.wickets ?? 0,
+    balls_bowled: source.balls_bowled ?? 0,
+    runs_conceded: source.runs_conceded ?? 0,
+    maiden_overs: source.maiden_overs ?? 0,
+    lbw_bowled_wickets: source.lbw_bowled_wickets ?? 0,
+    catches: source.catches ?? 0,
+    stumpings: source.stumpings ?? 0,
+    run_outs_direct: source.run_outs_direct ?? 0,
+    run_outs_indirect: source.run_outs_indirect ?? 0,
+    milestone_runs_pts: source.milestone_runs_pts ?? 0,
+    milestone_wkts_pts: source.milestone_wkts_pts ?? 0,
+    sr_pts: source.sr_pts ?? 0,
+    economy_pts: source.economy_pts ?? 0,
+    catch_bonus_pts: source.catch_bonus_pts ?? 0,
+    lineup_appearances: source.lineup_appearances ?? 0,
+    substitute_appearances: source.substitute_appearances ?? 0,
+    matches_played: source.matches_played ?? 0,
+  };
+}
+
 export async function POST(
   request: Request,
   context: { params: Promise<{ code: string }> },
@@ -333,12 +390,18 @@ export async function POST(
       const playerName = String(player.name);
       const normKey = normalizeName(playerName);
       const storedUuid = (player as { cricsheet_uuid?: string | null }).cricsheet_uuid;
+      const existing = (player.stats ?? {}) as Record<string, unknown>;
 
       let statsKey: string | undefined;
+      let clearStoredUuid = false;
 
       if (storedUuid) {
         const fullName = CRICSHEET_UUID_MAP.get(storedUuid);
-        if (fullName && aggregated[fullName]) statsKey = fullName;
+        if (fullName && normalizeName(fullName) === normKey && aggregated[fullName]) {
+          statsKey = fullName;
+        } else if (fullName && normalizeName(fullName) !== normKey) {
+          clearStoredUuid = true;
+        }
       }
 
       if (!statsKey) statsKey = normToOriginal.get(normKey);
@@ -351,50 +414,20 @@ export async function POST(
       }
 
       if (!statsKey) {
-        const surname = normKey.split(" ").pop() ?? "";
-        if (surname.length >= 3) {
-          const surnameHits = Array.from(normToOriginal.entries()).filter(
-            ([key]) => key.split(" ").pop() === surname,
-          );
-          if (surnameHits.length === 1) statsKey = surnameHits[0]?.[1];
-        }
-      }
-
-      if (!statsKey) {
         unmatched.push(playerName);
-        continue;
       }
 
-      const agg = aggregated[statsKey]!;
-      const existing = (player.stats ?? {}) as Record<string, unknown>;
-      const newStats: Record<string, unknown> = {
-        ...existing,
-        runs: agg.runs,
-        balls_faced: agg.balls_faced,
-        fours: agg.fours,
-        sixes: agg.sixes,
-        ducks: agg.ducks,
-        wickets: agg.wickets,
-        balls_bowled: agg.balls_bowled,
-        runs_conceded: agg.runs_conceded,
-        maiden_overs: agg.maiden_overs,
-        lbw_bowled_wickets: agg.lbw_bowled_wickets,
-        catches: agg.catches,
-        stumpings: agg.stumpings,
-        run_outs_direct: agg.run_outs_direct,
-        run_outs_indirect: agg.run_outs_indirect,
-        milestone_runs_pts: agg.milestone_runs_pts,
-        milestone_wkts_pts: agg.milestone_wkts_pts,
-        sr_pts: agg.sr_pts,
-        economy_pts: agg.economy_pts,
-        catch_bonus_pts: agg.catch_bonus_pts,
-        lineup_appearances: agg.lineup_appearances,
-        matches_played: agg.matches_played,
+      const agg = statsKey ? aggregated[statsKey] : undefined;
+      const updatePayload: Record<string, unknown> = {
+        stats: buildSeasonStatsPayload(existing, agg),
       };
 
-      const updatePayload: Record<string, unknown> = { stats: newStats };
-      const resolvedUuid = fullNameToUuid.get(statsKey);
-      if (resolvedUuid && !storedUuid) updatePayload.cricsheet_uuid = resolvedUuid;
+      if (statsKey) {
+        const resolvedUuid = fullNameToUuid.get(statsKey);
+        if (resolvedUuid && !storedUuid) updatePayload.cricsheet_uuid = resolvedUuid;
+      } else if (clearStoredUuid) {
+        updatePayload.cricsheet_uuid = null;
+      }
 
       const { error: updateError } = await admin
         .from("players")
@@ -403,11 +436,11 @@ export async function POST(
 
       if (updateError) {
         console.error(`[cricsheet-sync] failed to update player ${playerName}:`, updateError.message);
-        unmatched.push(playerName);
+        if (!unmatched.includes(playerName)) unmatched.push(playerName);
         continue;
       }
 
-      matched += 1;
+      if (statsKey) matched += 1;
     }
 
     revalidatePath(`/room/${room.code}`);
