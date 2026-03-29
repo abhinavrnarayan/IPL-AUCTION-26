@@ -314,6 +314,7 @@ function accumulatorToMatchStats(acc: CricsheetAccumulator): PlayerMatchStats {
     dismissed: acc.ducks > 0,
     balls_bowled: acc.balls_bowled,
     runs_conceded: acc.runs_conceded,
+    dot_balls: acc.dot_balls,
     wickets: acc.wickets,
     maiden_overs: acc.maiden_overs,
     lbw_bowled_wickets: acc.lbw_bowled_wickets,
