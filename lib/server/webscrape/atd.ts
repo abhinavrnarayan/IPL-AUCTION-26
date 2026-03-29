@@ -12,6 +12,7 @@
  */
 
 import {
+  extractDisplayName,
   mergeInningStats,
   processInning,
   type NormalizedMatch,
@@ -139,7 +140,7 @@ export async function listSeriesMatches(seriesId: string): Promise<AtdMatch[]> {
 // Response shape mirrors Cricbuzz: { scoreCard: [...innings] }
 
 interface AtdBatter {
-  batName?: string;
+  batName?: unknown;
   runs?: number;
   balls?: number;
   fours?: number;
@@ -148,7 +149,7 @@ interface AtdBatter {
 }
 
 interface AtdBowler {
-  bowlName?: string;
+  bowlName?: unknown;
   overs?: number;
   maidens?: number;
   runs?: number;
@@ -173,26 +174,41 @@ export async function fetchMatchScorecard(
     const batting: ScorecardBattingRow[] = Object.values(
       inning.batTeamDetails?.batsmenData ?? {},
     )
-      .filter((b) => b.batName)
       .map((b) => ({
-        name: String(b.batName!).trim(),
+        name: extractDisplayName(b.batName),
         runs: b.runs ?? 0,
         balls: b.balls ?? 0,
         fours: b.fours ?? 0,
         sixes: b.sixes ?? 0,
         outDesc: String(b.outDesc ?? "").trim(),
+      }))
+      .filter((b) => b.name)
+      .map((b) => ({
+        name: b.name,
+        runs: b.runs,
+        balls: b.balls,
+        fours: b.fours,
+        sixes: b.sixes,
+        outDesc: b.outDesc,
       }));
 
     const bowling: ScorecardBowlingRow[] = Object.values(
       inning.bowlTeamDetails?.bowlersData ?? {},
     )
-      .filter((b) => b.bowlName)
       .map((b) => ({
-        name: String(b.bowlName!).trim(),
+        name: extractDisplayName(b.bowlName),
         overs: b.overs ?? 0,
         maidens: b.maidens ?? 0,
         runs: b.runs ?? 0,
         wickets: b.wickets ?? 0,
+      }))
+      .filter((b) => b.name)
+      .map((b) => ({
+        name: b.name,
+        overs: b.overs,
+        maidens: b.maidens,
+        runs: b.runs,
+        wickets: b.wickets,
       }));
 
     return processInning(batting, bowling);
@@ -264,15 +280,22 @@ export async function fetchIPLMatchesFromATD(
   }
 
   const results: NormalizedMatch[] = [];
+  let lastError: unknown = null;
   for (let i = 0; i < completed.length; i++) {
     const match = completed[i]!;
     try {
       const nm = await fetchMatchScorecard(match, season);
       results.push(nm);
-    } catch {
-      // Skip failed matches silently
+    } catch (error) {
+      lastError = error;
     }
     onProgress?.(i + 1, completed.length);
+  }
+
+  if (results.length === 0 && completed.length > 0) {
+    throw new Error(
+      `AllThingsDev / Cricbuzz scorecards could not be parsed.${lastError instanceof Error ? ` ${lastError.message}` : ""}`,
+    );
   }
   return results;
 }

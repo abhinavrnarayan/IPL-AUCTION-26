@@ -75,7 +75,7 @@ function normalizeCalculatedPoints(
 
   const statsMap = normalizePlayerStatsMap(rawPlayerStats);
   for (const [name, stats] of Object.entries(statsMap)) {
-    if (!name.trim()) continue;
+    if (!name.trim() || name === "[object Object]") continue;
     normalized[name] = computeMatchPoints(stats);
   }
   return normalized;
@@ -114,9 +114,24 @@ export async function POST(
       }, { status: 400 });
     }
 
-    const fetchResult = requestedProvider
-      ? await fetchIPLMatchesFromProvider(requestedProvider, season)
-      : await fetchIPLMatchesWithFallback(season);
+    let fetchResult;
+    try {
+      fetchResult = requestedProvider
+        ? await fetchIPLMatchesFromProvider(requestedProvider, season)
+        : await fetchIPLMatchesWithFallback(season);
+    } catch (error) {
+      const providerErrors = requestedProvider
+        ? { [requestedProvider]: error instanceof Error ? error.message : String(error) }
+        : {};
+      return NextResponse.json({
+        ok: false,
+        error: requestedProvider
+          ? `Could not fetch matches from ${requestedProvider}.`
+          : "Could not fetch matches from any configured provider.",
+        errors: providerErrors,
+        providers,
+      }, { status: 400 });
+    }
 
     const { matches, source, errors } = fetchResult;
 

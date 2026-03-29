@@ -50,6 +50,28 @@ export interface NormalizedMatch {
   sourceLabel: string;
   playerStats: Record<string, PlayerMatchStats>; // cricketapi player name → stats
 }
+export function extractDisplayName(value: unknown): string {
+  if (typeof value === "string") return value.trim();
+  if (!value || typeof value !== "object") return "";
+
+  const record = value as Record<string, unknown>;
+  const candidates = [
+    record.name,
+    record.fullName,
+    record.playerName,
+    record.batsmanName,
+    record.bowlerName,
+    record.nickName,
+  ];
+
+  for (const candidate of candidates) {
+    if (typeof candidate === "string" && candidate.trim()) {
+      return candidate.trim();
+    }
+  }
+
+  return "";
+}
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 

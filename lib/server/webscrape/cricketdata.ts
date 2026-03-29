@@ -5,6 +5,7 @@
  */
 
 import {
+  extractDisplayName,
   mergeInningStats,
   processInning,
   type NormalizedMatch,
@@ -83,7 +84,7 @@ export async function listSeriesMatches(seriesId: string): Promise<CricketDataMa
 // ── Fetch and parse a scorecard ───────────────────────────────────────────────
 
 interface CricketDataBatter {
-  batsman: string;
+  batsman: unknown;
   r: string | number;
   b: string | number;
   "4s": string | number;
@@ -93,7 +94,7 @@ interface CricketDataBatter {
 }
 
 interface CricketDataBowler {
-  bowler: string;
+  bowler: unknown;
   o: string | number;
   m: string | number;
   r: string | number;
@@ -132,21 +133,21 @@ export async function fetchMatchScorecard(
 
   const inningStats = innings.map((inning) => {
     const batting: ScorecardBattingRow[] = (inning.batting ?? []).map((b) => ({
-      name: String(b.batsman ?? "").trim(),
+      name: extractDisplayName(b.batsman),
       runs: n(b.r),
       balls: n(b.b),
       fours: n(b["4s"]),
       sixes: n(b["6s"]),
       outDesc: String(b.outDesc ?? "").trim(),
-    }));
+    })).filter((row) => row.name);
 
     const bowling: ScorecardBowlingRow[] = (inning.bowling ?? []).map((bw) => ({
-      name: String(bw.bowler ?? "").trim(),
+      name: extractDisplayName(bw.bowler),
       overs: bw.o,
       maidens: n(bw.m),
       runs: n(bw.r),
       wickets: n(bw.w),
-    }));
+    })).filter((row) => row.name);
 
     return processInning(batting, bowling);
   });
@@ -176,15 +177,22 @@ export async function fetchIPLMatchesFromCricketData(
   const completed = allMatches.filter((m) => m.matchEnded || m.status?.toLowerCase().includes("won"));
 
   const results: NormalizedMatch[] = [];
+  let lastError: unknown = null;
   for (let i = 0; i < completed.length; i++) {
     const match = completed[i]!;
     try {
       const nm = await fetchMatchScorecard(match, season);
       results.push(nm);
-    } catch {
-      // Skip failed matches silently; they'll be retried next sync
+    } catch (error) {
+      lastError = error;
     }
     onProgress?.(i + 1, completed.length);
+  }
+
+  if (results.length === 0 && completed.length > 0) {
+    throw new Error(
+      `CricketData.org scorecards could not be parsed.${lastError instanceof Error ? ` ${lastError.message}` : ""}`,
+    );
   }
   return results;
 }
