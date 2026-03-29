@@ -14,8 +14,6 @@ node_modules
 # Build artifacts
 tsconfig.tsbuildinfo
 
-# Netlify local cache
-.netlify
 
 # OS
 .DS_Store
