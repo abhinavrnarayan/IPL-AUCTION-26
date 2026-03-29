@@ -21,6 +21,7 @@ import {
   availableProviders,
   fetchIPLMatchesFromProvider,
   fetchIPLMatchesWithFallback,
+  getProviderLabel,
   type WebscrapeProviderId,
 } from "@/lib/server/webscrape/index";
 import { getSupabaseAdminClient } from "@/lib/supabase/admin";
@@ -126,7 +127,7 @@ export async function POST(
       return NextResponse.json({
         ok: false,
         error: requestedProvider
-          ? `Could not fetch matches from ${requestedProvider}.`
+          ? `Could not fetch matches from ${getProviderLabel(requestedProvider)}.`
           : "Could not fetch matches from any configured provider.",
         errors: providerErrors,
         providers,

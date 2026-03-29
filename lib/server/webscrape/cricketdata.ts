@@ -29,8 +29,23 @@ async function get<T>(path: string): Promise<T> {
   if (res.status === 429) throw new Error("RATE_LIMITED");
   if (!res.ok) throw new Error(`CricketData HTTP ${res.status}: ${await res.text()}`);
 
-  const json = (await res.json()) as { status?: string; data?: T; message?: string };
-  if (json.status === "failure") throw new Error(json.message ?? "CricketData API error");
+  const json = (await res.json()) as {
+    status?: string;
+    data?: T;
+    message?: string;
+    msg?: string;
+    reason?: string;
+    info?: string;
+  };
+  if (json.status === "failure") {
+    throw new Error(
+      json.message ??
+      json.msg ??
+      json.reason ??
+      json.info ??
+      "CricketData API error",
+    );
+  }
   return json.data as T;
 }
 
