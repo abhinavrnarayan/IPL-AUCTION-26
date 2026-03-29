@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import { toErrorMessage } from "@/lib/utils";
 import { ExportButton } from "@/components/ui/export-button";
 
@@ -45,6 +46,7 @@ function topScorers(pts: Record<string, number>, n = 5): Array<[string, number]>
 // ── Component ─────────────────────────────────────────────────────────────────
 
 export function WebscrapeSyncPanel({ roomCode }: { roomCode: string }) {
+  const router = useRouter();
   const [season, setSeason] = useState("2026");
   const [fetching, setFetching] = useState(false);
   const [accepting, setAccepting] = useState<string | null>(null); // matchId being accepted
@@ -150,6 +152,7 @@ export function WebscrapeSyncPanel({ roomCode }: { roomCode: string }) {
           return { ...m, sources: newSources };
         }),
       );
+      router.refresh();
     } catch (err) {
       alert(toErrorMessage(err));
     } finally {
@@ -207,6 +210,7 @@ export function WebscrapeSyncPanel({ roomCode }: { roomCode: string }) {
         }),
       );
       setOverrideEdit(null);
+      router.refresh();
     } catch (err) {
       alert(toErrorMessage(err));
     } finally {
