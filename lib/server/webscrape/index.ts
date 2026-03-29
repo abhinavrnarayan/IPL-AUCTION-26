@@ -1,20 +1,22 @@
 /**
  * Fallback orchestrator — tries each tier in order until one succeeds.
  *
- * Tier 1: CricketData.org  (CRICKETDATA_API_KEY)
- * Tier 2: RapidAPI Cricbuzz (RAPIDAPI_KEY)
+ * Tier 1: CricketData.org         (CRICKETDATA_API_KEY)
+ * Tier 2: RapidAPI Cricbuzz       (RAPIDAPI_KEY)
+ * Tier 3: AllThingsDev Cricbuzz   (ATD_API_KEY)
  */
 
 import { fetchIPLMatchesFromCricketData } from "./cricketdata";
 import { fetchIPLMatchesFromRapidAPI } from "./rapidapi";
+import { fetchIPLMatchesFromATD } from "./atd";
 import type { NormalizedMatch } from "./parser";
 
 export type { NormalizedMatch, PlayerMatchStats } from "./parser";
 
 export interface FetchResult {
   matches: NormalizedMatch[];
-  source: "cricketdata" | "rapidapi";
-  errors: Record<string, string>; // source → error message
+  source: "cricketdata" | "rapidapi" | "atd";
+  errors: Record<string, string>;
 }
 
 export async function fetchIPLMatchesWithFallback(
@@ -51,6 +53,20 @@ export async function fetchIPLMatchesWithFallback(
     errors["rapidapi"] = "RAPIDAPI_KEY not set";
   }
 
+  // ── Tier 3: AllThingsDev Cricbuzz ─────────────────────────────────────────
+  if (process.env.ATD_API_KEY) {
+    try {
+      const matches = await fetchIPLMatchesFromATD(season, (d, t) =>
+        onProgress?.(d, t, "AllThingsDev"),
+      );
+      return { matches, source: "atd", errors };
+    } catch (e) {
+      errors["atd"] = String(e);
+    }
+  } else {
+    errors["atd"] = "ATD_API_KEY not set";
+  }
+
   throw new Error(
     `All cricket data providers failed:\n${Object.entries(errors)
       .map(([k, v]) => `  ${k}: ${v}`)
@@ -70,6 +86,11 @@ export function availableProviders(): Array<{ id: string; label: string; configu
       id: "rapidapi",
       label: "RapidAPI / Cricbuzz",
       configured: Boolean(process.env.RAPIDAPI_KEY),
+    },
+    {
+      id: "atd",
+      label: "AllThingsDev / Cricbuzz",
+      configured: Boolean(process.env.ATD_API_KEY),
     },
   ];
 }

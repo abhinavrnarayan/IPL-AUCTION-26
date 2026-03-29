@@ -46,7 +46,7 @@ export interface NormalizedMatch {
   season: string;
   homeTeam: string;
   awayTeam: string;
-  source: "cricketdata" | "rapidapi" | "cricapi";
+  source: "cricketdata" | "rapidapi" | "cricapi" | "atd";
   sourceLabel: string;
   playerStats: Record<string, PlayerMatchStats>; // cricketapi player name → stats
 }
