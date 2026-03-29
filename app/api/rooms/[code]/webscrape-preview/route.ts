@@ -10,15 +10,76 @@
 
 import { NextResponse } from "next/server";
 
-import { AppError } from "@/lib/domain/errors";
 import { handleRouteError } from "@/lib/server/api";
 import { requireApiUser } from "@/lib/server/auth";
 import { requireRoomAdmin } from "@/lib/server/room";
-import { computeMatchPoints } from "@/lib/server/webscrape/parser";
-import { fetchIPLMatchesWithFallback, availableProviders } from "@/lib/server/webscrape/index";
+import {
+  computeMatchPoints,
+  type PlayerMatchStats,
+} from "@/lib/server/webscrape/parser";
+import {
+  availableProviders,
+  fetchIPLMatchesFromProvider,
+  fetchIPLMatchesWithFallback,
+  type WebscrapeProviderId,
+} from "@/lib/server/webscrape/index";
 import { getSupabaseAdminClient } from "@/lib/supabase/admin";
 
 export const dynamic = "force-dynamic";
+
+function isProviderId(value: unknown): value is WebscrapeProviderId {
+  return value === "cricketdata" || value === "rapidapi" || value === "atd";
+}
+
+function normalizePlayerStatsMap(
+  raw: unknown,
+): Record<string, PlayerMatchStats> {
+  if (!raw || typeof raw !== "object") return {};
+
+  if (Array.isArray(raw)) {
+    const mapped: Record<string, PlayerMatchStats> = {};
+    for (const item of raw) {
+      if (!item || typeof item !== "object") continue;
+      const maybeName = "name" in item ? item.name : undefined;
+      if (typeof maybeName !== "string" || !maybeName.trim()) continue;
+      mapped[maybeName.trim()] = item as PlayerMatchStats;
+    }
+    return mapped;
+  }
+
+  return raw as Record<string, PlayerMatchStats>;
+}
+
+function normalizeCalculatedPoints(
+  rawCalculatedPoints: unknown,
+  rawPlayerStats?: unknown,
+): Record<string, number> {
+  const normalized: Record<string, number> = {};
+  if (rawCalculatedPoints && typeof rawCalculatedPoints === "object" && !Array.isArray(rawCalculatedPoints)) {
+    for (const [name, value] of Object.entries(rawCalculatedPoints as Record<string, unknown>)) {
+      if (!name || name === "[object Object]") continue;
+      if (typeof value === "number" && Number.isFinite(value)) {
+        normalized[name] = value;
+        continue;
+      }
+      if (typeof value === "string") {
+        const parsed = Number(value);
+        if (Number.isFinite(parsed)) normalized[name] = parsed;
+      }
+    }
+  }
+
+  if (Object.keys(normalized).length > 0) {
+    return normalized;
+  }
+
+  const statsMap = normalizePlayerStatsMap(rawPlayerStats);
+  for (const [name, stats] of Object.entries(statsMap)) {
+    if (!name.trim()) continue;
+    normalized[name] = computeMatchPoints(stats);
+  }
+  return normalized;
+}
 
 export async function POST(
   request: Request,
@@ -32,6 +93,7 @@ export async function POST(
 
     const body = (await request.json().catch(() => ({}))) as Record<string, unknown>;
     const season = String(body.season ?? "2026");
+    const requestedProvider = isProviderId(body.provider) ? body.provider : null;
 
     // Check at least one provider is configured
     const providers = availableProviders();
@@ -44,8 +106,19 @@ export async function POST(
       }, { status: 400 });
     }
 
-    // Fetch from available providers
-    const { matches, source, errors } = await fetchIPLMatchesWithFallback(season);
+    if (requestedProvider && !providers.some((provider) => provider.id === requestedProvider && provider.configured)) {
+      return NextResponse.json({
+        ok: false,
+        error: "Selected provider is not configured.",
+        providers,
+      }, { status: 400 });
+    }
+
+    const fetchResult = requestedProvider
+      ? await fetchIPLMatchesFromProvider(requestedProvider, season)
+      : await fetchIPLMatchesWithFallback(season);
+
+    const { matches, source, errors } = fetchResult;
 
     if (matches.length === 0) {
       return NextResponse.json({
@@ -107,7 +180,7 @@ export async function POST(
     // Also fetch any previously stored rows for this season (other sources)
     const { data: allRows } = await admin
       .from("match_results")
-      .select("match_id, match_date, teams, source, source_label, calculated_points, accepted")
+      .select("match_id, match_date, teams, source, source_label, calculated_points, player_stats, accepted")
       .eq("room_id", room.id)
       .eq("season", season)
       .order("match_date", { ascending: true });
@@ -139,7 +212,7 @@ export async function POST(
       const entry = comparisonByMatch.get(matchId)!;
       entry.sources[String(row.source)] = {
         sourceLabel: String(row.source_label ?? row.source),
-        calculatedPoints: (row.calculated_points as Record<string, number>) ?? {},
+        calculatedPoints: normalizeCalculatedPoints(row.calculated_points, row.player_stats),
         accepted: Boolean(row.accepted),
       };
     }
@@ -148,6 +221,7 @@ export async function POST(
       ok: true,
       season,
       source,
+      selectedProvider: requestedProvider ?? source,
       errors,
       providers,
       matchesFetched: matches.length,
@@ -174,7 +248,7 @@ export async function GET(
 
     const { data: rows } = await admin
       .from("match_results")
-      .select("match_id, match_date, teams, source, source_label, calculated_points, accepted")
+      .select("match_id, match_date, teams, source, source_label, calculated_points, player_stats, accepted")
       .eq("room_id", room.id)
       .eq("season", season)
       .order("match_date", { ascending: true });
@@ -199,7 +273,7 @@ export async function GET(
       const entry = comparisonByMatch.get(matchId)!;
       entry.sources[String(row.source)] = {
         sourceLabel: String(row.source_label ?? row.source),
-        calculatedPoints: (row.calculated_points as Record<string, number>) ?? {},
+        calculatedPoints: normalizeCalculatedPoints(row.calculated_points, row.player_stats),
         accepted: Boolean(row.accepted),
       };
     }

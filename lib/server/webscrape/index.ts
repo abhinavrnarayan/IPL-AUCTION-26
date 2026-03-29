@@ -12,11 +12,64 @@ import { fetchIPLMatchesFromATD } from "./atd";
 import type { NormalizedMatch } from "./parser";
 
 export type { NormalizedMatch, PlayerMatchStats } from "./parser";
+export type WebscrapeProviderId = "cricketdata" | "rapidapi" | "atd";
 
 export interface FetchResult {
   matches: NormalizedMatch[];
-  source: "cricketdata" | "rapidapi" | "atd";
+  source: WebscrapeProviderId;
   errors: Record<string, string>;
+}
+
+const PROVIDER_LABELS: Record<WebscrapeProviderId, string> = {
+  cricketdata: "CricketData.org",
+  rapidapi: "RapidAPI / Cricbuzz",
+  atd: "AllThingsDev / Cricbuzz",
+};
+
+function isProviderConfigured(provider: WebscrapeProviderId): boolean {
+  switch (provider) {
+    case "cricketdata":
+      return Boolean(process.env.CRICKETDATA_API_KEY);
+    case "rapidapi":
+      return Boolean(process.env.RAPIDAPI_KEY);
+    case "atd":
+      return Boolean(process.env.ATD_API_KEY);
+  }
+}
+
+export function getProviderLabel(provider: WebscrapeProviderId): string {
+  return PROVIDER_LABELS[provider];
+}
+
+export async function fetchIPLMatchesFromProvider(
+  provider: WebscrapeProviderId,
+  season: string,
+  onProgress?: (done: number, total: number, source: string) => void,
+): Promise<FetchResult> {
+  if (!isProviderConfigured(provider)) {
+    throw new Error(`${getProviderLabel(provider)} is not configured`);
+  }
+
+  switch (provider) {
+    case "cricketdata": {
+      const matches = await fetchIPLMatchesFromCricketData(season, (d, t) =>
+        onProgress?.(d, t, getProviderLabel(provider)),
+      );
+      return { matches, source: provider, errors: {} };
+    }
+    case "rapidapi": {
+      const matches = await fetchIPLMatchesFromRapidAPI(season, (d, t) =>
+        onProgress?.(d, t, getProviderLabel(provider)),
+      );
+      return { matches, source: provider, errors: {} };
+    }
+    case "atd": {
+      const matches = await fetchIPLMatchesFromATD(season, (d, t) =>
+        onProgress?.(d, t, getProviderLabel(provider)),
+      );
+      return { matches, source: provider, errors: {} };
+    }
+  }
 }
 
 export async function fetchIPLMatchesWithFallback(
@@ -79,18 +132,18 @@ export function availableProviders(): Array<{ id: string; label: string; configu
   return [
     {
       id: "cricketdata",
-      label: "CricketData.org",
-      configured: Boolean(process.env.CRICKETDATA_API_KEY),
+      label: PROVIDER_LABELS.cricketdata,
+      configured: isProviderConfigured("cricketdata"),
     },
     {
       id: "rapidapi",
-      label: "RapidAPI / Cricbuzz",
-      configured: Boolean(process.env.RAPIDAPI_KEY),
+      label: PROVIDER_LABELS.rapidapi,
+      configured: isProviderConfigured("rapidapi"),
     },
     {
       id: "atd",
-      label: "AllThingsDev / Cricbuzz",
-      configured: Boolean(process.env.ATD_API_KEY),
+      label: PROVIDER_LABELS.atd,
+      configured: isProviderConfigured("atd"),
     },
   ];
 }

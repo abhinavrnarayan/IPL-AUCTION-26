@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { toErrorMessage } from "@/lib/utils";
 import { ExportButton } from "@/components/ui/export-button";
 
-// ── Types mirroring the API response ─────────────────────────────────────────
+// â”€â”€ Types mirroring the API response â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 interface SourceData {
   sourceLabel: string;
@@ -17,13 +17,14 @@ interface MatchComparison {
   matchId: string;
   matchDate: string;
   teams: string[];
-  sources: Record<string, SourceData>; // source key → data
+  sources: Record<string, SourceData>; // source key â†’ data
 }
 
 interface PreviewResponse {
   ok: boolean;
   season?: string;
   source?: string;
+  selectedProvider?: string;
   errors?: Record<string, string>;
   providers?: Array<{ id: string; label: string; configured: boolean }>;
   matchesFetched?: number;
@@ -31,7 +32,7 @@ interface PreviewResponse {
   error?: string;
 }
 
-// ── Helpers ───────────────────────────────────────────────────────────────────
+// â”€â”€ Helpers â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 function totalPts(pts: Record<string, number>): number {
   return Object.values(pts).reduce((s, v) => s + v, 0);
@@ -43,11 +44,12 @@ function topScorers(pts: Record<string, number>, n = 5): Array<[string, number]>
     .slice(0, n);
 }
 
-// ── Component ─────────────────────────────────────────────────────────────────
+// â”€â”€ Component â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 export function WebscrapeSyncPanel({ roomCode }: { roomCode: string }) {
   const router = useRouter();
   const [season, setSeason] = useState("2026");
+  const [selectedProvider, setSelectedProvider] = useState<string | null>(null);
   const [fetching, setFetching] = useState(false);
   const [accepting, setAccepting] = useState<string | null>(null); // matchId being accepted
   const [comparison, setComparison] = useState<MatchComparison[]>([]);
@@ -55,7 +57,7 @@ export function WebscrapeSyncPanel({ roomCode }: { roomCode: string }) {
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [fetchError, setFetchError] = useState<string | null>(null);
   const [lastFetched, setLastFetched] = useState<string | null>(null);
-  // Manual override state: matchId → { playerName → pts override }
+  // Manual override state: matchId â†’ { playerName â†’ pts override }
   const [overrides, setOverrides] = useState<Record<string, Record<string, string>>>({});
   const [overrideEdit, setOverrideEdit] = useState<string | null>(null); // matchId with open editor
   const [autoRefresh, setAutoRefresh] = useState(false);
@@ -63,7 +65,7 @@ export function WebscrapeSyncPanel({ roomCode }: { roomCode: string }) {
 
   const AUTO_REFRESH_INTERVAL = 10 * 60; // seconds
 
-  // ── Callbacks (defined before effects that depend on them) ───────────────────
+  // â”€â”€ Callbacks (defined before effects that depend on them) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
   const handleFetch = useCallback(async () => {
     setFetching(true);
@@ -72,7 +74,7 @@ export function WebscrapeSyncPanel({ roomCode }: { roomCode: string }) {
       const res = await fetch(`/api/rooms/${roomCode}/webscrape-preview`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ season }),
+        body: JSON.stringify({ season, provider: selectedProvider }),
       });
       const data = (await res.json()) as PreviewResponse;
       if (!res.ok || !data.ok) {
@@ -83,6 +85,7 @@ export function WebscrapeSyncPanel({ roomCode }: { roomCode: string }) {
       }
       setComparison(data.comparison ?? []);
       setProviders(data.providers ?? []);
+      setSelectedProvider((current) => data.selectedProvider ?? current);
       setErrors(data.errors ?? {});
       setLastFetched(new Date().toLocaleTimeString());
     } catch (err) {
@@ -90,9 +93,9 @@ export function WebscrapeSyncPanel({ roomCode }: { roomCode: string }) {
     } finally {
       setFetching(false);
     }
-  }, [roomCode, season]);
+  }, [roomCode, season, selectedProvider]);
 
-  // ── Effects ──────────────────────────────────────────────────────────────────
+  // â”€â”€ Effects â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
   // Load stored comparison on mount / season change
   useEffect(() => {
@@ -103,11 +106,24 @@ export function WebscrapeSyncPanel({ roomCode }: { roomCode: string }) {
         if (data.ok && data.comparison) {
           setComparison(data.comparison);
           setProviders(data.providers ?? []);
+          setSelectedProvider((current) => {
+            if (current) return current;
+            const firstConfigured = (data.providers ?? []).find((provider) => provider.configured);
+            return firstConfigured?.id ?? null;
+          });
         }
       } catch { /* silently ignore on initial load */ }
     }
     void loadStored();
   }, [roomCode, season]);
+
+  useEffect(() => {
+    if (selectedProvider) return;
+    const firstConfigured = providers.find((provider) => provider.configured);
+    if (firstConfigured) {
+      setSelectedProvider(firstConfigured.id);
+    }
+  }, [providers, selectedProvider]);
 
   // Auto-refresh: 10-minute countdown + trigger
   useEffect(() => {
@@ -171,7 +187,7 @@ export function WebscrapeSyncPanel({ roomCode }: { roomCode: string }) {
     const sourceData = match.sources[source];
     if (!sourceData) return;
 
-    // Build patched points — we patch calculatedPoints only here for the UI.
+    // Build patched points â€” we patch calculatedPoints only here for the UI.
     // The real patch goes to the server via overrides.
     const patchedPoints = { ...sourceData.calculatedPoints };
     for (const [playerName, newPts] of Object.entries(matchOverrides)) {
@@ -268,12 +284,14 @@ export function WebscrapeSyncPanel({ roomCode }: { roomCode: string }) {
         </div>
         <button
           className="button secondary"
-          disabled={fetching}
+          disabled={fetching || !selectedProvider}
           onClick={() => void handleFetch()}
           style={{ marginTop: "auto" }}
           type="button"
         >
-          {fetching ? "Fetching live data…" : "Fetch Live Scores"}
+          {fetching
+            ? "Fetching live data..."
+            : `Fetch Live Scores${selectedProvider ? ` (${providers.find((provider) => provider.id === selectedProvider)?.label ?? selectedProvider})` : ""}`}
         </button>
         {comparison.length > 0 && (
           <div style={{ marginTop: "auto" }}>
@@ -309,14 +327,23 @@ export function WebscrapeSyncPanel({ roomCode }: { roomCode: string }) {
       {providers.length > 0 && (
         <div style={{ display: "flex", gap: "0.5rem", flexWrap: "wrap" }}>
           {providers.map((p) => (
-            <span
+            <button
               key={p.id}
-              className={`pill ${p.configured ? "highlight" : ""}`}
-              style={{ fontSize: "0.78rem", opacity: p.configured ? 1 : 0.5 }}
+              className={`pill ${selectedProvider === p.id ? "highlight" : ""}`}
+              disabled={!p.configured || fetching}
+              onClick={() => setSelectedProvider(p.id)}
+              style={{
+                fontSize: "0.78rem",
+                opacity: p.configured ? 1 : 0.5,
+                cursor: p.configured ? "pointer" : "not-allowed",
+                background: selectedProvider === p.id ? undefined : "rgba(255,255,255,0.03)",
+                border: "1px solid rgba(116, 104, 255, 0.28)",
+              }}
               title={p.configured ? "API key configured" : "API key missing"}
+              type="button"
             >
-              {p.label} {p.configured ? "✓" : "✗"}
-            </span>
+              {p.label} {selectedProvider === p.id ? "(Selected)" : p.configured ? "(Ready)" : "(Missing key)"}
+            </button>
           ))}
         </div>
       )}
@@ -333,8 +360,7 @@ export function WebscrapeSyncPanel({ roomCode }: { roomCode: string }) {
       {/* Comparison table */}
       {comparison.length === 0 && !fetching && (
         <p className="subtle" style={{ fontSize: "0.85rem" }}>
-          Click <strong>Fetch Live Scores</strong> to pull match data from configured API providers.
-          You can then compare scores side-by-side and accept the most accurate source per match.
+          Pick a provider, then click <strong>Fetch Live Scores</strong> to pull match data. You can compare stored sources side-by-side and accept the one you want for each match.
         </p>
       )}
 
@@ -447,7 +473,7 @@ export function WebscrapeSyncPanel({ roomCode }: { roomCode: string }) {
                       style={{ width: "100%", fontSize: "0.82rem", padding: "0.45rem" }}
                       type="button"
                     >
-                      {isAccepted ? "Accepted ✓" : isProcessing ? "Accepting…" : "Accept this source"}
+                      {isAccepted ? "Accepted âœ“" : isProcessing ? "Acceptingâ€¦" : "Accept this source"}
                     </button>
                   </div>
                 );
@@ -512,7 +538,7 @@ export function WebscrapeSyncPanel({ roomCode }: { roomCode: string }) {
                       style={{ fontSize: "0.8rem" }}
                       type="button"
                     >
-                      {isProcessing ? "Applying…" : `Apply + Accept ${match.sources[srcKey]?.sourceLabel ?? srcKey}`}
+                      {isProcessing ? "Applyingâ€¦" : `Apply + Accept ${match.sources[srcKey]?.sourceLabel ?? srcKey}`}
                     </button>
                   ))}
                 </div>
@@ -524,3 +550,4 @@ export function WebscrapeSyncPanel({ roomCode }: { roomCode: string }) {
     </div>
   );
 }
+
