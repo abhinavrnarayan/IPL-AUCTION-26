@@ -148,9 +148,9 @@ export function ResultsExportBar({ snapshot }: { snapshot: ResultsSnapshot }) {
         subtitle: "Highest fantasy scores across the room",
         columns: [
           { key: "rank", label: "#", width: 36, align: "center" as const },
-          { key: "playerName", label: "Player", width: 230 },
-          { key: "teamName", label: "Team", width: 170 },
-          { key: "points", label: "Points", width: 79, align: "right" as const },
+          { key: "playerName", label: "Player", width: 226 },
+          { key: "teamName", label: "Team", width: 163 },
+          { key: "points", label: "Points", width: 90, align: "center" as const },
         ],
         rows: topPlayers.map((player, index) => ({
           rank: index + 1,
@@ -165,9 +165,9 @@ export function ResultsExportBar({ snapshot }: { snapshot: ResultsSnapshot }) {
         startOnNewPage: true,
         columns: [
           { key: "rank", label: "#", width: 36, align: "center" as const },
-          { key: "name", label: "Player", width: 270 },
-          { key: "points", label: "Points", width: 85, align: "right" as const },
-          { key: "role", label: "Position", width: 124 },
+          { key: "name", label: "Player", width: 250 },
+          { key: "points", label: "Points", width: 105, align: "center" as const },
+          { key: "role", label: "Position", width: 160 },
         ],
         rows: players.map((player, index) => ({
           rank: index + 1,
