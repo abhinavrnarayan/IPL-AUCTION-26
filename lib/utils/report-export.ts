@@ -1,5 +1,21 @@
 "use client";
 
+type PdfTableColumn = {
+  key: string;
+  label: string;
+  width: number;
+  align?: "left" | "center" | "right";
+};
+
+type PdfTableRow = Record<string, string | number>;
+
+type PdfTableSection = {
+  title: string;
+  subtitle?: string;
+  columns: PdfTableColumn[];
+  rows: PdfTableRow[];
+};
+
 function downloadBlob(blob: Blob, filename: string) {
   const url = URL.createObjectURL(blob);
   const link = document.createElement("a");
@@ -11,6 +27,35 @@ function downloadBlob(blob: Blob, filename: string) {
 
 function escapePdfText(value: string) {
   return value.replace(/\\/g, "\\\\").replace(/\(/g, "\\(").replace(/\)/g, "\\)");
+}
+
+function toPdfColor(hex: string) {
+  const value = hex.replace("#", "");
+  const r = parseInt(value.slice(0, 2), 16) / 255;
+  const g = parseInt(value.slice(2, 4), 16) / 255;
+  const b = parseInt(value.slice(4, 6), 16) / 255;
+  return `${r.toFixed(3)} ${g.toFixed(3)} ${b.toFixed(3)}`;
+}
+
+function wrapText(text: string, maxChars: number) {
+  if (text.length <= maxChars) return [text];
+
+  const words = text.split(/\s+/);
+  const lines: string[] = [];
+  let current = "";
+
+  for (const word of words) {
+    const next = current ? `${current} ${word}` : word;
+    if (next.length <= maxChars) {
+      current = next;
+      continue;
+    }
+    if (current) lines.push(current);
+    current = word;
+  }
+
+  if (current) lines.push(current);
+  return lines.length > 0 ? lines : [text];
 }
 
 export async function downloadPngFromSvg(
@@ -71,7 +116,6 @@ export function downloadSimplePdf(filename: string, title: string, lines: string
   if (current.length > 0) pages.push(current);
 
   const objects: string[] = [];
-  const pageObjectIds: number[] = [];
 
   objects.push("<< /Type /Catalog /Pages 2 0 R >>");
 
@@ -81,8 +125,6 @@ export function downloadSimplePdf(filename: string, title: string, lines: string
 
   for (let index = 0; index < pages.length; index += 1) {
     const pageObjectId = firstPageObjectId + index * 2;
-    const contentObjectId = firstContentObjectId + index * 2;
-    pageObjectIds.push(pageObjectId);
     pageKids.push(`${pageObjectId} 0 R`);
   }
 
@@ -112,6 +154,138 @@ export function downloadSimplePdf(filename: string, title: string, lines: string
   let pdf = "%PDF-1.4\n";
   const offsets: number[] = [0];
 
+  objects.forEach((object, index) => {
+    offsets.push(pdf.length);
+    pdf += `${index + 1} 0 obj\n${object}\nendobj\n`;
+  });
+
+  const xrefOffset = pdf.length;
+  pdf += `xref\n0 ${objects.length + 1}\n`;
+  pdf += "0000000000 65535 f \n";
+  for (let index = 1; index < offsets.length; index += 1) {
+    pdf += `${String(offsets[index]).padStart(10, "0")} 00000 n \n`;
+  }
+  pdf += `trailer\n<< /Size ${objects.length + 1} /Root 1 0 R >>\nstartxref\n${xrefOffset}\n%%EOF`;
+
+  downloadBlob(new Blob([pdf], { type: "application/pdf" }), filename);
+}
+
+export function downloadTablePdf(filename: string, documentTitle: string, sections: PdfTableSection[]) {
+  const pageWidth = 595;
+  const pageHeight = 842;
+  const margin = 32;
+  const usableWidth = pageWidth - margin * 2;
+  const sectionGap = 18;
+  const titleLines = wrapText(documentTitle, 42);
+
+  const bg = toPdfColor("0b1020");
+  const panel = toPdfColor("151b30");
+  const border = toPdfColor("303a66");
+  const accent = toPdfColor("7f88ff");
+  const text = toPdfColor("f2f5ff");
+  const subtle = toPdfColor("92a0c6");
+  const headerFill = toPdfColor("1d2648");
+
+  const pages: string[][] = [];
+  let current: string[] = [];
+  let y = pageHeight - margin;
+
+  const ensurePage = (neededHeight: number) => {
+    if (current.length === 0) {
+      current.push(`${bg} rg 0 0 ${pageWidth} ${pageHeight} re f`);
+      let titleY = pageHeight - margin - 8;
+      for (const line of titleLines) {
+        current.push("BT");
+        current.push(`/F2 20 Tf ${text} rg ${margin} ${titleY} Td (${escapePdfText(line)}) Tj ET`);
+        titleY -= 24;
+      }
+      y = titleY - 12;
+    }
+
+    if (y - neededHeight < margin) {
+      pages.push(current);
+      current = [];
+      y = pageHeight - margin;
+      ensurePage(neededHeight);
+    }
+  };
+
+  const drawSectionHeader = (section: PdfTableSection) => {
+    const subtitleLines = section.subtitle ? wrapText(section.subtitle, 70) : [];
+    const neededHeight = 34 + subtitleLines.length * 14 + 10 + 28;
+    ensurePage(neededHeight);
+
+    current.push(`${panel} rg ${margin} ${y - 6} ${usableWidth} 32 re f`);
+    current.push(`${border} RG 1 w ${margin} ${y - 6} ${usableWidth} 32 re S`);
+    current.push(`BT /F2 14 Tf ${text} rg ${margin + 12} ${y + 6} Td (${escapePdfText(section.title)}) Tj ET`);
+    y -= 22;
+
+    subtitleLines.forEach((line) => {
+      current.push(`BT /F1 10 Tf ${subtle} rg ${margin + 12} ${y} Td (${escapePdfText(line)}) Tj ET`);
+      y -= 13;
+    });
+
+    y -= 6;
+    current.push(`${headerFill} rg ${margin} ${y - 18} ${usableWidth} 22 re f`);
+    current.push(`${border} RG 1 w ${margin} ${y - 18} ${usableWidth} 22 re S`);
+
+    let x = margin + 8;
+    for (const column of section.columns) {
+      const align = column.align ?? "left";
+      const textX = align === "right"
+        ? x + column.width - 8
+        : align === "center"
+          ? x + column.width / 2
+          : x;
+      const anchorCmd = align === "center" ? " 0 Tc" : "";
+      current.push(`BT /F2 10 Tf ${accent} rg ${textX} ${y - 4} Td (${escapePdfText(column.label)}) Tj ET${anchorCmd}`);
+      x += column.width;
+    }
+    y -= 26;
+  };
+
+  const drawRow = (section: PdfTableSection, row: PdfTableRow, zebra: boolean) => {
+    ensurePage(30);
+    if (zebra) current.push(`${panel} rg ${margin} ${y - 18} ${usableWidth} 22 re f`);
+    current.push(`${border} RG 0.5 w ${margin} ${y - 18} ${usableWidth} 22 re S`);
+
+    let x = margin + 8;
+    for (const column of section.columns) {
+      const value = String(row[column.key] ?? "");
+      const align = column.align ?? "left";
+      const shown = value.length > 34 ? `${value.slice(0, 31)}...` : value;
+      let textX = x;
+      if (align === "right") textX = x + column.width - 12;
+      else if (align === "center") textX = x + column.width / 2;
+      current.push(`BT /F1 10 Tf ${text} rg ${textX} ${y - 4} Td (${escapePdfText(shown)}) Tj ET`);
+      x += column.width;
+    }
+    y -= 24;
+  };
+
+  sections.forEach((section) => {
+    drawSectionHeader(section);
+    section.rows.forEach((row, index) => drawRow(section, row, index % 2 === 0));
+    y -= sectionGap;
+  });
+
+  if (current.length > 0) pages.push(current);
+
+  const objects: string[] = [];
+  objects.push("<< /Type /Catalog /Pages 2 0 R >>");
+  objects.push(`<< /Type /Pages /Kids [${pages.map((_, index) => `${5 + index * 2} 0 R`).join(" ")}] /Count ${pages.length} >>`);
+  objects.push("<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>");
+  objects.push("<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica-Bold >>");
+
+  pages.forEach((commands, index) => {
+    const contentObjectId = 6 + index * 2;
+    const stream = commands.join("\n");
+    objects.push(`<< /Type /Page /Parent 2 0 R /MediaBox [0 0 ${pageWidth} ${pageHeight}] /Resources << /Font << /F1 3 0 R /F2 4 0 R >> >> /Contents ${contentObjectId} 0 R >>`);
+    objects.push(`<< /Length ${stream.length} >>\nstream\n${stream}\nendstream`);
+  });
+
+  let pdf = "%PDF-1.4\n";
+  const offsets: number[] = [0];
   objects.forEach((object, index) => {
     offsets.push(pdf.length);
     pdf += `${index + 1} 0 obj\n${object}\nendobj\n`;

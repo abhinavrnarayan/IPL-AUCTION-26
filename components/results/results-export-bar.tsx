@@ -3,7 +3,7 @@
 import { scorePlayer } from "@/lib/domain/scoring";
 import type { ResultsSnapshot } from "@/lib/domain/types";
 import { formatCurrencyShort } from "@/lib/utils";
-import { downloadPngFromSvg, downloadSimplePdf } from "@/lib/utils/report-export";
+import { downloadPngFromSvg, downloadSimplePdf, downloadTablePdf } from "@/lib/utils/report-export";
 import { ExportButton } from "@/components/ui/export-button";
 
 const LEADERBOARD_COLS = [
@@ -42,7 +42,9 @@ export function ResultsExportBar({ snapshot }: { snapshot: ResultsSnapshot }) {
   }
 
   function getTeamPlayerSheets() {
-    return snapshot.teams.map((team, teamIndex) => {
+    return snapshot.leaderboard.map((teamScore, teamIndex) => {
+      const team = snapshot.teams.find((entry) => entry.id === teamScore.teamId);
+      if (!team) return null;
       const players = snapshot.squads
         .filter((entry) => entry.teamId === team.id)
         .map((entry) => ({
@@ -58,26 +60,33 @@ export function ResultsExportBar({ snapshot }: { snapshot: ResultsSnapshot }) {
         rank: teamIndex + 1,
         players,
       };
-    });
+    }).filter(Boolean) as Array<{
+      team: (typeof snapshot.teams)[number];
+      rank: number;
+      players: Array<{ name: string; role: string; points: number; price: number }>;
+    }>;
   }
 
-  function buildLeaderboardSvg() {
+  function buildLeaderboardSvg(vertical = false) {
     const rows = snapshot.leaderboard;
-    const width = 1200;
-    const headerHeight = 120;
-    const rowHeight = 74;
+    const width = vertical ? 760 : 1200;
+    const headerHeight = vertical ? 140 : 120;
+    const rowHeight = vertical ? 86 : 74;
     const height = headerHeight + rows.length * rowHeight + 40;
 
     const rowMarkup = rows
       .map((team, index) => {
         const y = headerHeight + index * rowHeight;
+        const badgeX = vertical ? width - 180 : width - 220;
+        const badgeWidth = vertical ? 120 : 150;
+        const badgeTextX = badgeX + badgeWidth / 2;
         return `
           <rect x="36" y="${y}" width="${width - 72}" height="58" rx="20" fill="rgba(20,22,40,0.96)" stroke="rgba(107,114,255,0.22)" />
           <circle cx="78" cy="${y + 29}" r="19" fill="rgba(93,104,255,0.16)" stroke="rgba(117,127,255,0.34)" />
           <text x="78" y="${y + 36}" text-anchor="middle" font-size="19" font-weight="800" fill="#8b92ff">${index + 1}</text>
-          <text x="122" y="${y + 35}" font-size="25" font-weight="700" fill="#f4f5ff">${team.teamName}</text>
-          <rect x="${width - 220}" y="${y + 11}" width="150" height="36" rx="18" fill="rgba(24,214,151,0.12)" stroke="rgba(24,214,151,0.26)" />
-          <text x="${width - 145}" y="${y + 35}" text-anchor="middle" font-size="22" font-weight="800" fill="#25d69b">${team.totalPoints} pts</text>
+          <text x="122" y="${y + 35}" font-size="${vertical ? 22 : 25}" font-weight="700" fill="#f4f5ff">${team.teamName}</text>
+          <rect x="${badgeX}" y="${y + 11}" width="${badgeWidth}" height="36" rx="18" fill="rgba(24,214,151,0.12)" stroke="rgba(24,214,151,0.26)" />
+          <text x="${badgeTextX}" y="${y + 35}" text-anchor="middle" font-size="${vertical ? 18 : 22}" font-weight="800" fill="#25d69b">${team.totalPoints} pts</text>
         `;
       })
       .join("");
@@ -97,7 +106,7 @@ export function ResultsExportBar({ snapshot }: { snapshot: ResultsSnapshot }) {
             </radialGradient>
           </defs>
           <text x="36" y="56" font-size="20" font-weight="700" fill="#8b92ff">SFL RESULTS</text>
-          <text x="36" y="92" font-size="40" font-weight="800" fill="#f4f5ff">Team Rankings</text>
+          <text x="36" y="${vertical ? 100 : 92}" font-size="${vertical ? 34 : 40}" font-weight="800" fill="#f4f5ff">Team Rankings</text>
           ${rowMarkup}
         </svg>
       `,
@@ -107,6 +116,11 @@ export function ResultsExportBar({ snapshot }: { snapshot: ResultsSnapshot }) {
   async function handleLeaderboardImage() {
     const { svg, width, height } = buildLeaderboardSvg();
     await downloadPngFromSvg(svg, `${snapshot.room.name}-team-rankings.png`, width, height);
+  }
+
+  async function handleLeaderboardImageVertical() {
+    const { svg, width, height } = buildLeaderboardSvg(true);
+    await downloadPngFromSvg(svg, `${snapshot.room.name}-team-rankings-mobile.png`, width, height);
   }
 
   function handleLeaderboardPdf() {
@@ -129,30 +143,47 @@ export function ResultsExportBar({ snapshot }: { snapshot: ResultsSnapshot }) {
       }))
       .sort((left, right) => right.points - left.points || left.playerName.localeCompare(right.playerName))
       .slice(0, 10);
-
-    const lines = [
-      "Top 10 players",
-      ...topTenPlayers.map(
-        (player, index) =>
-          `#${index + 1}  ${player.playerName}  |  ${player.teamName}  |  ${player.points} pts`,
-      ),
-      "",
-      "Team leaderboards",
-      "",
-      ...getTeamPlayerSheets().flatMap(({ team, rank, players }) => [
-        `Rank #${rank} - ${team.name}`,
-        ...players.map(
-          (player, index) =>
-            `  ${index + 1}. ${player.name} | ${player.role} | ${player.points} pts | Bought ${formatCurrencyShort(player.price)}`,
-        ),
-        "",
-      ]),
+    const sections = [
+      {
+        title: "Top 10 Players",
+        subtitle: "Highest fantasy scores across the room",
+        columns: [
+          { key: "rank", label: "#", width: 40, align: "center" as const },
+          { key: "playerName", label: "Player", width: 220 },
+          { key: "teamName", label: "Team", width: 170 },
+          { key: "points", label: "Points", width: 90, align: "right" as const },
+        ],
+        rows: topTenPlayers.map((player, index) => ({
+          rank: index + 1,
+          playerName: player.playerName,
+          teamName: player.teamName,
+          points: `${player.points} pts`,
+        })),
+      },
+      ...getTeamPlayerSheets().map(({ team, rank, players }) => ({
+        title: `#${rank} ${team.name}`,
+        subtitle: `${players.length} players • ${snapshot.leaderboard[rank - 1]?.totalPoints ?? 0} pts`,
+        columns: [
+          { key: "rank", label: "#", width: 36, align: "center" as const },
+          { key: "name", label: "Player", width: 210 },
+          { key: "role", label: "Role", width: 120 },
+          { key: "price", label: "Bought", width: 90, align: "right" as const },
+          { key: "points", label: "Points", width: 90, align: "right" as const },
+        ],
+        rows: players.map((player, index) => ({
+          rank: index + 1,
+          name: player.name,
+          role: player.role,
+          price: formatCurrencyShort(player.price),
+          points: `${player.points} pts`,
+        })),
+      })),
     ];
 
-    downloadSimplePdf(
+    downloadTablePdf(
       `${snapshot.room.name}-team-player-points.pdf`,
       `${snapshot.room.name} - Team Player Points`,
-      lines,
+      sections,
     );
   }
 
@@ -172,6 +203,9 @@ export function ResultsExportBar({ snapshot }: { snapshot: ResultsSnapshot }) {
       />
       <button className="btn-sm" onClick={() => void handleLeaderboardImage()} type="button">
         Rankings image
+      </button>
+      <button className="btn-sm" onClick={() => void handleLeaderboardImageVertical()} type="button">
+        Rankings image mobile
       </button>
       <button className="btn-sm" onClick={handleLeaderboardPdf} type="button">
         Rankings PDF
