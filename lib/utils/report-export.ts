@@ -233,12 +233,11 @@ export function downloadTablePdf(filename: string, documentTitle: string, sectio
     for (const column of section.columns) {
       const align = column.align ?? "left";
       const textX = align === "right"
-        ? x + column.width - 8
+        ? x + column.width - 18
         : align === "center"
           ? x + column.width / 2
           : x;
-      const anchorCmd = align === "center" ? " 0 Tc" : "";
-      current.push(`BT /F2 10 Tf ${accent} rg ${textX} ${y - 4} Td (${escapePdfText(column.label)}) Tj ET${anchorCmd}`);
+      current.push(`BT /F2 10 Tf ${accent} rg ${textX} ${y - 4} Td (${escapePdfText(column.label)}) Tj ET`);
       x += column.width;
     }
     y -= 26;
@@ -253,9 +252,10 @@ export function downloadTablePdf(filename: string, documentTitle: string, sectio
     for (const column of section.columns) {
       const value = String(row[column.key] ?? "");
       const align = column.align ?? "left";
-      const shown = value.length > 34 ? `${value.slice(0, 31)}...` : value;
+      const maxChars = Math.max(6, Math.floor(column.width / 7));
+      const shown = value.length > maxChars ? `${value.slice(0, maxChars - 3)}...` : value;
       let textX = x;
-      if (align === "right") textX = x + column.width - 12;
+      if (align === "right") textX = x + column.width - 18;
       else if (align === "center") textX = x + column.width / 2;
       current.push(`BT /F1 10 Tf ${text} rg ${textX} ${y - 4} Td (${escapePdfText(shown)}) Tj ET`);
       x += column.width;

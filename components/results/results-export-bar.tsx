@@ -2,7 +2,6 @@
 
 import { scorePlayer } from "@/lib/domain/scoring";
 import type { ResultsSnapshot } from "@/lib/domain/types";
-import { formatCurrencyShort } from "@/lib/utils";
 import { downloadPngFromSvg, downloadSimplePdf, downloadTablePdf } from "@/lib/utils/report-export";
 import { ExportButton } from "@/components/ui/export-button";
 
@@ -51,9 +50,8 @@ export function ResultsExportBar({ snapshot }: { snapshot: ResultsSnapshot }) {
           name: entry.player?.name ?? "Unknown player",
           role: entry.player?.role ?? "Player",
           points: entry.player ? scorePlayer(entry.player) : 0,
-          price: entry.purchasePrice,
         }))
-        .sort((left, right) => right.points - left.points || right.price - left.price);
+        .sort((left, right) => right.points - left.points || left.name.localeCompare(right.name));
 
       return {
         team,
@@ -63,7 +61,7 @@ export function ResultsExportBar({ snapshot }: { snapshot: ResultsSnapshot }) {
     }).filter(Boolean) as Array<{
       team: (typeof snapshot.teams)[number];
       rank: number;
-      players: Array<{ name: string; role: string; points: number; price: number }>;
+      players: Array<{ name: string; role: string; points: number }>;
     }>;
   }
 
@@ -149,33 +147,31 @@ export function ResultsExportBar({ snapshot }: { snapshot: ResultsSnapshot }) {
         subtitle: "Highest fantasy scores across the room",
         columns: [
           { key: "rank", label: "#", width: 40, align: "center" as const },
-          { key: "playerName", label: "Player", width: 220 },
-          { key: "teamName", label: "Team", width: 170 },
-          { key: "points", label: "Points", width: 90, align: "right" as const },
+          { key: "playerName", label: "Player", width: 236 },
+          { key: "teamName", label: "Team", width: 165 },
+          { key: "points", label: "Points", width: 74, align: "right" as const },
         ],
         rows: topTenPlayers.map((player, index) => ({
           rank: index + 1,
           playerName: player.playerName,
           teamName: player.teamName,
-          points: `${player.points} pts`,
+          points: player.points,
         })),
       },
       ...getTeamPlayerSheets().map(({ team, rank, players }) => ({
         title: `#${rank} ${team.name}`,
-        subtitle: `${players.length} players • ${snapshot.leaderboard[rank - 1]?.totalPoints ?? 0} pts`,
+        subtitle: `${players.length} players - ${snapshot.leaderboard[rank - 1]?.totalPoints ?? 0} points`,
         columns: [
           { key: "rank", label: "#", width: 36, align: "center" as const },
-          { key: "name", label: "Player", width: 210 },
-          { key: "role", label: "Role", width: 120 },
-          { key: "price", label: "Bought", width: 90, align: "right" as const },
-          { key: "points", label: "Points", width: 90, align: "right" as const },
+          { key: "name", label: "Player", width: 250 },
+          { key: "role", label: "Role", width: 165 },
+          { key: "points", label: "Points", width: 64, align: "right" as const },
         ],
         rows: players.map((player, index) => ({
           rank: index + 1,
           name: player.name,
           role: player.role,
-          price: formatCurrencyShort(player.price),
-          points: `${player.points} pts`,
+          points: player.points,
         })),
       })),
     ];
