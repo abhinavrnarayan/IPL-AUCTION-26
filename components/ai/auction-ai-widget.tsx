@@ -375,23 +375,16 @@ export default function AuctionAIWidget() {
       <AnimatePresence>
         {open && (
           <motion.div
+            className="sfl-chatbot-window"
             initial={{ opacity: 0, y: 30, scale: 0.9, filter: "blur(8px)" }}
             animate={{ opacity: 1, y: 0, scale: 1, filter: "blur(0px)" }}
             exit={{ opacity: 0, y: 20, scale: 0.95, filter: "blur(4px)" }}
             transition={{ type: "spring", damping: 25, stiffness: 300 }}
             style={{
-              position: "fixed",
-              bottom: "100px",
-              right: "24px",
-              width: "360px",
-              maxWidth: "calc(100vw - 48px)",
-              height: "500px",
-              maxHeight: "calc(100dvh - 140px)",
               background: "linear-gradient(180deg, rgba(15,23,42,0.85) 0%, rgba(9,14,23,0.95) 100%)",
               backdropFilter: "blur(20px)",
               border: "1px solid rgba(255, 255, 255, 0.1)",
               borderTop: "1px solid rgba(99, 102, 241, 0.3)",
-              borderRadius: "20px",
               display: "flex",
               flexDirection: "column",
               overflow: "hidden",
@@ -573,6 +566,30 @@ export default function AuctionAIWidget() {
       </AnimatePresence>
 
       <style jsx>{`
+        .sfl-chatbot-window {
+          position: fixed;
+          bottom: 100px;
+          right: 24px;
+          width: 360px;
+          max-width: calc(100vw - 48px);
+          height: 500px;
+          max-height: calc(100dvh - 140px);
+          border-radius: 20px;
+        }
+
+        @media (max-width: 600px) {
+          .sfl-chatbot-window {
+            bottom: 0 !important;
+            right: 0 !important;
+            width: 100vw !important;
+            max-width: 100vw !important;
+            height: 100dvh !important;
+            max-height: 100dvh !important;
+            border-radius: 0 !important;
+            z-index: 100 !important;
+          }
+        }
+
         .sfl-chat-scroll::-webkit-scrollbar {
           width: 6px;
         }

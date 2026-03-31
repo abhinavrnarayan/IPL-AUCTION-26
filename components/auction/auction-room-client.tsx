@@ -207,7 +207,7 @@ export function AuctionRoomClient({ snapshot }: { snapshot: AuctionSnapshot }) {
         routerRef.current.refresh();
       });
       refreshTimeoutRef.current = null;
-    }, 75);
+    }, 1500); // Debounced to 1.5s to prevent massive re-render stutter during rapid bidding
   }, []);
 
   // Timer â€” ticks down safely using a relative local interval
@@ -236,12 +236,13 @@ export function AuctionRoomClient({ snapshot }: { snapshot: AuctionSnapshot }) {
       .on(
         "postgres_changes",
         { event: "*", schema: "public", table: "auction_state", filter: `room_id=eq.${snapshot.room.id}` },
-        () => refreshRoom(),
+        // Skipping refreshRoom() for auction state to prevent layout thrashing. The "broadcast" events handle UI updates optimistically!
+        () => {},
       )
       .on(
         "postgres_changes",
         { event: "*", schema: "public", table: "bids", filter: `room_id=eq.${snapshot.room.id}` },
-        () => refreshRoom(),
+        () => {}, // Let optimistic UI & broadcast events handle the rapid state changes
       )
       .on(
         "postgres_changes",
@@ -405,7 +406,10 @@ export function AuctionRoomClient({ snapshot }: { snapshot: AuctionSnapshot }) {
           void overlayTimer;
         }
       })
-      .on("broadcast", { event: "REFRESH_ROOM" }, () => refreshRoom())
+      .on("broadcast", { event: "REFRESH_ROOM" }, () => {
+         // Throttled to prevent full freeze
+         refreshRoom();
+      })
       .subscribe();
 
     channelRef.current = channel;
@@ -722,7 +726,6 @@ export function AuctionRoomClient({ snapshot }: { snapshot: AuctionSnapshot }) {
           } satisfies BidPlacedPayload,
         });
         channelRef.current?.send({ type: "broadcast", event: "REFRESH_ROOM" });
-        refreshRoom();
         return null;
       }
     } catch (err) {
