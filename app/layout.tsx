@@ -34,6 +34,9 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en" suppressHydrationWarning>
+      <head>
+        <meta name="sfl-server-time" content={Date.now().toString()} />
+      </head>
       <body className={`${displayFont.variable} ${bodyFont.variable}`}>
         <AmbientBackground />
         <IntroSplashWrapper />

@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { getSupabaseAdminClient } from "@/lib/supabase/admin";
 import { findRoomByCode, getRoomEntities } from "@/lib/server/room";
 import { buildTeamLeaderboard } from "@/lib/domain/scoring";
 
@@ -12,6 +13,7 @@ type AiResponse =
         | "show_bid_options"
         | "auction_bid"
         | "start_auction"
+        | "seed_default_players"
         | "show_leading_team";
       room_code?: string;
       amount_text?: string;
@@ -136,6 +138,17 @@ export async function POST(req: NextRequest) {
       } catch (err) {
         console.error("Failed to load room context for AI", err);
       }
+    } else {
+      try {
+        const admin = getSupabaseAdminClient();
+        const { data: openRooms } = await admin.from("rooms").select("name, code, status").neq("status", "COMPLETED").order("created_at", { ascending: false }).limit(10);
+        if (openRooms && openRooms.length > 0) {
+          const roomText = openRooms.map(r => `- Room Code: ${r.code} (Name: ${r.name}, Status: ${r.status})`).join("\n");
+          roomContext = `\n[LOBBY DATA]: The user is currently in the Lobby. Below is a list of active open rooms they can join:\n${roomText}\nCRITICAL RULE: If the user asks to "join a room", specifically ask them which room they want to join and list the available rooms to them.`;
+        } else {
+          roomContext = `\n[LOBBY DATA]: The user is currently in the Lobby. There are NO active rooms right now.\nCRITICAL RULE: If they ask about joining a room, tell them none exist right now and instruct them to create a new room.`;
+        }
+      } catch (err) {}
     }
 
     const identityPrompt = `
@@ -164,13 +177,18 @@ Supported actions:
 - show_bid_options
 - auction_bid
 - start_auction
+- seed_default_players
 - show_leading_team
 
-If the user says something like "bid 50L" or "bid 1Cr", return:
-{ "type": "action", "action": "auction_bid", "amount_text": "50L" }
+CRITICAL SAFETY RULE: NEVER invent or hallucinate pages that don't exist. If the user asks you to go to a page or do something completely outside your knowledge or off-topic, DO NOT output a navigation block. Instead, output: { "type": "info", "message": "I don't know..." }
 
 If the user asks "how to join an auction", "how to play", or "how to start":
 { "type": "navigation", "route": "/login", "message": "To join an auction, please log in first, create a team, and then you can join or start an auction room! I'll take you to the login page right now." }
+
+If the user asks to "start the auction", gently remind them: "You need to upload players and create teams before you can start the auction!" if the room isn't ready.
+
+If the user says "upload players" or "seed players" or "upload default players":
+{ "type": "action", "action": "seed_default_players" }
 `;
 
     const finalSystemPrompt = `${identityPrompt}\n${roomContext}\n${formatConstraints}`;

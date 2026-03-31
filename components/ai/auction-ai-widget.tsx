@@ -19,6 +19,7 @@ type AiResponse =
     | "show_bid_options"
     | "auction_bid"
     | "start_auction"
+    | "seed_default_players"
     | "show_leading_team";
     room_code?: string;
     amount_text?: string;
@@ -285,6 +286,23 @@ export default function AuctionAIWidget() {
 
       if ("type" in data && data.type === "action" && data.action === "show_leading_team") {
         handleLeadingTeam();
+        return;
+      }
+
+      if ("type" in data && data.type === "action" && data.action === "seed_default_players") {
+        const currentRoom = getCurrentRoomCode(pathname);
+        if (!currentRoom) {
+          pushBotMessage("You need to be inside a room for me to upload players. Open a room first!");
+          return;
+        }
+        pushBotMessage("⏳ Seeding the default player pool and teams into this room... hang tight!");
+        const seedRes = await fetch(`/api/rooms/${currentRoom}/ai/seed`, { method: "POST" });
+        const seedData = (await seedRes.json()) as { ok?: boolean; playersImported?: number; teamsImported?: number; error?: string };
+        if (!seedRes.ok || seedData.error) {
+          pushBotMessage(`Failed to seed: ${seedData.error ?? "Unknown error"}. Make sure you are the room admin.`);
+        } else {
+          pushBotMessage(`✅ Done! Imported ${seedData.teamsImported ?? 10} teams and ${seedData.playersImported ?? 0} players into the room. You can now start the auction!`);
+        }
         return;
       }
 

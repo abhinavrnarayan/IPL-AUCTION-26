@@ -60,9 +60,30 @@ type ChatMessagePayload = {
   sentAt: string;
 };
 
+declare global {
+  interface Window {
+    __SFL_SERVER_DRIFT__?: number;
+  }
+}
+
 function getRemainingSeconds(expiresAt: string | null) {
   if (!expiresAt) return 0;
-  return Math.max(0, Math.ceil((new Date(expiresAt).getTime() - Date.now()) / 1000));
+  if (typeof window === "undefined") {
+    return Math.max(0, Math.ceil((new Date(expiresAt).getTime() - Date.now()) / 1000));
+  }
+  
+  if (window.__SFL_SERVER_DRIFT__ === undefined) {
+    const meta = document.querySelector('meta[name="sfl-server-time"]');
+    if (meta) {
+       const serverTime = Number(meta.getAttribute('content'));
+       window.__SFL_SERVER_DRIFT__ = Date.now() - serverTime; 
+    } else {
+       window.__SFL_SERVER_DRIFT__ = 0;
+    }
+  }
+  
+  const correctedNow = Date.now() - window.__SFL_SERVER_DRIFT__;
+  return Math.max(0, Math.ceil((new Date(expiresAt).getTime() - correctedNow) / 1000));
 }
 
 function getInitials(name: string) {
@@ -217,6 +238,9 @@ export function AuctionRoomClient({ snapshot }: { snapshot: AuctionSnapshot }) {
     const phase = optimisticPhase ?? localAuctionState.phase;
     if (phase !== "LIVE" || !localAuctionState.expiresAt) {
       prevPhaseRef.current = phase;
+      if (phase === "PAUSED" && localAuctionState.pausedRemainingMs != null) {
+        setRemainingSeconds(Math.ceil(localAuctionState.pausedRemainingMs / 1000));
+      }
       return;
     }
 
@@ -264,6 +288,7 @@ export function AuctionRoomClient({ snapshot }: { snapshot: AuctionSnapshot }) {
               lastEvent: newDoc.last_event ?? curr.lastEvent,
               currentPlayerId: newDoc.current_player_id !== undefined ? newDoc.current_player_id : curr.currentPlayerId,
               currentTeamId: newDoc.current_team_id !== undefined ? newDoc.current_team_id : curr.currentTeamId,
+              pausedRemainingMs: newDoc.paused_remaining_ms !== undefined ? newDoc.paused_remaining_ms : curr.pausedRemainingMs,
             };
           });
         },
