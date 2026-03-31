@@ -303,8 +303,11 @@ export function AuctionRoomClient({ snapshot }: { snapshot: AuctionSnapshot }) {
           // Sync timer for ALL events using authoritative server timestamps
           if (newDoc.phase === "PAUSED" && newDoc.paused_remaining_ms != null) {
             setRemainingSeconds(Math.ceil(newDoc.paused_remaining_ms / 1000));
-          } else if (newDoc.phase === "LIVE" && newDoc.expires_at) {
-            // Only resync if DB-derived value differs from current by more than 3s to avoid jitter
+          } else if (newDoc.phase === "LIVE" && (lastEvent === "AUCTION_RESUMED" || lastEvent === "AUCTION_STARTED")) {
+            // On resume or new auction start: reset everyone to full timerSeconds — no clock drift
+            setRemainingSeconds(snapshot.room.timerSeconds);
+          } else if (newDoc.phase === "LIVE" && newDoc.expires_at && lastEvent !== "NEW_BID") {
+            // For ADVANCE / other LIVE transitions: sync from server timestamp
             const serverSeconds = getRemainingSeconds(newDoc.expires_at);
             setRemainingSeconds((prev) => Math.abs(serverSeconds - prev) > 3 ? serverSeconds : prev);
           }
