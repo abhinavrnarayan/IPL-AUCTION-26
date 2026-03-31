@@ -30,6 +30,7 @@ type BidPlacedPayload = {
   teamId: string;
   amount: number;
   expiresAt: string;
+  timerSeconds: number;
   version: number;
 };
 
@@ -383,7 +384,7 @@ export function AuctionRoomClient({ snapshot }: { snapshot: AuctionSnapshot }) {
               !(item.playerId === next.playerId && item.teamId === next.teamId && item.amount === next.amount),
           ),
         ]);
-        setRemainingSeconds(snapshot.room.timerSeconds);
+        setRemainingSeconds(next.timerSeconds ?? snapshot.room.timerSeconds);
       })
       .on("broadcast", { event: "SKIP_VOTED" }, ({ payload }) => {
         const next = payload as SkipVotePayload;
@@ -796,6 +797,7 @@ export function AuctionRoomClient({ snapshot }: { snapshot: AuctionSnapshot }) {
             teamId,
             amount: nextAmount,
             expiresAt: nextExpiresAt,
+            timerSeconds: snapshot.room.timerSeconds,
             version: localAuctionState.version + 1,
           } satisfies BidPlacedPayload,
         });
