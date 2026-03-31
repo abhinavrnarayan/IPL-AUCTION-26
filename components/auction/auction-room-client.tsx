@@ -249,8 +249,24 @@ export function AuctionRoomClient({ snapshot }: { snapshot: AuctionSnapshot }) {
       .on(
         "postgres_changes",
         { event: "*", schema: "public", table: "auction_state", filter: `room_id=eq.${snapshot.room.id}` },
-        // Skipping refreshRoom() for auction state to prevent layout thrashing. The "broadcast" events handle UI updates optimistically!
-        () => {},
+        (dbPayload) => {
+          const newDoc = dbPayload.new as any;
+          if (!newDoc || !newDoc.version) return;
+          setLocalAuctionState((curr) => {
+            if (newDoc.version < curr.version) return curr; // protect optimistic local state
+            return {
+              ...curr,
+              phase: newDoc.phase ?? curr.phase,
+              expiresAt: newDoc.expires_at !== undefined ? newDoc.expires_at : curr.expiresAt,
+              currentBid: newDoc.current_bid !== undefined ? newDoc.current_bid : curr.currentBid,
+              currentRound: newDoc.current_round ?? curr.currentRound,
+              version: newDoc.version,
+              lastEvent: newDoc.last_event ?? curr.lastEvent,
+              currentPlayerId: newDoc.current_player_id !== undefined ? newDoc.current_player_id : curr.currentPlayerId,
+              currentTeamId: newDoc.current_team_id !== undefined ? newDoc.current_team_id : curr.currentTeamId,
+            };
+          });
+        },
       )
       .on(
         "postgres_changes",
@@ -738,7 +754,6 @@ export function AuctionRoomClient({ snapshot }: { snapshot: AuctionSnapshot }) {
             version: localAuctionState.version + 1,
           } satisfies BidPlacedPayload,
         });
-        channelRef.current?.send({ type: "broadcast", event: "REFRESH_ROOM" });
         return null;
       }
     } catch (err) {
