@@ -282,9 +282,9 @@ export function AuctionRoomClient({ snapshot }: { snapshot: AuctionSnapshot }) {
           setLocalAuctionState((curr) => {
             if (newDoc.version < curr.version) return curr; // protect optimistic local state
 
-            // For NEW_BID events: the broadcast already reset the timer to timerSeconds.
-            // Do NOT override expiresAt from DB — it causes clock-drift-induced timer collapse to 0s.
-            const shouldUpdateExpiresAt = lastEvent !== "NEW_BID";
+            // For NEW_BID: allow expiresAt update from DB (authoritative server timestamp)
+            // but do NOT rely on broadcast expiresAt which came from admin's local clock
+            const shouldUpdateExpiresAt = true;
 
             return {
               ...curr,
@@ -300,13 +300,13 @@ export function AuctionRoomClient({ snapshot }: { snapshot: AuctionSnapshot }) {
             };
           });
 
-          // Sync timer for phase transitions (PAUSE / RESUME / ADVANCE) — but NOT for NEW_BID
-          if (lastEvent !== "NEW_BID") {
-            if (newDoc.phase === "PAUSED" && newDoc.paused_remaining_ms != null) {
-              setRemainingSeconds(Math.ceil(newDoc.paused_remaining_ms / 1000));
-            } else if (newDoc.phase === "LIVE" && newDoc.expires_at) {
-              setRemainingSeconds(getRemainingSeconds(newDoc.expires_at));
-            }
+          // Sync timer for ALL events using authoritative server timestamps
+          if (newDoc.phase === "PAUSED" && newDoc.paused_remaining_ms != null) {
+            setRemainingSeconds(Math.ceil(newDoc.paused_remaining_ms / 1000));
+          } else if (newDoc.phase === "LIVE" && newDoc.expires_at) {
+            // Only resync if DB-derived value differs from current by more than 3s to avoid jitter
+            const serverSeconds = getRemainingSeconds(newDoc.expires_at);
+            setRemainingSeconds((prev) => Math.abs(serverSeconds - prev) > 3 ? serverSeconds : prev);
           }
         },
       )
@@ -380,7 +380,7 @@ export function AuctionRoomClient({ snapshot }: { snapshot: AuctionSnapshot }) {
               !(item.playerId === next.playerId && item.teamId === next.teamId && item.amount === next.amount),
           ),
         ]);
-        setRemainingSeconds(getRemainingSeconds(next.expiresAt));
+        setRemainingSeconds(snapshot.room.timerSeconds);
       })
       .on("broadcast", { event: "SKIP_VOTED" }, ({ payload }) => {
         const next = payload as SkipVotePayload;
