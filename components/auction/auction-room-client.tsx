@@ -276,21 +276,38 @@ export function AuctionRoomClient({ snapshot }: { snapshot: AuctionSnapshot }) {
         (dbPayload) => {
           const newDoc = dbPayload.new as any;
           if (!newDoc || !newDoc.version) return;
+
+          const lastEvent = newDoc.last_event as string | null;
+
           setLocalAuctionState((curr) => {
             if (newDoc.version < curr.version) return curr; // protect optimistic local state
+
+            // For NEW_BID events: the broadcast already reset the timer to timerSeconds.
+            // Do NOT override expiresAt from DB — it causes clock-drift-induced timer collapse to 0s.
+            const shouldUpdateExpiresAt = lastEvent !== "NEW_BID";
+
             return {
               ...curr,
               phase: newDoc.phase ?? curr.phase,
-              expiresAt: newDoc.expires_at !== undefined ? newDoc.expires_at : curr.expiresAt,
+              expiresAt: shouldUpdateExpiresAt && newDoc.expires_at !== undefined ? newDoc.expires_at : curr.expiresAt,
               currentBid: newDoc.current_bid !== undefined ? newDoc.current_bid : curr.currentBid,
               currentRound: newDoc.current_round ?? curr.currentRound,
               version: newDoc.version,
-              lastEvent: newDoc.last_event ?? curr.lastEvent,
+              lastEvent: lastEvent ?? curr.lastEvent,
               currentPlayerId: newDoc.current_player_id !== undefined ? newDoc.current_player_id : curr.currentPlayerId,
               currentTeamId: newDoc.current_team_id !== undefined ? newDoc.current_team_id : curr.currentTeamId,
               pausedRemainingMs: newDoc.paused_remaining_ms !== undefined ? newDoc.paused_remaining_ms : curr.pausedRemainingMs,
             };
           });
+
+          // Sync timer for phase transitions (PAUSE / RESUME / ADVANCE) — but NOT for NEW_BID
+          if (lastEvent !== "NEW_BID") {
+            if (newDoc.phase === "PAUSED" && newDoc.paused_remaining_ms != null) {
+              setRemainingSeconds(Math.ceil(newDoc.paused_remaining_ms / 1000));
+            } else if (newDoc.phase === "LIVE" && newDoc.expires_at) {
+              setRemainingSeconds(getRemainingSeconds(newDoc.expires_at));
+            }
+          }
         },
       )
       .on(
