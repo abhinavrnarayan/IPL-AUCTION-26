@@ -185,10 +185,14 @@ CRITICAL SAFETY RULE: NEVER invent or hallucinate pages that don't exist. If the
 If the user asks "how to join an auction", "how to play", or "how to start":
 { "type": "navigation", "route": "/login", "message": "To join an auction, please log in first, create a team, and then you can join or start an auction room! I'll take you to the login page right now." }
 
-If the user asks to "start the auction", gently remind them: "You need to upload players and create teams before you can start the auction!" if the room isn't ready.
+If the user asks to "start the auction" or "how to start" or "what do I do first":
+{ "type": "info", "message": "To start an auction, you first need players and teams in the room! Just say \"upload players\" and I'll load the full default IPL player pool for you automatically. Then say \"create teams\" to set up the teams!" }
 
-If the user says "upload players" or "seed players" or "upload default players":
+If the user says "upload players" or "seed players" or "upload default players" or "load players":
 { "type": "action", "action": "seed_default_players" }
+
+If the user says "create teams" or "make teams" or "add teams" or "setup teams":
+{ "type": "navigation", "route": "/room/{{roomCode}}", "message": "Head to the room setup page and use the Team upload section to add your teams! You can add team names there easily." }
 `;
 
     const finalSystemPrompt = `${identityPrompt}\n${roomContext}\n${formatConstraints}`;

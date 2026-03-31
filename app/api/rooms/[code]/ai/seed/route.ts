@@ -56,15 +56,13 @@ export async function POST(
     const parsedPlayers = JSON.parse(rawData) as any[];
 
     // 3. Insert players
-    const playerRows = parsedPlayers.map((p, i) => ({
+    const playerRows = parsedPlayers.map((p) => ({
       room_id: room.id,
       name: p.name,
-      role: p.role ?? "UNKNOWN",
-      base_price: p.basePrice ?? 50,
+      role: p.role ?? "All-Rounder",
+      base_price: p.basePrice ?? 10,
       status: "AVAILABLE",
-      source_index: p.sourceIndex ?? i + 1,
-      nationality: p.nationality ?? "Indian",
-      stats: { iplTeam: p.iplTeam },
+      stats: { iplTeam: p.iplTeam ?? null },
     }));
 
     // Chunk the upsert to avoid huge network payload boundaries
