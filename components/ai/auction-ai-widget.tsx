@@ -130,7 +130,12 @@ export default function AuctionAIWidget() {
       }
       router.push(`/auction/${roomCode}`);
     } catch (error) {
-      pushBotMessage(toErrorMessage(error));
+      const msg = toErrorMessage(error);
+      if (msg.toLowerCase().includes("player") || msg.toLowerCase().includes("upload")) {
+        pushBotMessage("Looks like this room has no players yet! Just say **\"upload players\"** to me and I'll load the full IPL player pool and all 10 teams for you automatically. 🏏");
+      } else {
+        pushBotMessage(msg);
+      }
     }
   }
 

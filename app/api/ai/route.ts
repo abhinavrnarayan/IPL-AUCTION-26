@@ -222,6 +222,12 @@ If the user says "create teams" or "make teams" or "add teams" or "setup teams":
     try {
       return NextResponse.json(JSON.parse(cleanContent));
     } catch {
+      // LLM sometimes wraps response in a JSON string instead of pure JSON.
+      // Try to extract the message field to avoid showing raw { } to the user.
+      const msgMatch = cleanContent.match(/"message"\s*:\s*"((?:[^"\\]|\\.)*)"/i);
+      if (msgMatch) {
+        return NextResponse.json({ type: "info", message: msgMatch[1].replace(/\\n/g, "\n").replace(/\\"/g, '"') });
+      }
       return NextResponse.json({ type: "info", message: cleanContent || "I could not understand that." });
     }
   } catch (error) {
