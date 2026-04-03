@@ -59,10 +59,6 @@ export function CricsheetSyncButton({ roomCode }: { roomCode: string }) {
       if (!response.ok) throw new Error(payload.error ?? "Sync failed.");
 
       setResult(payload);
-
-      if ((payload.playersMatched ?? 0) > 0) {
-        setTimeout(() => window.location.reload(), 1200);
-      }
     } catch (err) {
       setError(toErrorMessage(err));
     } finally {

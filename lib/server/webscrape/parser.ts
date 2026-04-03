@@ -345,7 +345,79 @@ export function mergeInningStats(
     t.dot_ball_pts = dotBallPts(t.dot_balls);
   }
 
+  // Merge abbreviated fielder names into full names.
+  // e.g. "Phil Salt" (catch-only entry from outDesc) → "Philip Salt" (batting entry).
+  // Only merges when: same surname, same first initial, first word is a prefix of the other,
+  // AND one entry has no batting or bowling (it is purely a fielding credit from outDesc).
+  consolidateNameVariants(merged);
+
   return merged;
+}
+
+/**
+ * After cross-inning merge, some players appear twice: once under their full
+ * batting name (e.g. "Philip Salt") and once under an abbreviated name used in
+ * dismissal descriptions (e.g. "Phil Salt"). Collapse the abbreviated entry into
+ * the full-name entry so catch/fielding credits are not lost.
+ *
+ * Conditions to merge nameA into nameB (nameB is longer / more canonical):
+ *  1. Same surname (last word, case-insensitive)
+ *  2. Same first initial
+ *  3. One first-word is a prefix of the other ("Phil" ⊂ "Philip")
+ *  4. The shorter-name entry has NO batting and NO bowling stats — it is
+ *     purely a fielding credit from outDesc, so it is safe to absorb.
+ */
+function consolidateNameVariants(merged: Record<string, PlayerMatchStats>): void {
+  const keys = Object.keys(merged);
+
+  // Build surname → names index
+  const bySurname: Record<string, string[]> = {};
+  for (const key of keys) {
+    const surname = key.trim().split(" ").pop()?.toLowerCase() ?? "";
+    (bySurname[surname] ??= []).push(key);
+  }
+
+  for (const group of Object.values(bySurname)) {
+    if (group.length < 2) continue;
+
+    // Check every pair within the same-surname group
+    for (let i = 0; i < group.length; i++) {
+      for (let j = i + 1; j < group.length; j++) {
+        const a = group[i]!;
+        const b = group[j]!;
+        if (!merged[a] || !merged[b]) continue; // already merged away
+
+        const firstA = a.trim().split(" ")[0]!.toLowerCase();
+        const firstB = b.trim().split(" ")[0]!.toLowerCase();
+
+        // First initial must match
+        if (firstA[0] !== firstB[0]) continue;
+
+        // One first-word must be a prefix of the other (handles Phil / Philip)
+        if (!firstA.startsWith(firstB) && !firstB.startsWith(firstA)) continue;
+
+        // One entry must be purely a fielding credit (no bat, no bowl)
+        const statsA = merged[a]!;
+        const statsB = merged[b]!;
+        const aIsFieldOnly = statsA.balls_faced === 0 && statsA.balls_bowled === 0;
+        const bIsFieldOnly = statsB.balls_faced === 0 && statsB.balls_bowled === 0;
+        if (!aIsFieldOnly && !bIsFieldOnly) continue;
+
+        // Merge field-only entry into the richer entry
+        const [src, dst] = aIsFieldOnly ? [a, b] : [b, a];
+        const srcStats = merged[src]!;
+        const dstStats = merged[dst]!;
+
+        dstStats.catches += srcStats.catches;
+        dstStats.stumpings += srcStats.stumpings;
+        dstStats.run_outs += srcStats.run_outs;
+        // Recompute catch bonus from merged total
+        dstStats.catch_bonus_pts = dstStats.catches >= 3 ? 4 : 0;
+
+        delete merged[src];
+      }
+    }
+  }
 }
 
 /** Compute fantasy points for a player from their match stats. */

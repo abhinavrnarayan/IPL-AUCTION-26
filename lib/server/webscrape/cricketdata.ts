@@ -103,7 +103,8 @@ interface CricketDataBatter {
   "4s": string | number;
   "6s": string | number;
   sr?: string;
-  outDesc?: string;
+  outDesc?: string;    // CricAPI v1 field name
+  dismissal?: string;  // alternative field name used by some CricAPI endpoints
 }
 
 interface CricketDataBowler {
@@ -152,7 +153,7 @@ export async function fetchMatchScorecard(
       balls: n(b.b),
       fours: n(b["4s"]),
       sixes: n(b["6s"]),
-      outDesc: String(b.outDesc ?? "").trim(),
+      outDesc: String(b.outDesc ?? b.dismissal ?? "").trim(),
     })).filter((row) => row.name);
 
     const bowling: ScorecardBowlingRow[] = (inning.bowling ?? []).map((bw) => ({
