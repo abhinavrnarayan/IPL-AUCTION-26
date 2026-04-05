@@ -1,9 +1,7 @@
 "use client";
 
-import dynamic from "next/dynamic";
 import { usePathname } from "next/navigation";
-
-const IntroSplash = dynamic(() => import("./intro-splash"), { ssr: false });
+import IntroSplash from "./intro-splash";
 
 export default function IntroSplashWrapper() {
   const pathname = usePathname();

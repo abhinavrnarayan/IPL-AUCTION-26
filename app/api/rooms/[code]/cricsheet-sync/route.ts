@@ -323,10 +323,28 @@ export async function POST(
       );
     }
 
+    // ── Skip already-accepted matches ─────────────────────────────────────────
+    // Fetch accepted match_ids for this room+season so we never re-process a
+    // match the admin has already reviewed and accepted.
+    const { data: alreadyAccepted } = await admin
+      .from("match_results")
+      .select("match_id")
+      .eq("room_id", room.id)
+      .eq("season", aggregationSeason)
+      .eq("source", "cricsheet")
+      .eq("accepted", true);
+
+    const acceptedMatchIds = new Set(
+      (alreadyAccepted ?? []).map((r) => String(r.match_id)),
+    );
+
+    const newMatches = matches.filter((m) => !acceptedMatchIds.has(m.matchId));
+    const skippedAccepted = matches.length - newMatches.length;
+
     let upserted = 0;
     let upsertErrors = 0;
 
-    for (const match of matches) {
+    for (const match of newMatches) {
       const { data: existing } = await admin
         .from("match_results")
         .select("id")
@@ -467,6 +485,7 @@ export async function POST(
       seasons,
       matchesProcessed,
       matchesSkipped,
+      matchesAlreadyAccepted: skippedAccepted,
       matchesUpserted: upserted,
       matchesErrored: upsertErrors,
       totalAcceptedMatches: (acceptedRows ?? []).length,

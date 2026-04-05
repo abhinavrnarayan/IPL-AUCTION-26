@@ -16,7 +16,7 @@ function previewWorkbook(file: File): Promise<PreviewData> {
     const wb = XLSX.read(new Uint8Array(buf), { type: "array" });
     const unsoldSheetName =
       wb.SheetNames.find((n) =>
-        ["Unsold Players", "XSell", "XSELL", "Unsold"].some(
+        ["Unsold Players", "Excel", "Excel", "Unsold"].some(
           (candidate) => candidate.toLowerCase() === n.toLowerCase(),
         ),
       ) ?? null;
@@ -131,7 +131,7 @@ export function ImportResultsForm({ roomCode }: { roomCode: string }) {
       <div className="subtle">
         Upload a workbook where each sheet is a team (with columns{" "}
         <span className="mono">#, Player, Role, IPL Team, Price, Price (₹L)</span>
-        ) and an <span className="mono">Unsold Players</span> or <span className="mono">XSell</span> sheet.
+        ) and an <span className="mono">Unsold Players</span> or <span className="mono">Excel</span> sheet.
         Existing teams, players, and squads in this room will be replaced.
       </div>
 

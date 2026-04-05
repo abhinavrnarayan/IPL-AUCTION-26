@@ -22,7 +22,8 @@ export const metadata: Metadata = {
   description:
     "A live fantasy IPL auction game for building teams, running rooms, and tracking results.",
   icons: {
-    icon: "/images/sfl.png",
+    icon: [{ url: "/favicon.ico", sizes: "any" }, { url: "/images/sfl.png", type: "image/png" }],
+    shortcut: "/favicon.ico",
     apple: "/images/sfl.png",
   },
 };

@@ -98,7 +98,7 @@ function parseUnsoldSheet(ws: XLSX.WorkSheet): Array<{ name: string; role: strin
 
 export const dynamic = "force-dynamic";
 
-const UNSOLD_SHEET_NAMES = ["Unsold Players", "XSell", "XSELL", "Unsold"] as const;
+const UNSOLD_SHEET_NAMES = ["Unsold Players", "Excel", "Excel", "Unsold"] as const;
 
 function findUnsoldSheetName(sheetNames: string[]) {
   return (

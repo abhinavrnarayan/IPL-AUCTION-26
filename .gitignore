@@ -27,6 +27,10 @@ npm-debug.log*
 .claude
 .orchids
 
+# Postman
+.postman
+postman
+
 # Lock files not needed
 deno.lock
 skills-lock.json

@@ -145,19 +145,32 @@ export async function POST(
       }, { status: 404 });
     }
 
-    // Get already-synced match IDs for this room to detect new vs existing
+    // ── Skip already-accepted matches ─────────────────────────────────────────
+    // A match is "done" once accepted. Identify accepted dates so we don't
+    // re-fetch or re-upsert them — saves API quota and keeps the preview clean.
     const { data: existingRows } = await admin
       .from("match_results")
-      .select("match_id, source, accepted")
+      .select("match_id, match_date, source, accepted")
       .eq("room_id", room.id)
       .eq("season", season);
+
+    const acceptedDates = new Set(
+      (existingRows ?? [])
+        .filter((r) => r.accepted && r.match_date)
+        .map((r) => String(r.match_date)),
+    );
 
     const existingByKey = new Map(
       (existingRows ?? []).map((r) => [`${String(r.match_id)}::${String(r.source)}`, r]),
     );
 
-    // Upsert all fetched matches into match_results
-    const upsertRows = matches.map((m) => {
+    // Only upsert matches whose date hasn't been accepted yet in this room
+    const newMatches = matches.filter(
+      (m) => !m.matchDate || !acceptedDates.has(m.matchDate),
+    );
+    const skippedAccepted = matches.length - newMatches.length;
+
+    const upsertRows = newMatches.map((m) => {
       const calculatedPoints: Record<string, number> = {};
       for (const [playerName, stats] of Object.entries(m.playerStats)) {
         calculatedPoints[playerName] = computeMatchPoints(stats);
@@ -173,7 +186,6 @@ export async function POST(
         source_label: m.sourceLabel,
         player_stats: m.playerStats as unknown as Record<string, unknown>,
         calculated_points: calculatedPoints as unknown as Record<string, unknown>,
-        // Preserve acceptance status if already accepted
         accepted: existingByKey.get(`${m.matchId}::${m.source}`)?.accepted ?? false,
       };
     });
@@ -183,14 +195,6 @@ export async function POST(
       await admin
         .from("match_results")
         .upsert(row, { onConflict: "room_id,match_id,source" });
-    }
-
-    // Build comparison response: group by matchId, show data from each source
-    const byMatchId = new Map<string, typeof upsertRows[number][]>();
-    for (const row of upsertRows) {
-      const existing = byMatchId.get(row.match_id) ?? [];
-      existing.push(row);
-      byMatchId.set(row.match_id, existing);
     }
 
     // Also fetch any previously stored rows for this season (other sources)
@@ -240,7 +244,8 @@ export async function POST(
       selectedProvider: requestedProvider ?? source,
       errors,
       providers,
-      matchesFetched: matches.length,
+      matchesFetched: newMatches.length,
+      matchesAlreadyAccepted: skippedAccepted,
       comparison: Array.from(comparisonByMatch.values()),
     });
   } catch (error) {

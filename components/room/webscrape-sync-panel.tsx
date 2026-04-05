@@ -28,6 +28,7 @@ interface PreviewResponse {
   errors?: Record<string, string>;
   providers?: Array<{ id: string; label: string; configured: boolean }>;
   matchesFetched?: number;
+  matchesAlreadyAccepted?: number;
   comparison?: MatchComparison[];
   error?: string;
 }
@@ -62,6 +63,7 @@ export function WebscrapeSyncPanel({ roomCode }: { roomCode: string }) {
   const [overrideEdit, setOverrideEdit] = useState<string | null>(null); // matchId with open editor
   const [autoRefresh, setAutoRefresh] = useState(false);
   const [nextRefreshIn, setNextRefreshIn] = useState(0);
+  const [skippedAccepted, setSkippedAccepted] = useState(0);
 
   const AUTO_REFRESH_INTERVAL = 10 * 60; // seconds
 
@@ -87,6 +89,7 @@ export function WebscrapeSyncPanel({ roomCode }: { roomCode: string }) {
       setProviders(data.providers ?? []);
       setSelectedProvider((current) => data.selectedProvider ?? current);
       setErrors(data.errors ?? {});
+      setSkippedAccepted(data.matchesAlreadyAccepted ?? 0);
       setLastFetched(new Date().toLocaleTimeString());
     } catch (err) {
       setFetchError(toErrorMessage(err));
@@ -345,6 +348,13 @@ export function WebscrapeSyncPanel({ roomCode }: { roomCode: string }) {
               {p.label} {selectedProvider === p.id ? "(Selected)" : p.configured ? "(Ready)" : "(Missing key)"}
             </button>
           ))}
+        </div>
+      )}
+
+      {/* Already-accepted skip notice */}
+      {skippedAccepted > 0 && (
+        <div className="notice subtle" style={{ fontSize: "0.82rem" }}>
+          {skippedAccepted} match{skippedAccepted !== 1 ? "es" : ""} already accepted — skipped. Only new matches are shown below.
         </div>
       )}
 

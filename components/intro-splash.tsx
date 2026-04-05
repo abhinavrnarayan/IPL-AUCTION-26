@@ -5,22 +5,20 @@ import { useEffect, useState } from "react";
 
 import sflLogo from "@/app/images/sfl.png";
 
-const PHASES: number[] = [0, 400, 1300, 2100, 3100, 4300];
+const PHASE_DELAYS: number[] = [450, 1500, 2650, 4050, 5350];
 
 export default function IntroSplash() {
-  const [phase, setPhase] = useState<number>(-1);
+  const [phase, setPhase] = useState<number>(0);
 
   useEffect(() => {
-    setPhase(0);
-
-    const timers = PHASES.slice(1).map((delay, index) =>
+    const timers = PHASE_DELAYS.map((delay, index) =>
       window.setTimeout(() => setPhase(index + 1), delay),
     );
 
     return () => timers.forEach((timer) => window.clearTimeout(timer));
   }, []);
 
-  if (phase === -1 || phase >= 5) {
+  if (phase >= 5) {
     return null;
   }
 
