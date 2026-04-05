@@ -165,6 +165,7 @@ export interface ResultsSnapshot {
   squads: Array<SquadEntry & { player: Player | null }>;
   trades: Trade[];
   leaderboard: TeamScore[];
+  currentMember: RoomMember | null;
 }
 
 export interface TradeRequest {

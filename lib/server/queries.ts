@@ -218,5 +218,6 @@ export async function getResultsSnapshot(
     })),
     trades: (tradeRows ?? []).map((row) => mapTrade(row as Record<string, unknown>)),
     leaderboard,
+    currentMember,
   };
 }

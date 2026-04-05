@@ -3,6 +3,7 @@ import { SiteLogo } from "@/components/site-logo";
 
 import { ResultsBoard } from "@/components/results/results-board";
 import { ResultsExportBar } from "@/components/results/results-export-bar";
+import { ResultsResetButton } from "@/components/results/results-reset-button";
 import { hasServiceRoleEnv } from "@/lib/config";
 import { requireSessionUser } from "@/lib/server/auth";
 import { getResultsSnapshot } from "@/lib/server/queries";
@@ -58,6 +59,9 @@ export default async function ResultsPage({
           <div className="subtle mono">{snapshot.room.code}</div>
         </div>
         <div className="link-row">
+          {snapshot.currentMember?.isAdmin ? (
+            <ResultsResetButton roomCode={snapshot.room.code} />
+          ) : null}
           <Link className="button ghost" href={`/room/${snapshot.room.code}`}>
             Room
           </Link>

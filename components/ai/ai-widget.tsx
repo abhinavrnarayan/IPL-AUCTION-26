@@ -42,7 +42,8 @@ export default function AIWidget() {
   }
 }, [messages, loading]);
 
-
+  
+  
   const sendMessage = async () => {
     if (!message) return;
 

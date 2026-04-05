@@ -210,6 +210,7 @@ If the user says "create teams" or "make teams" or "add teams" or "setup teams":
           { role: "user", content: trimmed },
         ],
         temperature: 0.2,
+        max_tokens: 300,
       }),
     });
 
