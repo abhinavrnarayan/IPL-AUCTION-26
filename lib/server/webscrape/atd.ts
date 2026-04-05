@@ -19,11 +19,12 @@ import {
   type ScorecardBattingRow,
   type ScorecardBowlingRow,
 } from "./parser";
+import { TTL, withCache } from "@/lib/server/redis";
 
 const ATD_HOST = "Cricbuzz-Official-Cricket-API.allthingsdev.co";
 const BASE = "https://Cricbuzz-Official-Cricket-API.proxy-production.allthingsdev.co";
 
-async function get<T>(path: string): Promise<T> {
+async function fetchRaw<T>(path: string): Promise<T> {
   const key = process.env.ATD_API_KEY;
   if (!key) throw new Error("ATD_API_KEY not set");
 
@@ -46,6 +47,12 @@ async function get<T>(path: string): Promise<T> {
   if (res.status === 429) throw new Error("RATE_LIMITED");
   if (!res.ok) throw new Error(`ATD HTTP ${res.status}: ${await res.text()}`);
   return res.json() as Promise<T>;
+}
+
+function get<T>(path: string, ttl = TTL.MATCH_LIST): Promise<T> {
+  // Scorecard paths get a long TTL — completed match data never changes
+  const effectiveTtl = path.includes("/scorecard") ? TTL.SCORECARD : ttl;
+  return withCache<T>(`ipl:atd:${path}`, effectiveTtl, () => fetchRaw<T>(path));
 }
 
 // ── Series discovery (same Cricbuzz data shape as RapidAPI) ──────────────────
@@ -86,7 +93,7 @@ export async function findIPLSeriesId(season: string): Promise<string> {
 
   for (const cat of categories) {
     try {
-      const data = await get<AtdSeriesCategory>(`/series/v1/${cat}`);
+      const data = await get<AtdSeriesCategory>(`/series/v1/${cat}`, TTL.SERIES_ID);
       const found = extractSeries(data).find((s) => isIPLSeries(String(s.name ?? ""), season));
       if (found) return String(found.id);
     } catch (e) {
@@ -248,7 +255,7 @@ interface AtdTypeMatch {
 }
 
 async function findIPLSeriesIdViaRecent(season: string): Promise<string | null> {
-  const data = await get<{ typeMatches?: AtdTypeMatch[] }>("/matches/v1/recent");
+  const data = await get<{ typeMatches?: AtdTypeMatch[] }>("/matches/v1/recent", TTL.SERIES_ID);
   for (const tm of data?.typeMatches ?? []) {
     for (const sm of tm?.seriesMatches ?? []) {
       const w = sm?.seriesAdWrapper;

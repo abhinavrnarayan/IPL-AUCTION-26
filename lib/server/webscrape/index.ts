@@ -31,7 +31,7 @@ function isProviderConfigured(provider: WebscrapeProviderId): boolean {
     case "cricketdata":
       return Boolean(process.env.CRICKETDATA_API_KEY);
     case "rapidapi":
-      return Boolean(process.env.RAPIDAPI_KEY);
+      return Boolean(process.env.RAPIDAPI_KEY || process.env.RAPIDAPI_KEY_2);
     case "atd":
       return Boolean(process.env.ATD_API_KEY);
   }

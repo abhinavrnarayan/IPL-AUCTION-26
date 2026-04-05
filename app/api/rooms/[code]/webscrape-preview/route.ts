@@ -145,28 +145,30 @@ export async function POST(
       }, { status: 404 });
     }
 
-    // ── Skip already-accepted matches ─────────────────────────────────────────
-    // A match is "done" once accepted. Identify accepted dates so we don't
-    // re-fetch or re-upsert them — saves API quota and keeps the preview clean.
+    // ── Skip already-accepted matches (same source only) ─────────────────────
+    // Use match_id + source as the key — NOT match_date — so that a Cricsheet-
+    // accepted match never blocks the same physical match being fetched via
+    // RapidAPI or CricketData (they have different match_ids).
     const { data: existingRows } = await admin
       .from("match_results")
       .select("match_id, match_date, source, accepted")
       .eq("room_id", room.id)
       .eq("season", season);
 
-    const acceptedDates = new Set(
+    // Keys of rows that are already accepted (match_id::source)
+    const acceptedKeys = new Set(
       (existingRows ?? [])
-        .filter((r) => r.accepted && r.match_date)
-        .map((r) => String(r.match_date)),
+        .filter((r) => r.accepted)
+        .map((r) => `${String(r.match_id)}::${String(r.source)}`),
     );
 
     const existingByKey = new Map(
       (existingRows ?? []).map((r) => [`${String(r.match_id)}::${String(r.source)}`, r]),
     );
 
-    // Only upsert matches whose date hasn't been accepted yet in this room
+    // Skip a match only when this exact source-row is already accepted
     const newMatches = matches.filter(
-      (m) => !m.matchDate || !acceptedDates.has(m.matchDate),
+      (m) => !acceptedKeys.has(`${m.matchId}::${m.source}`),
     );
     const skippedAccepted = matches.length - newMatches.length;
 

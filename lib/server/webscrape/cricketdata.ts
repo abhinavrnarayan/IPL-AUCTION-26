@@ -12,11 +12,12 @@ import {
   type ScorecardBattingRow,
   type ScorecardBowlingRow,
 } from "./parser";
+import { TTL, withCache } from "@/lib/server/redis";
 
 // CricAPI.com — the correct endpoint for accounts registered at cricketdata.org
 const BASE = "https://api.cricapi.com/v1";
 
-async function get<T>(path: string): Promise<T> {
+async function fetchRaw<T>(path: string): Promise<T> {
   const key = process.env.CRICKETDATA_API_KEY;
   if (!key) throw new Error("CRICKETDATA_API_KEY not set");
 
@@ -47,6 +48,12 @@ async function get<T>(path: string): Promise<T> {
   return json.data as T;
 }
 
+function get<T>(path: string, ttl = TTL.MATCH_LIST): Promise<T> {
+  // Scorecard paths get a long TTL — completed match data never changes
+  const effectiveTtl = path.includes("match_scorecard") ? TTL.SCORECARD : ttl;
+  return withCache<T>(`ipl:cd:${path}`, effectiveTtl, () => fetchRaw<T>(path));
+}
+
 // ── Find IPL series id ────────────────────────────────────────────────────────
 
 interface CricketDataSeries {
@@ -67,7 +74,7 @@ function isIPLSeries(name: string, season: string): boolean {
 export async function findIPLSeriesId(season: string): Promise<string> {
   // Paginate through results — IPL may not be on the first page
   for (const offset of [0, 25, 50, 75]) {
-    const data = await get<CricketDataSeries[]>(`/series?offset=${offset}`);
+    const data = await get<CricketDataSeries[]>(`/series?offset=${offset}`, TTL.SERIES_ID);
     const list = Array.isArray(data) ? data : [];
     if (list.length === 0) break; // no more pages
     const series = list.find((s) => isIPLSeries(s.name ?? "", season));

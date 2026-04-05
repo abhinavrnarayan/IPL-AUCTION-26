@@ -12,26 +12,56 @@ import {
   type ScorecardBattingRow,
   type ScorecardBowlingRow,
 } from "./parser";
+import { TTL, withCache } from "@/lib/server/redis";
 
 const HOST = process.env.RAPIDAPI_CRICBUZZ_HOST ?? "cricbuzz-cricket.p.rapidapi.com";
 const BASE = `https://${HOST}`;
 
-async function get<T>(path: string): Promise<T> {
-  const key = process.env.RAPIDAPI_KEY;
-  if (!key) throw new Error("RAPIDAPI_KEY not set");
+/** All configured RapidAPI keys in priority order (RAPIDAPI_KEY, RAPIDAPI_KEY_2, …). */
+function getKeys(): string[] {
+  return [
+    process.env.RAPIDAPI_KEY,
+    process.env.RAPIDAPI_KEY_2,
+  ].filter((k): k is string => Boolean(k));
+}
 
-  const res = await fetch(`${BASE}${path}`, {
-    headers: {
-      "X-RapidAPI-Key": key,
-      "X-RapidAPI-Host": HOST,
-      "User-Agent": "IPL-Auction-Platform/1.0",
-    },
-    signal: AbortSignal.timeout(15_000),
-  });
+/** HTTP status codes that mean "this key is exhausted — try the next one". */
+function isQuotaError(status: number): boolean {
+  return status === 429 || status === 402;
+}
 
-  if (res.status === 429) throw new Error("RATE_LIMITED");
-  if (!res.ok) throw new Error(`RapidAPI HTTP ${res.status}: ${await res.text()}`);
-  return res.json() as Promise<T>;
+async function fetchRaw<T>(path: string): Promise<T> {
+  const keys = getKeys();
+  if (keys.length === 0) throw new Error("RAPIDAPI_KEY not set");
+
+  let lastStatus = 0;
+  for (let i = 0; i < keys.length; i++) {
+    const res = await fetch(`${BASE}${path}`, {
+      headers: {
+        "X-RapidAPI-Key": keys[i]!,
+        "X-RapidAPI-Host": HOST,
+        "User-Agent": "IPL-Auction-Platform/1.0",
+      },
+      signal: AbortSignal.timeout(15_000),
+    });
+
+    if (isQuotaError(res.status)) {
+      lastStatus = res.status;
+      continue; // try next key
+    }
+    if (!res.ok) throw new Error(`RapidAPI HTTP ${res.status}: ${await res.text()}`);
+    return res.json() as Promise<T>;
+  }
+
+  throw new Error(
+    `RATE_LIMITED — all ${keys.length} RapidAPI key${keys.length > 1 ? "s" : ""} exhausted (last HTTP ${lastStatus})`,
+  );
+}
+
+function get<T>(path: string, ttl = TTL.MATCH_LIST): Promise<T> {
+  // Scorecard paths get a long TTL — completed match data never changes
+  const effectiveTtl = path.includes("/scard") ? TTL.SCORECARD : ttl;
+  return withCache<T>(`ipl:ra:${path}`, effectiveTtl, () => fetchRaw<T>(path));
 }
 
 interface CricbuzzSeriesItem {
@@ -70,7 +100,7 @@ export async function findIPLSeriesId(season: string): Promise<string> {
 
   for (const category of categories) {
     try {
-      const data = await get<CricbuzzSeriesCategory>(`/series/v1/${category}`);
+      const data = await get<CricbuzzSeriesCategory>(`/series/v1/${category}`, TTL.SERIES_ID);
       const found = extractSeries(data).find((series) => isIPLSeries(series.name ?? "", season));
       if (found) return String(found.id);
     } catch (error) {
@@ -265,7 +295,7 @@ interface CricbuzzTypeMatch {
 }
 
 async function findIPLSeriesIdViaRecent(season: string): Promise<string | null> {
-  const data = await get<{ typeMatches?: CricbuzzTypeMatch[] }>("/matches/v1/recent");
+  const data = await get<{ typeMatches?: CricbuzzTypeMatch[] }>("/matches/v1/recent", TTL.SERIES_ID);
   for (const typeMatch of data?.typeMatches ?? []) {
     for (const seriesMatch of typeMatch?.seriesMatches ?? []) {
       const wrapper = seriesMatch?.seriesAdWrapper;
