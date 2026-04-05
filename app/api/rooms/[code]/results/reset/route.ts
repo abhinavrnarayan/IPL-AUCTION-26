@@ -68,12 +68,23 @@ export async function POST(
       }
     }
 
+    const { error: approvalResetError, count: approvalsReset } = await admin
+      .from("match_results")
+      .update({ accepted: false, accepted_at: null }, { count: "exact" })
+      .eq("room_id", room.id)
+      .eq("accepted", true);
+
+    if (approvalResetError) {
+      throw new AppError(approvalResetError.message, 500, "MATCH_APPROVAL_RESET_FAILED");
+    }
+
     revalidatePath(`/room/${room.code}`);
     revalidatePath(`/results/${room.code}`);
 
     return NextResponse.json({
       ok: true,
       playersReset: (players ?? []).length,
+      approvalsReset: approvalsReset ?? 0,
     });
   } catch (error) {
     return handleRouteError(error);
