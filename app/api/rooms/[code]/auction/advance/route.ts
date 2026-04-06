@@ -6,7 +6,7 @@ import { handleRouteError } from "@/lib/server/api";
 import { isMissingColumnError, omitOptionalColumns } from "@/lib/server/auction-state";
 import { requireApiUser } from "@/lib/server/auth";
 import { reorderPlayersSafely } from "@/lib/server/player-order";
-import { getRoomEntities, requireRoomAdmin } from "@/lib/server/room";
+import { getRoomEntities, requireRoomAdmin, invalidateRoomCache } from "@/lib/server/room";
 import { getSupabaseAdminClient } from "@/lib/supabase/admin";
 
 export async function POST(
@@ -18,7 +18,7 @@ export async function POST(
     const authUser = await requireApiUser();
     const { room } = await requireRoomAdmin(code, authUser.id);
     const admin = getSupabaseAdminClient();
-    const { players, teams, auctionState, squads } = await getRoomEntities(room.id);
+    const { players, teams, auctionState, squads } = await getRoomEntities(room.id, true);
 
     if (!auctionState) {
       throw new AppError("Auction has not started yet.", 400, "NO_AUCTION_STATE");
@@ -203,6 +203,9 @@ export async function POST(
     if (!finalState) {
       throw new AppError("Final auction update conflicted. Refresh the room.", 409, "VERSION_CONFLICT");
     }
+
+    // Invalidate room entities cache — player status, team purse, squads changed
+    await invalidateRoomCache(room.id);
 
     return NextResponse.json({
       phase: finalPhase,

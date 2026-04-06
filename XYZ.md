@@ -517,3 +517,255 @@ TypeScript compile: clean.
 | Name mismatch — Nitish Reddy | API returns `”Nitish K. Reddy”`, DB has `”Nitish Kumar Reddy”` |
 | Economy threshold | Exactly 2.0 overs (`balls === 12`) triggers penalty in SFL but D11 does not penalise it — decision pending |
 
+---
+
+# Session Changelog (2026-03-31 to 2026-04-04)
+
+## What Was Changed
+
+### 14. Page Transition — Flash / Flicker Fix
+
+**Problem:** Page content was visible for a brief flash before the enter animation ran. framer-motion v12 SSR renders the `animate` (visible) state to HTML; on client hydration it snaps to `initial` (hidden) then animates — causing a guaranteed flash.
+
+**Fix:** Replaced framer-motion entirely with a pure CSS animation using `animation-fill-mode: both`, which applies the `from` keyframe from the very first CSS paint — no JS required.
+
+| File | Change |
+|------|--------|
+| `app/template.tsx` | Replaced `<MotionDiv>` with `<div className=”page-transition”>` |
+| `app/globals.css` | Added `@keyframes page-enter` (opacity 0→1, translateY 10px→0) + `.page-transition` class with `animation-fill-mode: both`; added `prefers-reduced-motion` guard |
+
+**Also added:** Shared `<SflLoader>` component and consistent loading screens across all route segments.
+
+| File | Change |
+|------|--------|
+| `components/ui/sfl-loader.tsx` | New shared loader — SFL logo + `caption` prop |
+| `app/loading.tsx` | Uses `<SflLoader>` |
+| `app/lobby/loading.tsx` | Uses `<SflLoader caption=”Loading lobby...”>` |
+| `app/results/[code]/loading.tsx` | Uses `<SflLoader caption=”Loading results...”>` |
+| `app/room/[code]/loading.tsx` | Uses `<SflLoader caption=”Loading your room...”>` |
+| `app/auction/[code]/loading.tsx` | Uses `<SflLoader caption=”Loading auction...”>` |
+
+---
+
+### 15. Google Favicon — Fix for Search Results
+
+**Problem:** Google Search showed a generic globe icon instead of the SFL logo. Required `/favicon.ico` at domain root + `<link rel=”shortcut icon”>` in HTML `<head>`.
+
+**Fix:**
+
+| File | Change |
+|------|--------|
+| `public/favicon.ico` | Created by copying `public/images/sfl.png` |
+| `app/layout.tsx` | Updated `icons` metadata to include `shortcut: “/favicon.ico”`, `icon` array with `.ico` + `.png`, and `apple: “/images/sfl.png”` |
+
+---
+
+### 16. Incremental Match Skip — Avoid Re-processing Accepted Matches
+
+**Problem:** Every sync re-fetched and re-scored all matches from match 1, even those already accepted. Each re-run burned API quota and overloaded the preview UI.
+
+**Fix:** Both sync routes now filter out matches already accepted in `match_results` before fetching/parsing.
+
+| File | Change |
+|------|--------|
+| `app/api/rooms/[code]/cricsheet-sync/route.ts` | Queries `match_results` for accepted Cricsheet match IDs; filters `matches` array to only unprocessed matches; returns `matchesAlreadyAccepted` count in response |
+| `app/api/rooms/[code]/webscrape-preview/route.ts` | Queries accepted rows keyed by `match_id::source` composite; filters new matches only; returns `matchesFetched` + `matchesAlreadyAccepted` in response |
+| `components/room/webscrape-sync-panel.tsx` | Shows notice: *”X matches already accepted — skipped. Only new matches are shown below.”* |
+| `components/room/cricsheet-sync-button.tsx` | Shows pill: *”X already accepted, skipped”* |
+
+**Key design decision:** Uses `match_id::source` composite key (not `match_date`) so Cricsheet-accepted matches never block RapidAPI matches for the same physical game.
+
+---
+
+### 17. Dual RapidAPI Key — Automatic Quota Failover
+
+**Problem:** RapidAPI free tier is 100 req/month. Once exhausted, the entire provider goes dark until the next month.
+
+**Fix:** Added `RAPIDAPI_KEY_2` support. The client tries `RAPIDAPI_KEY` first; on HTTP 429 or 402, it automatically falls through to `RAPIDAPI_KEY_2`.
+
+| File | Change |
+|------|--------|
+| `lib/server/webscrape/rapidapi.ts` | Replaced single `get()` with `getKeys()` + `fetchRaw()` + `get()` pattern; `isQuotaError(429\|402)` detection; loop over keys; throws `”RATE_LIMITED — all N keys exhausted (last HTTP 4xx)”` |
+| `lib/server/webscrape/index.ts` | `isProviderConfigured(“rapidapi”)` now returns true if either `RAPIDAPI_KEY` or `RAPIDAPI_KEY_2` is set |
+| `.env.example` | Added `RAPIDAPI_KEY_2=` with comment explaining automatic failover |
+
+**Setup:** Each key must belong to a separate RapidAPI account, and each account must independently subscribe to the Cricbuzz API.
+
+---
+
+### 18. Source Simulation — Cricsheet vs CricketData vs RapidAPI (Matches 1–6)
+
+A full simulation was run with `scripts/simulate-sources.ts` comparing all three providers across the first 6 IPL 2026 matches.
+
+**Key findings:**
+
+| Root cause | Point gap |
+|---|---|
+| Dot ball milestone (3/6 dots) missing from API scorecards | ~102 pts over 6 matches |
+| API `dots` field is always `0` or absent | API providers don't expose dot ball counts |
+| Dismissal types (LBW, bowled bonus) absent from some APIs | Variable |
+| Boundary counts occasionally off by 1 (extras misattributed) | Small |
+| CricketData hits daily limit mid-season (100 req/day) | Provider limitation |
+| RapidAPI free tier: 100 req/month | Provider limitation |
+
+**Conclusion:** Cricsheet is the most accurate source for fantasy scoring. API sources are useful for quick previews but systematically under-score bowlers due to missing dot ball data.
+
+---
+
+# Session Changelog (2026-04-06)
+
+## What Was Changed
+
+### 19. Redis Caching Layer — Cricket APIs + Supabase Queries
+
+**Problem:** Every admin fetch burned 60+ API requests against the monthly quota. Every page load fired 4–6 separate Supabase round trips. Re-fetching an already-seen match rescored it from scratch.
+
+**Solution:** Introduced `ioredis`-backed caching with graceful degradation (app works normally if Redis is unreachable). All cache ops are fire-and-forget on the write side — no app crashes on Redis errors.
+
+#### New file: `lib/server/redis.ts`
+
+| Export | Purpose |
+|---|---|
+| `TTL` constants | `SCORECARD` (7 days), `MATCH_LIST` (30 min), `SERIES_ID` (1 hr), `ROOM` (30s), `LEADERBOARD` (60s) |
+| `withCache(key, ttl, fn)` | Fetch-or-cache helper; runs `fn` only on miss |
+| `cacheGet / cacheSet` | Raw get/set JSON helpers |
+| `cacheDel(...keys)` | Delete one or more cache keys |
+| Global singleton | Dev hot-reload safe; production singleton per process |
+
+#### Cricket API caching
+
+All 3 providers now cache at the HTTP call level:
+
+| Provider | Key pattern | TTL |
+|---|---|---|
+| CricketData | `ipl:cd:/series?offset=N` | 1 hr |
+| CricketData | `ipl:cd:/series_info?id=...` | 30 min |
+| CricketData | `ipl:cd:/match_scorecard?id=...` | **7 days** |
+| RapidAPI | `ipl:ra:/series/v1/{cat}` | 1 hr |
+| RapidAPI | `ipl:ra:/series/v1/{seriesId}` | 30 min |
+| RapidAPI | `ipl:ra:/mcenter/v1/{id}/scard` | **7 days** |
+| ATD | `ipl:atd:/series/v1/{cat}` | 1 hr |
+| ATD | `ipl:atd:/match/{id}/scorecard` | **7 days** |
+
+**Impact:** First fetch of a season costs ~60 API requests. Every subsequent fetch for the same season: **0 requests** (served from Redis).
+
+#### Supabase query caching
+
+| Function | Key | TTL | Bypass |
+|---|---|---|---|
+| `findRoomByCode(code)` | `room:code:{CODE}` | 1 hr | — |
+| `getRoomEntities(roomId)` | `room:entities:{roomId}` | 15 s | `bypassCache=true` on write paths |
+| `listRoomMembers(roomId)` | `room:members:{roomId}` | 60 s | — |
+
+#### Cache invalidation
+
+Write paths call `invalidateRoomCache(roomId, code?)` which deletes `room:entities` + `room:members` + `room:code` keys immediately:
+
+| Route | Trigger |
+|---|---|
+| `auction/advance` | Player sold/unsold, squad insert, team purse update |
+| `auction/start` | Auction reset and start |
+| `players` POST/DELETE | Player upload or removal |
+
+#### Write path safety
+
+`advance` and `start` routes pass `bypassCache=true` to `getRoomEntities` — they always read fresh `auctionState.version` from Supabase, preventing false `VERSION_CONFLICT (409)` errors from stale cached state.
+
+#### Files Changed
+
+```
+NEW   lib/server/redis.ts
+MOD   lib/server/webscrape/cricketdata.ts   (withCache wrapper on get())
+MOD   lib/server/webscrape/rapidapi.ts      (withCache wrapper + dual-key restored)
+MOD   lib/server/webscrape/atd.ts           (withCache wrapper on get())
+MOD   lib/server/webscrape/index.ts         (RAPIDAPI_KEY_2 in isProviderConfigured)
+MOD   lib/server/room.ts                    (cache + invalidateRoomCache export)
+MOD   app/api/rooms/[code]/auction/advance/route.ts  (invalidateRoomCache + bypassCache)
+MOD   app/api/rooms/[code]/auction/start/route.ts    (invalidateRoomCache + bypassCache)
+MOD   app/api/rooms/[code]/players/route.ts          (invalidateRoomCache on POST/DELETE)
+MOD   .env.example                          (added REDIS_URL, RAPIDAPI_KEY_2)
+MOD   package.json                          (added ioredis)
+```
+
+#### Setup
+
+```env
+# .env.local
+REDIS_URL=redis://:PASSWORD@host:port
+RAPIDAPI_KEY_2=your-second-key
+```
+
+Get a free Redis database at [redis.io/try-free](https://redis.io/try-free/) or [Redis Cloud](https://app.redislabs.com).
+
+---
+
+### 20. Skeleton Loading Screens — All 4 Pages
+
+**Problem:** All loading states showed the SFL spinner — users couldn't distinguish “loading” from “broken/stuck”.
+
+**Fix:** Each page now shows a skeleton that mirrors its actual layout, so users immediately know what's loading. A `StuckAlert` appears after a timeout if loading takes too long.
+
+#### New component: `components/ui/stuck-alert.tsx`
+
+Client component. Mounts invisibly; after `delayMs` (default 7000ms) renders a yellow notice:
+> *”Still loading… this is taking longer than usual. Check your connection or try refreshing.”*
+
+#### Updated loading screens
+
+| File | Skeleton layout |
+|---|---|
+| `app/lobby/loading.tsx` | Nav + two form panels + 3 SkeletonCards for room list |
+| `app/room/[code]/loading.tsx` | Nav + stats strip (4 tiles) + split grid with 5 panels |
+| `app/results/[code]/loading.tsx` | Nav + export bar + leaderboard table (5 rows) + player breakdown (6 rows) |
+| `app/auction/[code]/loading.tsx` | Nav + stats strip + player card + bid panel + squad board grid; StuckAlert at 5s |
+
+#### Updated `components/ui/skeleton.tsx`
+
+Added optional `style?: React.CSSProperties` prop to `<Skeleton>` for one-off layout overrides.
+
+#### Files Changed
+
+```
+NEW   components/ui/stuck-alert.tsx
+MOD   components/ui/skeleton.tsx             (style prop)
+MOD   app/lobby/loading.tsx
+MOD   app/room/[code]/loading.tsx
+MOD   app/results/[code]/loading.tsx
+MOD   app/auction/[code]/loading.tsx
+```
+
+---
+
+## DB Changes Required (cumulative this week)
+
+No new DB migrations this week. All changes are application-layer only.
+
+Previously required (still needed if not yet run):
+
+| File | Status |
+|---|---|
+| `supabase/match-results.sql` | Run once (2026-03-27 session) |
+| `supabase/add-cricsheet-uuid.sql` | Run once (2026-03-28 session) |
+
+---
+
+## Environment Variables — Full Current List
+
+```env
+NEXT_PUBLIC_APP_URL=
+NEXT_PUBLIC_SUPABASE_URL=
+NEXT_PUBLIC_SUPABASE_ANON_KEY=
+SUPABASE_SERVICE_ROLE_KEY=
+
+# Redis (optional — enables API + DB query caching)
+REDIS_URL=
+
+# Cricket API providers (at least one required for Live Web Sync)
+CRICKETDATA_API_KEY=
+RAPIDAPI_KEY=
+RAPIDAPI_KEY_2=          # fallback key — auto-used when primary hits quota (429/402)
+RAPIDAPI_CRICBUZZ_HOST=  # optional override
+ATD_API_KEY=
+ATD_API_ENDPOINT=        # optional
+```
+

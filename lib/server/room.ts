@@ -9,6 +9,22 @@ import type {
   Trade,
 } from "@/lib/domain/types";
 import { getSupabaseAdminClient } from "@/lib/supabase/admin";
+import { TTL, withCache, cacheDel } from "@/lib/server/redis";
+
+// ── Cache key helpers (exported for mutation-side invalidation) ───────────────
+export const roomCodeKey = (code: string) =>
+  `room:code:${code.toUpperCase()}`;
+export const roomEntitiesKey = (roomId: string) =>
+  `room:entities:${roomId}`;
+export const roomMembersKey = (roomId: string) =>
+  `room:members:${roomId}`;
+
+/** Invalidate all room-level caches after a write (advance, start, player changes). */
+export async function invalidateRoomCache(roomId: string, code?: string) {
+  const keys = [roomEntitiesKey(roomId), roomMembersKey(roomId)];
+  if (code) keys.push(roomCodeKey(code));
+  await cacheDel(...keys);
+}
 
 function unwrapJoinedUser(row: Record<string, unknown>) {
   const joined = row.users;
@@ -134,22 +150,19 @@ export function mapTrade(row: Record<string, unknown>): Trade {
 }
 
 export async function findRoomByCode(code: string) {
-  const admin = getSupabaseAdminClient();
-  const { data, error } = await admin
-    .from("rooms")
-    .select("*")
-    .eq("code", code.toUpperCase())
-    .maybeSingle();
+  return withCache(roomCodeKey(code), TTL.SERIES_ID /* 1hr */, async () => {
+    const admin = getSupabaseAdminClient();
+    const { data, error } = await admin
+      .from("rooms")
+      .select("*")
+      .eq("code", code.toUpperCase())
+      .maybeSingle();
 
-  if (error) {
-    throw new AppError(error.message, 500, "ROOM_FETCH_FAILED");
-  }
+    if (error) throw new AppError(error.message, 500, "ROOM_FETCH_FAILED");
+    if (!data) throw new AppError("Room was not found.", 404, "ROOM_NOT_FOUND");
 
-  if (!data) {
-    throw new AppError("Room was not found.", 404, "ROOM_NOT_FOUND");
-  }
-
-  return mapRoom(data as Record<string, unknown>);
+    return mapRoom(data as Record<string, unknown>);
+  });
 }
 
 export async function getRoomMember(roomId: string, userId: string) {
@@ -224,55 +237,52 @@ export async function getAuctionStateOnly(roomId: string) {
   return data ? mapAuctionState(data as Record<string, unknown>) : null;
 }
 
-export async function getRoomEntities(roomId: string) {
-  const admin = getSupabaseAdminClient();
-  const [{ data: teamRows, error: teamError }, { data: playerRows, error: playerError }, { data: auctionRow, error: auctionError }, { data: squadRows, error: squadError }] =
-    await Promise.all([
+export async function getRoomEntities(roomId: string, bypassCache = false) {
+  const fetch = async () => {
+    const admin = getSupabaseAdminClient();
+    const [
+      { data: teamRows, error: teamError },
+      { data: playerRows, error: playerError },
+      { data: auctionRow, error: auctionError },
+      { data: squadRows, error: squadError },
+    ] = await Promise.all([
       admin.from("teams").select("*").eq("room_id", roomId).order("created_at"),
       admin.from("players").select("*").eq("room_id", roomId).order("order_index"),
       admin.from("auction_state").select("*").eq("room_id", roomId).maybeSingle(),
       admin.from("squad").select("*").eq("room_id", roomId),
     ]);
 
-  if (teamError) {
-    throw new AppError(teamError.message, 500, "TEAM_FETCH_FAILED");
-  }
+    if (teamError) throw new AppError(teamError.message, 500, "TEAM_FETCH_FAILED");
+    if (playerError) throw new AppError(playerError.message, 500, "PLAYER_FETCH_FAILED");
+    if (auctionError) throw new AppError(auctionError.message, 500, "AUCTION_FETCH_FAILED");
+    if (squadError) throw new AppError(squadError.message, 500, "SQUAD_FETCH_FAILED");
 
-  if (playerError) {
-    throw new AppError(playerError.message, 500, "PLAYER_FETCH_FAILED");
-  }
-
-  if (auctionError) {
-    throw new AppError(auctionError.message, 500, "AUCTION_FETCH_FAILED");
-  }
-
-  if (squadError) {
-    throw new AppError(squadError.message, 500, "SQUAD_FETCH_FAILED");
-  }
-
-  return {
-    teams: (teamRows ?? []).map((row) => mapTeam(row as Record<string, unknown>)),
-    players: (playerRows ?? []).map((row) => mapPlayer(row as Record<string, unknown>)),
-    auctionState: auctionRow
-      ? mapAuctionState(auctionRow as Record<string, unknown>)
-      : null,
-    squads: (squadRows ?? []).map((row) =>
-      mapSquadEntry(row as Record<string, unknown>),
-    ),
+    return {
+      teams: (teamRows ?? []).map((row) => mapTeam(row as Record<string, unknown>)),
+      players: (playerRows ?? []).map((row) => mapPlayer(row as Record<string, unknown>)),
+      auctionState: auctionRow
+        ? mapAuctionState(auctionRow as Record<string, unknown>)
+        : null,
+      squads: (squadRows ?? []).map((row) => mapSquadEntry(row as Record<string, unknown>)),
+    };
   };
+
+  // Write paths (advance, start) pass bypassCache=true to always get fresh auction state.
+  if (bypassCache) return fetch();
+  return withCache(roomEntitiesKey(roomId), 15, fetch);
 }
 
 export async function listRoomMembers(roomId: string) {
-  const admin = getSupabaseAdminClient();
-  const { data, error } = await admin
-    .from("room_members")
-    .select("room_id, user_id, is_admin, is_player, users(email, display_name, avatar_url)")
-    .eq("room_id", roomId)
-    .order("joined_at");
+  return withCache(roomMembersKey(roomId), 60 /* 60s */, async () => {
+    const admin = getSupabaseAdminClient();
+    const { data, error } = await admin
+      .from("room_members")
+      .select("room_id, user_id, is_admin, is_player, users(email, display_name, avatar_url)")
+      .eq("room_id", roomId)
+      .order("joined_at");
 
-  if (error) {
-    throw new AppError(error.message, 500, "MEMBER_LIST_FAILED");
-  }
+    if (error) throw new AppError(error.message, 500, "MEMBER_LIST_FAILED");
 
-  return (data ?? []).map((row) => mapMember(row as Record<string, unknown>));
+    return (data ?? []).map((row) => mapMember(row as Record<string, unknown>));
+  });
 }

@@ -1,3 +1,4 @@
+import type React from "react";
 import styles from "./skeleton.module.css";
 
 export function Skeleton({
@@ -6,12 +7,14 @@ export function Skeleton({
   rounded = false,
   block = false,
   className,
+  style,
 }: {
   width?: string | number;
   height?: string | number;
   rounded?: boolean;
   block?: boolean;
   className?: string;
+  style?: React.CSSProperties;
 }) {
   return (
     <span
@@ -23,7 +26,7 @@ export function Skeleton({
       ]
         .filter(Boolean)
         .join(" ")}
-      style={{ width, height }}
+      style={{ width, height, ...style }}
       aria-hidden="true"
     />
   );

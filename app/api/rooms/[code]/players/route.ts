@@ -6,7 +6,7 @@ import { playerUploadSchema, removePlayersSchema } from "@/lib/domain/schemas";
 import { readJson, handleRouteError } from "@/lib/server/api";
 import { requireApiUser, syncUserProfileFromAuthUser } from "@/lib/server/auth";
 import { insertPlayersIntoRoom } from "@/lib/server/player-import";
-import { getAuctionStateOnly, requireRoomAdmin } from "@/lib/server/room";
+import { getAuctionStateOnly, requireRoomAdmin, invalidateRoomCache } from "@/lib/server/room";
 import { getSupabaseAdminClient } from "@/lib/supabase/admin";
 
 export async function POST(
@@ -21,6 +21,7 @@ export async function POST(
     const input = await readJson(request, playerUploadSchema);
     const result = await insertPlayersIntoRoom(room, input.players);
 
+    await invalidateRoomCache(room.id, room.code);
     revalidatePath(`/room/${room.code}`);
     revalidatePath(`/auction/${room.code}`);
     revalidatePath(`/results/${room.code}`);
@@ -143,6 +144,7 @@ export async function DELETE(
       deletedCount = data?.length ?? 0;
     }
 
+    await invalidateRoomCache(room.id, room.code);
     revalidatePath(`/room/${room.code}`);
     revalidatePath(`/auction/${room.code}`);
     revalidatePath(`/results/${room.code}`);

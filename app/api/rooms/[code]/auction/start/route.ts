@@ -6,7 +6,7 @@ import { AppError } from "@/lib/domain/errors";
 import { handleRouteError } from "@/lib/server/api";
 import { requireApiUser, syncUserProfileFromAuthUser } from "@/lib/server/auth";
 import { reorderPlayersSafely } from "@/lib/server/player-order";
-import { getRoomEntities, requireRoomAdmin } from "@/lib/server/room";
+import { getRoomEntities, requireRoomAdmin, invalidateRoomCache } from "@/lib/server/room";
 import { getSupabaseAdminClient } from "@/lib/supabase/admin";
 
 export async function POST(
@@ -19,7 +19,7 @@ export async function POST(
     await syncUserProfileFromAuthUser(authUser);
     const { room } = await requireRoomAdmin(code, authUser.id);
     const admin = getSupabaseAdminClient();
-    const { players, teams, auctionState } = await getRoomEntities(room.id);
+    const { players, teams, auctionState } = await getRoomEntities(room.id, true);
 
     if (players.length === 0) {
       throw new AppError("Upload players before starting the auction.", 400, "NO_PLAYERS");
@@ -98,6 +98,7 @@ export async function POST(
       throw new AppError(error.message, 500, "AUCTION_START_FAILED");
     }
 
+    await invalidateRoomCache(room.id, room.code);
     revalidatePath(`/room/${room.code}`);
     revalidatePath(`/auction/${room.code}`);
     revalidatePath(`/results/${room.code}`);
