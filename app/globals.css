@@ -3311,21 +3311,27 @@ body[data-sidebar="collapsed"] .auction-full {
   align-items: center;
   gap: 0.6rem;
   width: 100%;
-  padding: 0.5rem 0.55rem;
-  background: transparent;
-  border: 1px solid transparent;
+  padding: 0.5rem 0.6rem;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.07);
   border-radius: 12px;
   cursor: pointer;
   text-align: left;
-  transition: background 0.14s ease, border-color 0.14s ease;
-  min-height: 44px;
+  transition: background 0.14s ease, border-color 0.14s ease, box-shadow 0.14s ease;
+  min-height: 46px;
   overflow: hidden;
 }
 
-.sidebar-profile-btn:hover,
+.sidebar-profile-btn:hover {
+  background: rgba(99, 102, 241, 0.08);
+  border-color: rgba(99, 102, 241, 0.22);
+  box-shadow: 0 0 0 1px rgba(99, 102, 241, 0.08);
+}
+
 .sidebar-profile-btn.active {
-  background: rgba(99, 102, 241, 0.07);
-  border-color: rgba(99, 102, 241, 0.16);
+  background: rgba(99, 102, 241, 0.1);
+  border-color: rgba(99, 102, 241, 0.3);
+  box-shadow: 0 0 0 1px rgba(99, 102, 241, 0.1);
 }
 
 /* Avatar circle */
@@ -3333,16 +3339,18 @@ body[data-sidebar="collapsed"] .auction-full {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 30px;
-  height: 30px;
+  width: 32px;
+  height: 32px;
   border-radius: 50%;
   flex-shrink: 0;
   overflow: hidden;
+  box-shadow: 0 0 0 2px rgba(255,255,255,0.08);
 }
 
 .sidebar-avatar-lg {
-  width: 40px;
-  height: 40px;
+  width: 42px;
+  height: 42px;
+  box-shadow: 0 0 0 2px rgba(255,255,255,0.1), 0 2px 8px rgba(0,0,0,0.35);
 }
 
 .sidebar-avatar-initials {
@@ -3355,7 +3363,7 @@ body[data-sidebar="collapsed"] .auction-full {
 }
 
 .sidebar-avatar-lg .sidebar-avatar-initials {
-  font-size: 0.9rem;
+  font-size: 0.92rem;
 }
 
 /* Profile info (name + email) */
@@ -3394,18 +3402,30 @@ body[data-sidebar="collapsed"] .auction-full {
 /* ── Profile popover ── */
 .sidebar-profile-popover {
   position: absolute;
-  bottom: calc(100% + 0.5rem);
+  bottom: calc(100% + 0.6rem);
   left: 0.7rem;
   right: 0.7rem;
   z-index: 200;
-  background: rgba(14, 14, 22, 0.98);
-  border: 1px solid rgba(99, 102, 241, 0.22);
+  background: rgba(12, 12, 20, 0.97);
+  border: 1px solid rgba(99, 102, 241, 0.25);
   border-radius: 16px;
-  box-shadow: 0 16px 48px rgba(0,0,0,0.75), 0 0 0 1px rgba(255,255,255,0.04);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
+  box-shadow:
+    0 20px 60px rgba(0,0,0,0.8),
+    0 0 0 1px rgba(255,255,255,0.05),
+    inset 0 1px 0 rgba(255,255,255,0.05);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
   overflow: hidden;
-  animation: popover-in 0.16s var(--ease-out);
+  animation: popover-in 0.18s var(--ease-out);
+}
+
+/* Accent gradient line at top of popover */
+.sidebar-profile-popover::before {
+  content: "";
+  display: block;
+  height: 2px;
+  background: linear-gradient(90deg, #6366f1 0%, #8b5cf6 40%, #ec4899 100%);
+  opacity: 0.7;
 }
 
 /* When sidebar is collapsed, show popover to the right */
@@ -3424,45 +3444,53 @@ body[data-sidebar="collapsed"] .auction-full {
 .sidebar-popover-header {
   display: flex;
   align-items: center;
-  gap: 0.75rem;
-  padding: 0.9rem 1rem;
+  gap: 0.8rem;
+  padding: 1rem 1rem 0.9rem;
+  background: rgba(99, 102, 241, 0.05);
+}
+
+.sidebar-popover-header-info {
+  min-width: 0;
+  flex: 1;
 }
 
 .sidebar-popover-name {
   font-family: var(--font-display), sans-serif;
-  font-size: 0.9rem;
+  font-size: 0.88rem;
   font-weight: 700;
   color: var(--text);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  letter-spacing: -0.01em;
 }
 
 .sidebar-popover-email {
-  font-size: 0.75rem;
+  font-size: 0.72rem;
   color: var(--muted);
-  margin-top: 0.1rem;
+  margin-top: 0.15rem;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  opacity: 0.75;
 }
 
 .sidebar-popover-divider {
   height: 1px;
-  background: rgba(99, 102, 241, 0.1);
+  background: rgba(255, 255, 255, 0.06);
   margin: 0;
 }
 
 .sidebar-popover-item {
   display: flex;
   align-items: center;
-  gap: 0.65rem;
+  gap: 0.7rem;
   width: 100%;
   padding: 0.7rem 1rem;
-  font-size: 0.85rem;
+  font-size: 0.84rem;
   font-family: var(--font-display), sans-serif;
-  font-weight: 600;
-  color: var(--muted);
+  font-weight: 500;
+  color: rgba(255, 255, 255, 0.65);
   text-decoration: none;
   background: transparent;
   border: none;
@@ -3473,21 +3501,24 @@ body[data-sidebar="collapsed"] .auction-full {
 }
 
 .sidebar-popover-item:hover {
-  background: rgba(99, 102, 241, 0.08);
-  color: var(--text);
+  background: rgba(99, 102, 241, 0.09);
+  color: #fff;
 }
 
 .sidebar-popover-signout:hover {
-  background: rgba(244, 63, 94, 0.08);
-  color: var(--danger);
+  background: rgba(244, 63, 94, 0.09);
+  color: #fca5a5;
 }
 
 .sidebar-popover-icon {
-  font-size: 1rem;
-  line-height: 1;
-  width: 20px;
-  text-align: center;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
   flex-shrink: 0;
+  color: inherit;
+  opacity: 0.8;
 }
 
 /* ── Mobile hamburger ── */

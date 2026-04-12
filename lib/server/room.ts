@@ -57,6 +57,7 @@ export function mapRoom(row: Record<string, unknown>): Room {
     bidIncrement: Number(row.bid_increment),
     ownerId: String(row.owner_id),
     createdAt: String(row.created_at),
+    isSuperRoom: Boolean(row.is_super_room),
   };
 }
 
@@ -186,7 +187,7 @@ export async function requireRoomMember(code: string, userId: string) {
   const { data, error } = await admin
     .from("room_members")
     .select(
-      "room_id, user_id, is_admin, is_player, users(email, display_name, avatar_url), rooms!inner(id, code, name, purse, squad_size, timer_seconds, bid_increment, owner_id, created_at)",
+      "room_id, user_id, is_admin, is_player, users(email, display_name, avatar_url), rooms!inner(id, code, name, purse, squad_size, timer_seconds, bid_increment, owner_id, created_at, is_super_room)",
     )
     .eq("user_id", userId)
     .eq("rooms.code", code.toUpperCase())

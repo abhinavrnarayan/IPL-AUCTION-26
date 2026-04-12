@@ -169,6 +169,145 @@ function buildSeasonStatsPayload(
   };
 }
 
+// ── Per-room helpers (reset + recalculate) ────────────────────────────────────
+
+/**
+ * Zero out all scoring stats for every player in a room.
+ * Meta fields (ipl_team, cricsheet_name, etc.) are preserved.
+ * Does NOT touch match_results — those remain as the source of truth.
+ */
+export async function resetRoomStats(
+  roomId: string,
+  roomCode: string,
+): Promise<{ playersReset: number }> {
+  const admin = getSupabaseAdminClient();
+
+  const { data: players, error } = await admin
+    .from("players")
+    .select("id, stats")
+    .eq("room_id", roomId);
+  if (error) throw new Error(error.message);
+
+  let count = 0;
+  for (const player of players ?? []) {
+    const existing = (player.stats ?? {}) as Record<string, unknown>;
+    const zeroed = buildSeasonStatsPayload(existing, undefined); // zeroes all scoring fields
+    await admin.from("players").update({ stats: zeroed }).eq("id", player.id as string);
+    count += 1;
+  }
+
+  await invalidateRoomCache(roomId, roomCode);
+  revalidatePath(`/room/${roomCode}`);
+  revalidatePath(`/results/${roomCode}`);
+
+  return { playersReset: count };
+}
+
+/**
+ * Re-aggregate all accepted match_results for the room's latest season
+ * and write the result back to players.stats.
+ * This is a full recalculation from the stored match data — no new data is fetched.
+ */
+export async function recalculateRoomStats(
+  roomId: string,
+  roomCode: string,
+): Promise<{ playersUpdated: number }> {
+  const admin = getSupabaseAdminClient();
+
+  // Determine the latest season with accepted data in this room
+  const { data: latestRow } = await admin
+    .from("match_results")
+    .select("season")
+    .eq("room_id", roomId)
+    .eq("accepted", true)
+    .order("season", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+
+  if (!latestRow) return { playersUpdated: 0 }; // no accepted matches yet
+
+  const season = String(latestRow.season);
+
+  // Re-aggregate all accepted matches for this room + season
+  const { data: allAccepted } = await admin
+    .from("match_results")
+    .select("player_stats")
+    .eq("room_id", roomId)
+    .eq("season", season)
+    .eq("accepted", true);
+
+  const allMatchStats = (allAccepted ?? []).map(
+    (row) => (row.player_stats ?? {}) as Record<string, PlayerMatchStats>,
+  );
+  const aggregated = aggregateToPlayerStats(allMatchStats);
+
+  const normToOriginal = new Map<string, string>();
+  for (const name of Object.keys(aggregated)) {
+    normToOriginal.set(normalizeName(name), name);
+  }
+
+  const fullNameToUuid = new Map<string, string>();
+  for (const [uuid, fullName] of CRICSHEET_UUID_MAP.entries()) {
+    if (uuid.length === 8) fullNameToUuid.set(fullName, uuid);
+  }
+
+  const { data: players } = await admin
+    .from("players")
+    .select("id, name, stats, cricsheet_uuid")
+    .eq("room_id", roomId);
+
+  let matched = 0;
+
+  for (const player of players ?? []) {
+    const playerName = String(player.name);
+    const normKey = normalizeName(playerName);
+    const storedUuid = (player as { cricsheet_uuid?: string | null }).cricsheet_uuid;
+    const existing = (player.stats ?? {}) as Record<string, unknown>;
+
+    let statsKey: string | undefined;
+    let clearStoredUuid = false;
+
+    if (storedUuid) {
+      const fullName = CRICSHEET_UUID_MAP.get(storedUuid);
+      if (fullName && normalizeName(fullName) === normKey && aggregated[fullName]) {
+        statsKey = fullName;
+      } else if (fullName && normalizeName(fullName) !== normKey) {
+        clearStoredUuid = true;
+      }
+    }
+
+    if (!statsKey) statsKey = normToOriginal.get(normKey);
+
+    if (!statsKey) {
+      const candidates = Array.from(normToOriginal.entries()).filter(
+        ([key]) => isShortNameFormat(key) && matchesShortName(key, normKey),
+      );
+      if (candidates.length === 1) statsKey = candidates[0]?.[1];
+    }
+
+    const agg = statsKey ? aggregated[statsKey] : undefined;
+    const updatePayload: Record<string, unknown> = {
+      stats: buildSeasonStatsPayload(existing, agg),
+    };
+
+    if (statsKey) {
+      const resolvedUuid = fullNameToUuid.get(statsKey);
+      if (resolvedUuid && !storedUuid) updatePayload.cricsheet_uuid = resolvedUuid;
+    } else if (clearStoredUuid) {
+      updatePayload.cricsheet_uuid = null;
+    }
+
+    await admin.from("players").update(updatePayload).eq("id", player.id as string);
+    if (statsKey) matched += 1;
+  }
+
+  await invalidateRoomCache(roomId, roomCode);
+  revalidatePath(`/room/${roomCode}`);
+  revalidatePath(`/results/${roomCode}`);
+
+  return { playersUpdated: matched };
+}
+
 // ── Main push function ────────────────────────────────────────────────────────
 
 export async function pushMatchToAllRooms(
@@ -190,10 +329,11 @@ export async function pushMatchToAllRooms(
     throw new Error(`Global match not found or not accepted: ${matchId}/${source}`);
   }
 
-  // 2. Get all rooms
+  // 2. Get all rooms — skip the super room (sandbox, not part of live scoring)
   const { data: rooms, error: roomsError } = await admin
     .from("rooms")
-    .select("id, code");
+    .select("id, code")
+    .eq("is_super_room", false);
 
   if (roomsError) throw new Error(roomsError.message);
 

@@ -341,7 +341,22 @@ export function AppSidebar({ user }: AppSidebarProps) {
 
             {!collapsed && (
               <span className="sidebar-profile-chevron" aria-hidden="true">
-                {profileOpen ? "▾" : "▸"}
+                <svg
+                  width="12"
+                  height="12"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2.5"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  style={{
+                    transition: "transform 0.15s ease",
+                    transform: profileOpen ? "rotate(180deg)" : "rotate(0deg)",
+                  }}
+                >
+                  <polyline points="6 9 12 15 18 9" />
+                </svg>
               </span>
             )}
           </button>
@@ -361,15 +376,15 @@ export function AppSidebar({ user }: AppSidebarProps) {
                     <Image
                       src={user.avatarUrl}
                       alt={displayName}
-                      width={40}
-                      height={40}
+                      width={42}
+                      height={42}
                       style={{ borderRadius: "50%", objectFit: "cover" }}
                     />
                   ) : (
                     <span className="sidebar-avatar-initials">{initials}</span>
                   )}
                 </span>
-                <div>
+                <div className="sidebar-popover-header-info">
                   <div className="sidebar-popover-name">{displayName}</div>
                   <div className="sidebar-popover-email">{email}</div>
                 </div>
@@ -385,7 +400,12 @@ export function AppSidebar({ user }: AppSidebarProps) {
                   setMobileOpen(false);
                 }}
               >
-                <span className="sidebar-popover-icon">👤</span>
+                <span className="sidebar-popover-icon" aria-hidden="true">
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <circle cx="12" cy="8" r="4"/>
+                    <path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/>
+                  </svg>
+                </span>
                 Profile &amp; settings
               </Link>
 
@@ -396,7 +416,13 @@ export function AppSidebar({ user }: AppSidebarProps) {
                   type="submit"
                   className="sidebar-popover-item sidebar-popover-signout"
                 >
-                  <span className="sidebar-popover-icon">↩</span>
+                  <span className="sidebar-popover-icon" aria-hidden="true">
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
+                      <polyline points="16 17 21 12 16 7"/>
+                      <line x1="21" y1="12" x2="9" y2="12"/>
+                    </svg>
+                  </span>
                   Sign out
                 </button>
               </form>

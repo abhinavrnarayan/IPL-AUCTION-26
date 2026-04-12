@@ -46,7 +46,7 @@ export async function getLobbySnapshot(
 
   const [{ data: roomRows }, { data: teamRows }, { data: memberRows }, { data: auctionRows }] =
     await Promise.all([
-      admin.from("rooms").select("*").in("id", roomIds).order("created_at", {
+      admin.from("rooms").select("*").in("id", roomIds).eq("is_super_room", false).order("created_at", {
         ascending: false,
       }),
       admin.from("teams").select("room_id, id").in("room_id", roomIds),

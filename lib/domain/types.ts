@@ -25,6 +25,7 @@ export interface Room {
   bidIncrement: number;
   ownerId: string;
   createdAt: string;
+  isSuperRoom: boolean;
 }
 
 export interface RoomMember {

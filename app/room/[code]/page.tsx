@@ -8,14 +8,15 @@ import { RoomInvitePanel } from "@/components/room/room-invite-panel";
 import { RoomAuctionExportButton } from "@/components/room/room-auction-export-button";
 import { StartAuctionButton } from "@/components/room/start-auction-button";
 import { TeamOwnershipPanel } from "@/components/room/team-ownership-panel";
-import { UploadPlayersForm } from "@/components/room/upload-players-form";
-import { UploadTeamsForm } from "@/components/room/upload-teams-form";
+import { PointsSyncPanel } from "@/components/room/points-sync-panel";
+import { CricsheetSyncButton } from "@/components/room/cricsheet-sync-button";
+import { WebscrapeSyncPanel } from "@/components/room/webscrape-sync-panel";
+import { CollapsibleSection } from "@/components/room/collapsible-section";
 import { SelfCreateTeamForm } from "@/components/room/self-create-team-form";
 import { TradePanel } from "@/components/trades/trade-panel";
 import { DashboardAutoRefresher } from "@/components/dashboard-auto-refresher";
 import { SquadBoard } from "@/components/auction/squad-board";
 import { SoldPlayerShowcase } from "@/components/sold-player-showcase";
-import { defaultPlayerPoolCount } from "@/lib/default-player-pool";
 import { hasServiceRoleEnv } from "@/lib/config";
 import { requireSessionUser } from "@/lib/server/auth";
 import { getRoomSnapshot } from "@/lib/server/queries";
@@ -173,23 +174,7 @@ export default async function RoomPage({
         <div className="grid">
           {snapshot.currentMember.isAdmin ? (
             <>
-              <div className="panel">
-                <h2>Player list</h2>
-                <p className="subtle">
-                  Add players for this room from the default list or upload your own sheet.
-                </p>
-                <UploadPlayersForm
-                  defaultPlayerCount={defaultPlayerPoolCount}
-                  roomCode={snapshot.room.code}
-                />
-              </div>
-
-              <div className="panel">
-                <h2>Team upload</h2>
-                <UploadTeamsForm roomCode={snapshot.room.code} />
-              </div>
-
-              {/* Admin My Team â€” same panel as member view */}
+              {/* Admin My Team — same panel as member view */}
               <div className="panel" style={{ borderColor: "rgba(251,191,36,0.18)", background: "linear-gradient(145deg, rgba(251,191,36,0.05), rgba(10,8,30,0.5))" }}>
                 <h2 style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
                   <span>My Team</span>
@@ -315,18 +300,67 @@ export default async function RoomPage({
 
 
       {snapshot.currentMember.isAdmin && snapshot.teams.length > 0 ? (
-        <section className="panel" style={{ marginTop: "1rem" }}>
-          <h2>Team ownership</h2>
-          <TeamOwnershipPanel
-            members={snapshot.members}
-            roomCode={snapshot.room.code}
-            teams={snapshot.teams}
-          />
-        </section>
+        <div style={{ marginTop: "1rem" }}>
+          <CollapsibleSection title="Team ownership" accentColor="rgba(255,255,255,0.1)">
+            <p className="subtle" style={{ marginBottom: "1rem", fontSize: "0.88rem" }}>
+              Assign joined room members to teams. Each member can only own one team at a time.
+            </p>
+            <TeamOwnershipPanel
+              members={snapshot.members}
+              roomCode={snapshot.room.code}
+              teams={snapshot.teams}
+            />
+          </CollapsibleSection>
+        </div>
       ) : null}
 
-      <section className="grid two" style={{ marginTop: "1rem" }}>
-        <div className="panel" style={{ padding: 0, background: "transparent", border: "none" }}>
+      {/* ── Score Sync: available to all room admins ── */}
+      {snapshot.currentMember.isAdmin ? (
+        <div style={{ marginTop: "1rem" }}>
+          <CollapsibleSection
+            title="Score Sync"
+            eyebrow="Points management"
+            accentColor="rgba(99,102,241,0.3)"
+          >
+            <p className="subtle" style={{ marginBottom: "1rem", fontSize: "0.88rem" }}>
+              Reset clears all player points. Update Scores rebuilds from stored match data.
+            </p>
+            <PointsSyncPanel roomCode={snapshot.room.code} />
+          </CollapsibleSection>
+        </div>
+      ) : null}
+
+      {/* ── Super-room only: Cricsheet + Live Score data sources ── */}
+      {snapshot.currentMember.isAdmin && snapshot.room.isSuperRoom ? (
+        <div style={{ marginTop: "0.75rem", display: "flex", flexDirection: "column", gap: "0.75rem" }}>
+          <CollapsibleSection
+            title="Cricsheet Sync"
+            eyebrow="Ball-by-ball data"
+            badge="Sandbox only"
+            accentColor="rgba(56,189,248,0.25)"
+          >
+            <p className="subtle" style={{ marginBottom: "1rem", fontSize: "0.88rem" }}>
+              Download the IPL season from Cricsheet and sync player stats into this room.
+            </p>
+            <CricsheetSyncButton roomCode={snapshot.room.code} />
+          </CollapsibleSection>
+
+          <CollapsibleSection
+            title="Live Score Sync"
+            eyebrow="Live API data"
+            badge="Sandbox only"
+            accentColor="rgba(99,220,120,0.25)"
+          >
+            <p className="subtle" style={{ marginBottom: "1rem", fontSize: "0.88rem" }}>
+              Fetch live match scores from API providers, compare sources, and accept the one you trust for each match.
+            </p>
+            <WebscrapeSyncPanel roomCode={snapshot.room.code} />
+          </CollapsibleSection>
+        </div>
+      ) : null}
+
+      <div style={{ marginTop: "1rem" }}>
+        <CollapsibleSection title="Dream Team Boards" eyebrow="Team-wise leaderboards" accentColor="rgba(255,255,255,0.1)">
           <SquadBoard
             teams={snapshot.teams}
             squads={snapshot.squads}
@@ -337,8 +371,8 @@ export default async function RoomPage({
             isAdmin={snapshot.currentMember.isAdmin}
             scrollable={false}
           />
-        </div>
-      </section>
+        </CollapsibleSection>
+      </div>
 
       {snapshot.teams.length > 1 && (
         <section className="panel" style={{ marginTop: "1rem" }}>
