@@ -301,7 +301,7 @@ export async function recalculateRoomStats(
       return statsKey ? 1 : 0;
     }),
   );
-  const matched = matchCounts.reduce((s, v) => s + v, 0);
+  const matched = matchCounts.reduce<number>((s, v) => s + v, 0);
 
   await invalidateRoomCache(roomId, roomCode);
   revalidatePath(`/room/${roomCode}`);
