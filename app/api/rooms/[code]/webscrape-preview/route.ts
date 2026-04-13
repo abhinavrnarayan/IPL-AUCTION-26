@@ -63,55 +63,145 @@ function normalizeCalculatedPoints(
   return out;
 }
 
-type ComparisonMap = Map<string, {
-  matchId: string; matchDate: string; teams: string[];
-  sources: Record<string, { sourceLabel: string; calculatedPoints: Record<string, number>; accepted: boolean; pushedAt: string | null }>;
-}>;
+function normalizePlayerName(name: string): string {
+  return name.toLowerCase().replace(/\./g, "").replace(/\s+/g, " ").trim();
+}
+
+function getPlayerNameSet(
+  rawCalc: unknown,
+  rawStats?: unknown,
+): Set<string> {
+  return new Set(
+    Object.keys(normalizeCalculatedPoints(rawCalc, rawStats))
+      .map(normalizePlayerName)
+      .filter(Boolean),
+  );
+}
+
+function countOverlap(left: Set<string>, right: Set<string>): number {
+  let overlap = 0;
+  for (const playerName of left) {
+    if (right.has(playerName)) overlap += 1;
+  }
+  return overlap;
+}
+
+type ComparisonSource = {
+  matchId: string;
+  sourceLabel: string;
+  calculatedPoints: Record<string, number>;
+  accepted: boolean;
+  pushedAt: string | null;
+};
+
+type ComparisonEntry = {
+  matchId: string;
+  groupMatchIds: string[];
+  matchDate: string;
+  teams: string[];
+  sources: Record<string, ComparisonSource>;
+};
+
+type ComparisonEntryInternal = ComparisonEntry & {
+  playerNames: Set<string>;
+};
+
+type ComparisonMap = Map<string, ComparisonEntry>;
 
 function buildComparison(rows: Array<Record<string, unknown>>): ComparisonMap {
-  const map: ComparisonMap = new Map();
+  const map = new Map<string, ComparisonEntryInternal>();
   for (const row of rows) {
     const matchId = String(row.match_id);
     if (!map.has(matchId)) {
-      map.set(matchId, { matchId, matchDate: String(row.match_date ?? ""), teams: (row.teams as string[]) ?? [], sources: {} });
+      map.set(matchId, {
+        matchId,
+        groupMatchIds: [matchId],
+        matchDate: String(row.match_date ?? ""),
+        teams: (row.teams as string[]) ?? [],
+        sources: {},
+        playerNames: new Set<string>(),
+      });
     }
     const entry = map.get(matchId)!;
+    const calculatedPoints = normalizeCalculatedPoints(row.calculated_points, row.player_stats);
+
+    if (entry.teams.length === 0 && Array.isArray(row.teams) && row.teams.length > 0) {
+      entry.teams = row.teams as string[];
+    }
+
     entry.sources[String(row.source)] = {
+      matchId,
       sourceLabel: String(row.source_label ?? row.source),
-      calculatedPoints: normalizeCalculatedPoints(row.calculated_points, row.player_stats),
+      calculatedPoints,
       accepted: Boolean(row.accepted),
       pushedAt: row.accepted_at ? String(row.accepted_at) : null,
     };
-  }
 
-  // Merge entries that represent the same physical match but have different provider matchIds.
-  // Cricsheet stores teams=[] while webscrape providers store the real team names.
-  // Strategy: for each date, merge teamless entries (cricsheet) into the entry that has team names.
-  const byDate = new Map<string, string[]>();
-  for (const [matchId, entry] of map) {
-    if (!entry.matchDate) continue;
-    if (!byDate.has(entry.matchDate)) byDate.set(entry.matchDate, []);
-    byDate.get(entry.matchDate)!.push(matchId);
-  }
-
-  for (const matchIds of byDate.values()) {
-    if (matchIds.length < 2) continue;
-    const withTeams    = matchIds.filter((id) => (map.get(id)!.teams ?? []).length > 0);
-    const withoutTeams = matchIds.filter((id) => (map.get(id)!.teams ?? []).length === 0);
-    if (withTeams.length === 0 || withoutTeams.length === 0) continue;
-
-    // Use the first entry with real team names as the canonical card
-    const canonical = map.get(withTeams[0]!)!;
-    for (const fromId of withoutTeams) {
-      const from = map.get(fromId)!;
-      for (const [src, data] of Object.entries(from.sources)) {
-        if (!canonical.sources[src]) canonical.sources[src] = data;
-      }
-      map.delete(fromId);
+    for (const playerName of getPlayerNameSet(row.calculated_points, row.player_stats)) {
+      entry.playerNames.add(playerName);
     }
   }
 
-  return map;
+  // Merge entries that represent the same physical match but use different provider IDs.
+  // Cricsheet rows arrive without team names, so we match them to the best same-date
+  // API row by player-name overlap instead of merging every teamless row into the first card.
+  const byDate = new Map<string, ComparisonEntryInternal[]>();
+  for (const entry of map.values()) {
+    if (!entry.matchDate) continue;
+    if (!byDate.has(entry.matchDate)) byDate.set(entry.matchDate, []);
+    byDate.get(entry.matchDate)!.push(entry);
+  }
+
+  for (const entries of byDate.values()) {
+    if (entries.length < 2) continue;
+
+    const withTeams = entries.filter((entry) => entry.teams.length > 0);
+    const withoutTeams = entries.filter((entry) => entry.teams.length === 0);
+    if (withTeams.length === 0 || withoutTeams.length === 0) continue;
+
+    for (const teamlessEntry of withoutTeams) {
+      let bestMatch: ComparisonEntryInternal | null = null;
+      let bestOverlap = 0;
+
+      for (const candidate of withTeams) {
+        const overlap = countOverlap(teamlessEntry.playerNames, candidate.playerNames);
+        if (overlap > bestOverlap) {
+          bestMatch = candidate;
+          bestOverlap = overlap;
+        }
+      }
+
+      if (!bestMatch || bestOverlap === 0) continue;
+
+      for (const [sourceKey, sourceData] of Object.entries(teamlessEntry.sources)) {
+        if (!bestMatch.sources[sourceKey]) {
+          bestMatch.sources[sourceKey] = sourceData;
+        }
+      }
+
+      bestMatch.groupMatchIds = Array.from(
+        new Set([...bestMatch.groupMatchIds, ...teamlessEntry.groupMatchIds]),
+      );
+      for (const playerName of teamlessEntry.playerNames) {
+        bestMatch.playerNames.add(playerName);
+      }
+
+      map.delete(teamlessEntry.matchId);
+    }
+  }
+
+  const responseMap: ComparisonMap = new Map();
+  for (const [matchId, entry] of map) {
+    responseMap.set(matchId, {
+      matchId: entry.matchId,
+      groupMatchIds: entry.groupMatchIds,
+      matchDate: entry.matchDate,
+      teams: entry.teams,
+      sources: entry.sources,
+    });
+  }
+
+  return responseMap;
 }
 
 export async function GET(

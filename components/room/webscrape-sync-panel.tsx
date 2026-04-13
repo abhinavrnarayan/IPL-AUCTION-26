@@ -8,6 +8,7 @@ import { ExportButton } from "@/components/ui/export-button";
 // Ã¢â€â‚¬Ã¢â€â‚¬ Types mirroring the API response Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
 
 interface SourceData {
+  matchId: string;
   sourceLabel: string;
   calculatedPoints: Record<string, number>;
   accepted: boolean;
@@ -15,6 +16,7 @@ interface SourceData {
 
 interface MatchComparison {
   matchId: string;
+  groupMatchIds: string[];
   matchDate: string;
   teams: string[];
   sources: Record<string, SourceData>; // source key Ã¢â€ â€™ data
@@ -153,15 +155,22 @@ export function WebscrapeSyncPanel({ roomCode, initialProviders = [] }: Webscrap
     return () => clearInterval(tick);
   }, [autoRefresh, handleFetch]);
 
-  async function handleAccept(matchId: string, source: string) {
-    setAccepting(matchId);
+  async function handleAccept(match: MatchComparison, source: string) {
+    const sourceData = match.sources[source];
+    if (!sourceData) return;
+
+    setAccepting(match.matchId);
     try {
       const res = await fetch(`/api/rooms/${roomCode}/webscrape-accept`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           season,
-          accepts: [{ matchId, source }],
+          accepts: [{
+            matchId: sourceData.matchId,
+            source,
+            groupMatchIds: match.groupMatchIds,
+          }],
         }),
       });
       const data = (await res.json()) as { ok: boolean; error?: string };
@@ -170,7 +179,7 @@ export function WebscrapeSyncPanel({ roomCode, initialProviders = [] }: Webscrap
       // Optimistically update local state
       setComparison((prev) =>
         prev.map((m) => {
-          if (m.matchId !== matchId) return m;
+          if (m.matchId !== match.matchId) return m;
           const newSources = { ...m.sources };
           for (const k of Object.keys(newSources)) {
             newSources[k] = { ...newSources[k]!, accepted: k === source };
@@ -186,25 +195,23 @@ export function WebscrapeSyncPanel({ roomCode, initialProviders = [] }: Webscrap
     }
   }
 
-  async function handleUnaccept(matchId: string) {
-    setUnaccepting(matchId);
+  async function handleUnaccept(displayMatchId: string, matchId: string, source: string) {
+    setUnaccepting(displayMatchId);
     try {
       const res = await fetch(`/api/rooms/${roomCode}/webscrape-accept`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ season, unaccepts: [{ matchId }] }),
+        body: JSON.stringify({ season, unaccepts: [{ matchId, source }] }),
       });
       const data = (await res.json()) as { ok: boolean; error?: string };
       if (!res.ok || !data.ok) throw new Error(data.error ?? "Undo failed.");
 
-      // Optimistically clear accepted state for all sources of this match
+      // Optimistically clear accepted state for only the source that was undone.
       setComparison((prev) =>
         prev.map((m) => {
-          if (m.matchId !== matchId) return m;
+          if (m.matchId !== displayMatchId) return m;
           const newSources = { ...m.sources };
-          for (const k of Object.keys(newSources)) {
-            newSources[k] = { ...newSources[k]!, accepted: false };
-          }
+          newSources[source] = { ...newSources[source]!, accepted: false };
           return { ...m, sources: newSources };
         }),
       );
@@ -243,7 +250,11 @@ export function WebscrapeSyncPanel({ roomCode, initialProviders = [] }: Webscrap
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           season,
-          accepts: [{ matchId, source }],
+          accepts: [{
+            matchId: sourceData.matchId,
+            source,
+            groupMatchIds: match.groupMatchIds,
+          }],
           // Note: overrides here adjust calculated_points, not player_stats directly.
           // The server patches calculated_points via the overrides field.
         }),
@@ -414,7 +425,8 @@ export function WebscrapeSyncPanel({ roomCode, initialProviders = [] }: Webscrap
       {comparison.map((match) => {
         const sourceKeys = Object.keys(match.sources);
         const isProcessing = accepting === match.matchId || unaccepting === match.matchId;
-        const acceptedSource = sourceKeys.find((k) => match.sources[k]?.accepted);
+        const acceptedSources = sourceKeys.filter((k) => match.sources[k]?.accepted);
+        const acceptedSource = acceptedSources[0];
         const isOverrideOpen = overrideEdit === match.matchId;
 
         return (
@@ -435,20 +447,10 @@ export function WebscrapeSyncPanel({ roomCode, initialProviders = [] }: Webscrap
               </div>
               {acceptedSource && (
                 <span className="pill highlight" style={{ fontSize: "0.78rem" }}>
-                  Accepted: {match.sources[acceptedSource]?.sourceLabel ?? acceptedSource}
+                  {acceptedSources.length > 1
+                    ? `Accepted: ${acceptedSources.length} sources`
+                    : `Accepted: ${match.sources[acceptedSource]?.sourceLabel ?? acceptedSource}`}
                 </span>
-              )}
-              {acceptedSource && (
-                <button
-                  className="button ghost"
-                  disabled={isProcessing}
-                  onClick={() => void handleUnaccept(match.matchId)}
-                  style={{ fontSize: "0.78rem", padding: "0.2rem 0.55rem", color: "var(--error, #f87171)" }}
-                  type="button"
-                  title="Remove accepted status — scores will not count until a source is re-accepted"
-                >
-                  {unaccepting === match.matchId ? "Undoing…" : "Undo"}
-                </button>
               )}
               <button
                 className="btn-sm ghost"
@@ -542,26 +544,46 @@ export function WebscrapeSyncPanel({ roomCode, initialProviders = [] }: Webscrap
                       )}
                     </div>
 
-                    <button
-                      className={`button ${isAccepted ? "" : "ghost"}`}
-                      disabled={isProcessing}
-                      onClick={() => void handleAccept(match.matchId, srcKey)}
-                      style={{
-                        width: "100%",
-                        fontSize: "0.82rem",
-                        padding: "0.45rem",
-                      }}
-                      type="button"
-                      title={isAccepted ? "Click to re-accept (no change)" : "Accept this source and unaccept others"}
-                    >
-                      {isProcessing && accepting === match.matchId
-                        ? "Accepting..."
-                        : isAccepted
-                        ? "Accepted ✓"
-                        : sourceKeys.length > 1
-                        ? "Use this source"
-                        : "Accept"}
-                    </button>
+                    <div style={{ display: "grid", gap: "0.45rem" }}>
+                      <button
+                        className={`button ${isAccepted ? "" : "ghost"}`}
+                        disabled={isProcessing || isAccepted}
+                        onClick={() => void handleAccept(match, srcKey)}
+                        style={{
+                          width: "100%",
+                          fontSize: "0.82rem",
+                          padding: "0.45rem",
+                        }}
+                        type="button"
+                        title={isAccepted ? "This source is currently active for scoring" : "Accept this source and replace the others"}
+                      >
+                        {isProcessing && accepting === match.matchId
+                          ? "Accepting..."
+                          : isAccepted
+                          ? "Accepted ✓"
+                          : sourceKeys.length > 1
+                          ? "Use this source"
+                          : "Accept"}
+                      </button>
+
+                      {isAccepted && (
+                        <button
+                          className="button ghost"
+                          disabled={isProcessing}
+                          onClick={() => void handleUnaccept(match.matchId, sd.matchId, srcKey)}
+                          style={{
+                            width: "100%",
+                            fontSize: "0.78rem",
+                            padding: "0.4rem 0.45rem",
+                            color: "var(--error, #f87171)",
+                          }}
+                          type="button"
+                          title="Remove this accepted source so it no longer counts toward points"
+                        >
+                          {unaccepting === match.matchId ? "Undoing..." : "Undo"}
+                        </button>
+                      )}
+                    </div>
                   </div>
                 );
               })}
@@ -637,4 +659,3 @@ export function WebscrapeSyncPanel({ roomCode, initialProviders = [] }: Webscrap
     </div>
   );
 }
-
