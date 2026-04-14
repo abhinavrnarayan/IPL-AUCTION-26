@@ -12,7 +12,6 @@
 
 import { NextResponse } from "next/server";
 
-import { AppError } from "@/lib/domain/errors";
 import { handleRouteError } from "@/lib/server/api";
 import { requireApiUser } from "@/lib/server/auth";
 import { requireRoomAdmin } from "@/lib/server/room";
@@ -254,7 +253,7 @@ export async function POST(
       return NextResponse.json({
         ok: false,
         error: "No cricket API keys configured.",
-        detail: "Add CRICKETDATA_API_KEY or RAPIDAPI_KEY to your environment.",
+        detail: "Add RAPIDAPI_KEY to your environment.",
         providers,
       }, { status: 400 });
     }

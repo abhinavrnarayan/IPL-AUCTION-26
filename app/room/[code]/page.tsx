@@ -20,7 +20,6 @@ import { SoldPlayerShowcase } from "@/components/sold-player-showcase";
 import { hasServiceRoleEnv } from "@/lib/config";
 import { requireSessionUser } from "@/lib/server/auth";
 import { getRoomSnapshot } from "@/lib/server/queries";
-import { availableProviders } from "@/lib/server/webscrape/index";
 import { deriveRoleLabel, formatCurrency, formatCurrencyShort } from "@/lib/utils";
 
 export default async function RoomPage({
@@ -330,7 +329,12 @@ export default async function RoomPage({
             <PointsSyncPanel roomCode={snapshot.room.code} />
           </CollapsibleSection>
 
-          <LiveScoreSyncDrawer roomCode={snapshot.room.code} initialProviders={availableProviders()} />
+          <LiveScoreSyncDrawer
+            roomCode={snapshot.room.code}
+            initialProviders={[
+              { id: "rapidapi", label: "RapidAPI / Cricbuzz", configured: Boolean(process.env.RAPIDAPI_KEY || process.env.RAPIDAPI_KEY_2) },
+            ]}
+          />
 
           <CollapsibleSection
             title="Cricsheet Sync"

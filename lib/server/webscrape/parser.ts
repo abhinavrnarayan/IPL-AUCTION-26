@@ -1,8 +1,8 @@
 /**
  * Shared types and parsing utilities for all cricket API providers.
  *
- * All three providers (CricketData.org, RapidAPI Cricbuzz, CricAPI) return
- * innings scorecards. This module normalises them into a single shape and
+ * Supported providers: Cricsheet (ball-by-ball) and RapidAPI Cricbuzz.
+ * This module normalises innings scorecards into a single shape and
  * computes the per-match fantasy bonus points that must be calculated from
  * individual-match data (milestones, SR, economy, 3-catch bonus).
  */
@@ -48,7 +48,7 @@ export interface NormalizedMatch {
   season: string;
   homeTeam: string;
   awayTeam: string;
-  source: "cricketdata" | "rapidapi" | "cricapi" | "atd";
+  source: "cricsheet" | "rapidapi";
   sourceLabel: string;
   playerStats: Record<string, PlayerMatchStats>; // cricketapi player name → stats
 }
@@ -185,7 +185,7 @@ export function parseOutDesc(outDesc: string): OutDescResult {
 }
 
 // ── Core inning processor ─────────────────────────────────────────────────────
-// Used by both CricketData and RapidAPI parsers.
+// Used by both Cricsheet and RapidAPI parsers.
 
 export interface ScorecardBattingRow {
   name: string;

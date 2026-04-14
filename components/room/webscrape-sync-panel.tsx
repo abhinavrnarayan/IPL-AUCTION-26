@@ -63,7 +63,6 @@ export function WebscrapeSyncPanel({ roomCode, initialProviders = [] }: Webscrap
   const [fetching, setFetching] = useState(false);
   const [accepting, setAccepting] = useState<string | null>(null); // matchId being accepted
   const [comparison, setComparison] = useState<MatchComparison[]>([]);
-  const [providers, setProviders] = useState<Array<{ id: string; label: string; configured: boolean }>>(initialProviders);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [fetchError, setFetchError] = useState<string | null>(null);
   const [lastFetched, setLastFetched] = useState<string | null>(null);
@@ -91,12 +90,10 @@ export function WebscrapeSyncPanel({ roomCode, initialProviders = [] }: Webscrap
       const data = (await res.json()) as PreviewResponse;
       if (!res.ok || !data.ok) {
         setFetchError(data.error ?? "Fetch failed.");
-        if (data.providers) setProviders(data.providers);
         if (data.errors) setErrors(data.errors);
         return;
       }
       setComparison(data.comparison ?? []);
-      setProviders(data.providers ?? []);
       setSelectedProvider((current) => data.selectedProvider ?? current);
       setErrors(data.errors ?? {});
       setSkippedAccepted(data.matchesAlreadyAccepted ?? 0);
@@ -118,24 +115,11 @@ export function WebscrapeSyncPanel({ roomCode, initialProviders = [] }: Webscrap
         const data = (await res.json()) as PreviewResponse;
         if (data.ok && data.comparison) {
           setComparison(data.comparison);
-          setProviders(data.providers ?? []);
-          setSelectedProvider((current) => {
-            if (current) return current;
-            const firstConfigured = (data.providers ?? []).find((provider) => provider.configured);
-            return firstConfigured?.id ?? null;
-          });
         }
       } catch { /* silently ignore on initial load */ }
     }
     void loadStored();
   }, [roomCode, season]);
-
-  // Keep selected provider in sync if providers list updates after a fetch
-  useEffect(() => {
-    if (selectedProvider) return;
-    const first = providers.find((p) => p.configured);
-    if (first) setSelectedProvider(first.id);
-  }, [providers, selectedProvider]);
 
   // Auto-refresh: 10-minute countdown + trigger
   useEffect(() => {
@@ -342,7 +326,7 @@ export function WebscrapeSyncPanel({ roomCode, initialProviders = [] }: Webscrap
         >
           {fetching
             ? "Fetching live data..."
-            : `Fetch Live Scores${selectedProvider ? ` (${providers.find((provider) => provider.id === selectedProvider)?.label ?? selectedProvider})` : ""}`}
+            : `Fetch Live Scores${selectedProvider ? ` (${initialProviders.find((provider) => provider.id === selectedProvider)?.label ?? selectedProvider})` : ""}`}
         </button>
         {comparison.length > 0 && (
           <div style={{ marginTop: "auto" }}>
@@ -375,9 +359,9 @@ export function WebscrapeSyncPanel({ roomCode, initialProviders = [] }: Webscrap
       </div>
 
       {/* Provider status */}
-      {providers.length > 0 && (
+      {initialProviders.length > 0 && (
         <div style={{ display: "flex", gap: "0.5rem", flexWrap: "wrap" }}>
-          {providers.map((p) => (
+          {initialProviders.map((p) => (
             <button
               key={p.id}
               className={`pill ${selectedProvider === p.id ? "highlight" : ""}`}
