@@ -111,17 +111,26 @@ export async function POST(request: Request) {
       }, { status: 404 });
     }
 
-    // Skip matches already accepted in global_match_results
+    // Treat an accepted match as fully resolved, regardless of source.
     const { data: existingRows } = await admin
       .from("global_match_results")
-      .select("match_id, source, accepted")
+      .select("match_id, accepted")
       .eq("season", season);
 
-    const acceptedKeys = new Set(
-      (existingRows ?? []).filter((r) => r.accepted).map((r) => `${String(r.match_id)}::${String(r.source)}`),
+    const acceptedMatchIds = new Set(
+      (existingRows ?? []).filter((r) => r.accepted).map((r) => String(r.match_id)),
     );
 
-    const newMatches = matches.filter((m) => !acceptedKeys.has(`${m.matchId}::${m.source}`));
+    if (acceptedMatchIds.size > 0) {
+      await admin
+        .from("global_match_results")
+        .delete()
+        .eq("season", season)
+        .eq("accepted", false)
+        .in("match_id", Array.from(acceptedMatchIds));
+    }
+
+    const newMatches = matches.filter((m) => !acceptedMatchIds.has(m.matchId));
     const skippedAccepted = matches.length - newMatches.length;
 
     for (const m of newMatches) {

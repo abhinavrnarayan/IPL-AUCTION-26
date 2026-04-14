@@ -79,29 +79,7 @@ export async function POST(
 
       if (clearError) throw new AppError(clearError.message, 500, "DB_QUERY_FAILED");
 
-      // 2. Also revoke any accepted rows on the same match_date that were NOT in the
-      //    comparison group (e.g. cricsheet rows which have different match_ids).
-      const matchDate = (targetRow as { match_date?: string | null }).match_date;
-      if (matchDate) {
-        const { data: sameDateRows } = await admin
-          .from("match_results")
-          .select("match_id")
-          .eq("room_id", room.id)
-          .eq("match_date", matchDate)
-          .eq("accepted", true)
-          .not("match_id", "in", `(${comparisonMatchIds.join(",")})`);
-
-        if (sameDateRows && sameDateRows.length > 0) {
-          const extraIds = sameDateRows.map((r) => String(r.match_id));
-          await admin
-            .from("match_results")
-            .update({ accepted: false, accepted_at: null })
-            .eq("room_id", room.id)
-            .in("match_id", extraIds);
-        }
-      }
-
-      // Accept the chosen source after clearing the rest of the comparison group.
+      // 2. Accept the chosen source after clearing the rest of the explicit comparison group.
       const { error: acceptError } = await admin
         .from("match_results")
         .update({ accepted: true, accepted_at: new Date().toISOString() })

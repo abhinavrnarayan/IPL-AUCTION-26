@@ -150,32 +150,6 @@ export async function POST(
     const newMatches = matches.filter((m) => !acceptedMatchIds.has(m.matchId));
     const skippedAccepted = matches.length - newMatches.length;
 
-    // Collect all match_dates we are about to accept via cricsheet.
-    // For each of those dates, revoke any OTHER source that is currently
-    // accepted — one source per physical match, always.
-    const incomingDates = [...new Set(newMatches.map((m) => m.matchDate).filter(Boolean))];
-    if (incomingDates.length > 0) {
-      const { data: rivalAccepted } = await admin
-        .from("match_results")
-        .select("match_id, source")
-        .eq("room_id", room.id)
-        .eq("season", aggregationSeason)
-        .eq("accepted", true)
-        .neq("source", "cricsheet")
-        .in("match_date", incomingDates);
-
-      if (rivalAccepted && rivalAccepted.length > 0) {
-        const rivalIds = rivalAccepted.map((r) => String(r.match_id));
-        await admin
-          .from("match_results")
-          .update({ accepted: false, accepted_at: null })
-          .eq("room_id", room.id)
-          .in("match_id", rivalIds)
-          .neq("source", "cricsheet");
-        console.log(`[rooms/cricsheet-sync] revoked ${rivalIds.length} rival-source accepted row(s) for ${incomingDates.length} date(s)`);
-      }
-    }
-
     let upserted = 0;
     let upsertErrors = 0;
 
