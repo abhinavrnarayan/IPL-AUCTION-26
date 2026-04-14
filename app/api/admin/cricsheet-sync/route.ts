@@ -128,15 +128,24 @@ export async function POST(request: Request) {
       );
     }
 
-    // Skip matches already accepted in global_match_results
+    // Treat an accepted match as fully resolved, regardless of source.
     const { data: alreadyAccepted } = await admin
       .from("global_match_results")
       .select("match_id")
       .eq("season", aggregationSeason)
-      .eq("source", "cricsheet")
       .eq("accepted", true);
 
     const acceptedMatchIds = new Set((alreadyAccepted ?? []).map((r) => String(r.match_id)));
+
+    if (acceptedMatchIds.size > 0) {
+      await admin
+        .from("global_match_results")
+        .delete()
+        .eq("season", aggregationSeason)
+        .eq("accepted", false)
+        .in("match_id", Array.from(acceptedMatchIds));
+    }
+
     const newMatches = matches.filter((m) => !acceptedMatchIds.has(m.matchId));
     const skippedAccepted = matches.length - newMatches.length;
 
