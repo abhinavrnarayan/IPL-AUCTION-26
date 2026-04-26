@@ -23,7 +23,7 @@ export function HomeHero() {
         animate={reduced ? undefined : { opacity: 1, y: 0 }}
         transition={{ duration: 0.25, ease: [0.22, 1, 0.36, 1] }}
       >
-        <div className="brand"><SiteLogo suffix="St. Thomas Fantasy League" /></div>
+        <div className="brand"><SiteLogo suffix="Fantasy IPL" /></div>
         <div className="button-row">
           <motion.div whileHover={reduced ? undefined : { scale: 1.03 }} whileTap={reduced ? undefined : { scale: 0.97 }} transition={spring.snappy}>
             <Link className="button ghost" href="/login">Sign in</Link>

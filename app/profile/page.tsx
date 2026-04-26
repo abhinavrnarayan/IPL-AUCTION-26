@@ -144,7 +144,9 @@ export default async function ProfilePage({
             <dt>Email</dt>
             <dd>{user.email ?? "—"}</dd>
             <dt>Account ID</dt>
-            <dd className="mono" style={{ fontSize: "0.8rem" }}>{user.id}</dd>
+            <dd className="mono" style={{ fontSize: "0.8rem" }} title="Short reference only; full ID is hidden">
+              {user.id.slice(0, 8)}…{user.id.slice(-4)}
+            </dd>
           </dl>
         </section>
       </div>

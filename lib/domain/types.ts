@@ -5,6 +5,19 @@ export type AuctionPhase =
   | "ROUND_END"
   | "COMPLETED";
 
+const AUCTION_PHASE_LABELS: Record<AuctionPhase, string> = {
+  WAITING: "Not started",
+  LIVE: "Auction live",
+  PAUSED: "Paused",
+  ROUND_END: "Between rounds",
+  COMPLETED: "Auction over",
+};
+
+export function auctionPhaseLabel(phase: AuctionPhase | string | null | undefined): string {
+  if (!phase) return AUCTION_PHASE_LABELS.WAITING;
+  return AUCTION_PHASE_LABELS[phase as AuctionPhase] ?? String(phase);
+}
+
 export type PlayerStatus = "AVAILABLE" | "SOLD" | "UNSOLD";
 export type TradeStatus = "PENDING" | "APPROVED" | "REJECTED" | "EXECUTED";
 
@@ -112,6 +125,12 @@ export interface Trade {
   createdAt: string;
 }
 
+export interface RoundInterest {
+  round: number;
+  teamId: string;
+  playerId: string;
+}
+
 export interface TeamScore {
   teamId: string;
   teamName: string;
@@ -155,6 +174,7 @@ export interface AuctionSnapshot {
   bids: Bid[];
   squads: SquadEntry[];
   trades: Trade[];
+  roundInterests: RoundInterest[];
   user: UserProfile | null;
   currentMember: RoomMember | null;
 }

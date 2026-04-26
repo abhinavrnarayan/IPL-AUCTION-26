@@ -1,14 +1,15 @@
 import { revalidatePath } from "next/cache";
 import { NextResponse } from "next/server";
 
-import { shuffleItems } from "@/lib/domain/auction";
+import { MAX_AUCTION_ROUNDS, shuffleItems } from "@/lib/domain/auction";
 import { AppError } from "@/lib/domain/errors";
 import { startNextRoundSchema } from "@/lib/domain/schemas";
 import { readJson, handleRouteError } from "@/lib/server/api";
 import { isMissingColumnError, omitOptionalColumns } from "@/lib/server/auction-state";
+import { clearAuctionLiveSnapshot } from "@/lib/server/auction-live";
 import { requireApiUser } from "@/lib/server/auth";
 import { reorderPlayersSafely } from "@/lib/server/player-order";
-import { getAuctionStateOnly, requireRoomAdmin } from "@/lib/server/room";
+import { getAuctionStateOnly, invalidateRoomCache, requireRoomAdmin } from "@/lib/server/room";
 import { getSupabaseAdminClient } from "@/lib/supabase/admin";
 
 export async function POST(
@@ -34,17 +35,73 @@ export async function POST(
 
     const nextRound = auctionState.currentRound + 1;
 
+    if (nextRound > MAX_AUCTION_ROUNDS) {
+      throw new AppError(
+        `Auction already ran the maximum of ${MAX_AUCTION_ROUNDS} rounds. Complete the auction and finish remaining moves via trades.`,
+        400,
+        "MAX_ROUNDS_REACHED",
+      );
+    }
+
+    const requestedPlayerIds = Array.from(new Set(playerIds));
+    const { data: teamRows, error: teamError } = await admin
+      .from("teams")
+      .select("id, owner_user_id")
+      .eq("room_id", room.id);
+
+    if (teamError) {
+      throw new AppError(teamError.message, 500, "TEAM_FETCH_FAILED");
+    }
+
+    const ownedTeamIds = (teamRows ?? [])
+      .filter((team) => team.owner_user_id)
+      .map((team) => String(team.id));
+
+    let eligiblePlayerIds = requestedPlayerIds;
+    if (ownedTeamIds.length > 0) {
+      const { data: interestRows, error: interestError } = await admin
+        .from("round_interests")
+        .select("player_id")
+        .eq("room_id", room.id)
+        .eq("round", nextRound)
+        .in("team_id", ownedTeamIds);
+
+      if (interestError) {
+        throw new AppError(interestError.message, 500, "ROUND_INTEREST_FETCH_FAILED");
+      }
+
+      eligiblePlayerIds = Array.from(
+        new Set((interestRows ?? []).map((row) => String(row.player_id))),
+      );
+    }
+
+    if (eligiblePlayerIds.length === 0) {
+      throw new AppError(
+        ownedTeamIds.length > 0
+          ? "No team owner selections have been submitted for the next round yet."
+          : "Select at least one player for the next round.",
+        400,
+        "NO_PLAYERS",
+      );
+    }
+
     const { data: selectedPlayers, error: selectedPlayersError } = await admin
       .from("players")
       .select("id, order_index")
       .eq("room_id", room.id)
-      .in("id", playerIds);
+      .eq("status", "UNSOLD")
+      .in("id", eligiblePlayerIds);
 
     if (selectedPlayersError) {
       throw new AppError(selectedPlayersError.message, 500, "PLAYER_FETCH_FAILED");
     }
 
+    if ((selectedPlayers ?? []).length === 0) {
+      throw new AppError("No unsold players found for next round.", 400, "NO_PLAYERS");
+    }
+
     const shuffledSelectedPlayers = shuffleItems(selectedPlayers ?? []);
+    const selectedPlayerIds = shuffledSelectedPlayers.map((player) => String(player.id));
     await reorderPlayersSafely(
       room.id,
       shuffledSelectedPlayers.map((player) => ({
@@ -57,7 +114,7 @@ export async function POST(
     const { error: playerError } = await admin
       .from("players")
       .update({ status: "AVAILABLE" })
-      .in("id", playerIds)
+      .in("id", selectedPlayerIds)
       .eq("room_id", room.id);
 
     if (playerError) {
@@ -84,16 +141,23 @@ export async function POST(
       version: auctionState.version + 1,
       last_event: "ROUND_STARTED",
     };
-    let { error: stateError } = await admin
+    let { data: updatedState, error: stateError } = await admin
       .from("auction_state")
       .update(updateValues)
-      .eq("room_id", room.id);
+      .eq("room_id", room.id)
+      .eq("version", auctionState.version)
+      .select("*")
+      .maybeSingle();
 
     if (stateError && isMissingColumnError(stateError.message)) {
       const retry = await admin
         .from("auction_state")
         .update(omitOptionalColumns(updateValues))
-        .eq("room_id", room.id);
+        .eq("room_id", room.id)
+        .eq("version", auctionState.version)
+        .select("*")
+        .maybeSingle();
+      updatedState = retry.data;
       stateError = retry.error;
     }
 
@@ -101,10 +165,21 @@ export async function POST(
       throw new AppError(stateError.message, 500, "STATE_UPDATE_FAILED");
     }
 
+    if (!updatedState) {
+      throw new AppError("Auction state changed. Refresh and retry.", 409, "VERSION_CONFLICT");
+    }
+
+    await invalidateRoomCache(room.id, room.code);
+    await clearAuctionLiveSnapshot(room.id);
     revalidatePath(`/room/${room.code}`);
     revalidatePath(`/auction/${room.code}`);
 
-    return NextResponse.json({ round: nextRound });
+    return NextResponse.json({
+      round: nextRound,
+      expiresAt,
+      playerId: String(firstPlayer.id),
+      selectedPlayerIds,
+    });
   } catch (error) {
     return handleRouteError(error);
   }

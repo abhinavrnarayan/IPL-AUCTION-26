@@ -1,27 +1,62 @@
 import { NextResponse } from "next/server";
 
-import { resolveExpiredAuction, shuffleItems } from "@/lib/domain/auction";
+import { resolveExpiredAuction } from "@/lib/domain/auction";
 import { AppError } from "@/lib/domain/errors";
 import { handleRouteError } from "@/lib/server/api";
 import { isMissingColumnError, omitOptionalColumns } from "@/lib/server/auction-state";
+import { clearAuctionLiveSnapshot } from "@/lib/server/auction-live";
 import { requireApiUser } from "@/lib/server/auth";
-import { reorderPlayersSafely } from "@/lib/server/player-order";
-import { getRoomEntities, requireRoomAdmin, invalidateRoomCache } from "@/lib/server/room";
+import { getRoomEntities, requireRoomMember, invalidateRoomCache } from "@/lib/server/room";
 import { getSupabaseAdminClient } from "@/lib/supabase/admin";
 
 export async function POST(
-  _request: Request,
+  request: Request,
   context: { params: Promise<{ code: string }> },
 ) {
   try {
     const { code } = await context.params;
     const authUser = await requireApiUser();
-    const { room } = await requireRoomAdmin(code, authUser.id);
+    const { room, member } = await requireRoomMember(code, authUser.id);
     const admin = getSupabaseAdminClient();
-    const { players, teams, auctionState, squads } = await getRoomEntities(room.id, true);
+    const { players, teams, auctionState } = await getRoomEntities(room.id, true);
 
     if (!auctionState) {
       throw new AppError("Auction has not started yet.", 400, "NO_AUCTION_STATE");
+    }
+
+    // Optional guard: client can tell us which player/version it expected to resolve.
+    // If the server has already moved past it (auto-advance raced), treat as a no-op
+    // so we don't accidentally resolve the NEW player with zero bids.
+    const rawBody = await request.text().catch(() => "");
+    let expectedPlayerId: string | undefined;
+    let expectedVersion: number | undefined;
+    if (rawBody) {
+      try {
+        const parsed = JSON.parse(rawBody) as {
+          expectedPlayerId?: string;
+          expectedVersion?: number;
+        };
+        expectedPlayerId = parsed?.expectedPlayerId;
+        expectedVersion = parsed?.expectedVersion;
+      } catch {
+        // malformed body — proceed without guard
+      }
+    }
+
+    const alreadyAdvanced =
+      (expectedPlayerId && auctionState.currentPlayerId !== expectedPlayerId) ||
+      (expectedVersion !== undefined && auctionState.version !== expectedVersion);
+
+    if (alreadyAdvanced || auctionState.phase !== "LIVE") {
+      // Any non-LIVE phase (PAUSED / ROUND_END / COMPLETED / WAITING) or a stale
+      // player/version means another actor already handled this — return a no-op
+      // so the client just refreshes instead of surfacing a generic error.
+      return NextResponse.json({
+        noop: true,
+        phase: auctionState.phase,
+        round: auctionState.currentRound,
+        playerId: auctionState.currentPlayerId,
+      });
     }
 
     const resolution = resolveExpiredAuction({
@@ -29,7 +64,7 @@ export async function POST(
       auctionState,
       players,
       now: new Date(),
-      forceResolution: true,
+      forceResolution: member.isAdmin,
     });
 
     const { data: claimState, error: claimError } = await admin
@@ -110,58 +145,11 @@ export async function POST(
       }
     }
 
-    const resolvedPlayers = players.map((player) =>
-      player.id === resolution.currentPlayer.id
-        ? {
-            ...player,
-            status: resolution.sold ? "SOLD" : "UNSOLD",
-            currentTeamId: resolution.sold ? auctionState.currentTeamId : null,
-            soldPrice: resolution.sold ? auctionState.currentBid : null,
-          }
-        : player,
-    );
-
-    const unsoldPlayers = resolvedPlayers
-      .filter((player) => player.status === "UNSOLD")
-      .sort((left, right) => left.orderIndex - right.orderIndex);
-
-    let finalPhase = resolution.nextPhase;
-    let finalPlayerId = resolution.nextPlayerId;
-    let finalExpiresAt = resolution.expiresAt;
-    let finalLastEvent = resolution.lastEvent;
-    let finalRound = resolution.nextRound;
-
-    if (!resolution.nextPlayerId && unsoldPlayers.length > 0) {
-      const shuffledUnsoldPlayers = shuffleItems(unsoldPlayers);
-      await reorderPlayersSafely(
-        room.id,
-        shuffledUnsoldPlayers.map((player) => ({
-          id: player.id,
-          orderIndex: player.orderIndex,
-        })),
-      );
-
-      const { error: recycleError } = await admin
-        .from("players")
-        .update({ status: "AVAILABLE" })
-        .eq("room_id", room.id)
-        .eq("status", "UNSOLD");
-
-      if (recycleError) {
-        throw new AppError(recycleError.message, 500, "ROUND_RECYCLE_FAILED");
-      }
-
-      finalRound = resolution.nextRound + 1;
-      finalPhase = "LIVE";
-      finalPlayerId = shuffledUnsoldPlayers[0]?.id ?? null;
-      finalExpiresAt = new Date(Date.now() + room.timerSeconds * 1000).toISOString();
-      finalLastEvent = "ROUND_STARTED";
-    } else if (!resolution.nextPlayerId) {
-      finalPhase = "ROUND_END";
-      finalPlayerId = null;
-      finalExpiresAt = null;
-      finalLastEvent = "ROUND_END";
-    }
+    const finalPhase = resolution.nextPhase;
+    const finalPlayerId = resolution.nextPlayerId;
+    const finalExpiresAt = resolution.expiresAt;
+    const finalLastEvent = resolution.lastEvent;
+    const finalRound = resolution.nextRound;
 
     const finalUpdate = {
       phase: finalPhase,
@@ -205,12 +193,19 @@ export async function POST(
     }
 
     // Invalidate room entities cache — player status, team purse, squads changed
-    await invalidateRoomCache(room.id);
+    await invalidateRoomCache(room.id, room.code);
+    await clearAuctionLiveSnapshot(room.id);
 
     return NextResponse.json({
+      expiresAt: finalExpiresAt,
       phase: finalPhase,
+      previousPlayerId: resolution.currentPlayer.id,
+      previousPlayerStatus: resolution.sold ? "SOLD" : "UNSOLD",
       round: resolution.nextRound,
       playerId: finalPlayerId,
+      version: Number(finalState.version),
+      winningBid: resolution.sold ? auctionState.currentBid : null,
+      winningTeamId: resolution.sold ? auctionState.currentTeamId : null,
     });
   } catch (error) {
     return handleRouteError(error);

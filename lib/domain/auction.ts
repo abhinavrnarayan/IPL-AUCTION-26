@@ -10,6 +10,8 @@ import type {
 
 export const BID_INCREMENTS = [1_000_000, 2_500_000, 5_000_000, 10_000_000] as const;
 
+export const MAX_AUCTION_ROUNDS = 3;
+
 export function shuffleItems<T>(items: T[]) {
   const shuffled = [...items];
 
@@ -107,13 +109,20 @@ export function buildStartingAuctionState({
 }
 
 export function buildPausedAuctionState(auctionState: AuctionState, now: Date) {
-  if (!["LIVE", "WAITING"].includes(auctionState.phase)) {
-    throw new AppError("Auction cannot be paused right now.", 400, "INVALID_PHASE");
+  // Pause is only meaningful while the clock is running. WAITING / ROUND_END /
+  // COMPLETED have no live timer to freeze.
+  if (auctionState.phase !== "LIVE") {
+    throw new AppError("Auction can only be paused while live.", 400, "INVALID_PHASE");
   }
 
-  const pausedRemainingMs = auctionState.expiresAt
-    ? Math.max(0, new Date(auctionState.expiresAt).getTime() - now.getTime())
-    : null;
+  if (!auctionState.expiresAt) {
+    throw new AppError("No active timer to pause.", 400, "NO_ACTIVE_TIMER");
+  }
+
+  const pausedRemainingMs = Math.max(
+    0,
+    new Date(auctionState.expiresAt).getTime() - now.getTime(),
+  );
 
   return {
     ...auctionState,
@@ -137,9 +146,14 @@ export function buildResumedAuctionState(
     throw new AppError("No player is active to resume.", 400, "NO_ACTIVE_PLAYER");
   }
 
+  // Prefer the exact remainder saved when pause happened. Only fall back to the
+  // full room timer if that data was genuinely lost (e.g. legacy paused rows
+  // that predate the column). A zero-or-negative remainder snaps to a short
+  // grace period so the auction actually resolves instead of looping.
+  const savedMs = auctionState.pausedRemainingMs;
   const remainingMs =
-    auctionState.pausedRemainingMs != null && auctionState.pausedRemainingMs > 0
-      ? auctionState.pausedRemainingMs
+    savedMs != null
+      ? Math.max(1000, savedMs)
       : room.timerSeconds * 1000;
 
   return {
@@ -247,8 +261,10 @@ export function resolveExpiredAuction({
   const willBeUnsoldCount = alreadyUnsold + (sold ? 0 : 1);
 
   // When the current round's queue is exhausted and there are unsold players,
-  // pause at ROUND_END so admin can pick which ones advance
-  const shouldGoToRoundEnd = !queueAfterCurrent && willBeUnsoldCount > 0;
+  // pause at ROUND_END so members can submit interest for the next round.
+  // On the final round, we skip the ballot entirely and just complete.
+  const atMaxRound = auctionState.currentRound >= MAX_AUCTION_ROUNDS;
+  const shouldGoToRoundEnd = !queueAfterCurrent && willBeUnsoldCount > 0 && !atMaxRound;
 
   const nextPlayer = shouldGoToRoundEnd ? null : (queueAfterCurrent ?? null);
   const nextPhase: AuctionPhase = shouldGoToRoundEnd

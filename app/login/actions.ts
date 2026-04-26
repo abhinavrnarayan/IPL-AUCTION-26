@@ -17,7 +17,7 @@ function buildAuthRedirect({
   authNotice,
   next,
 }: {
-  page: "/login" | "/signup";
+  page: "/login" | "/signup" | "/login/reset";
   authError?: string;
   authNotice?: string;
   next: string;
@@ -91,14 +91,17 @@ export async function signOutAction() {
 }
 
 export async function resetPasswordAction(formData: FormData) {
+  const resetRedirect = (args: { authError?: string; authNotice?: string }) =>
+    buildAuthRedirect({ page: "/login/reset", next: "/lobby", ...args });
+
   if (!hasBrowserSupabaseEnv) {
-    redirect(buildLoginRedirect({ authError: "supabase_not_configured", next: "/lobby" }));
+    redirect(resetRedirect({ authError: "supabase_not_configured" }));
   }
 
   const email = getFormValue(formData, "email").trim().toLowerCase();
 
   if (!email) {
-    redirect(buildLoginRedirect({ authError: "missing_credentials", next: "/lobby" }));
+    redirect(resetRedirect({ authError: "missing_credentials" }));
   }
 
   const supabase = await createSupabaseServerClient();
@@ -111,10 +114,10 @@ export async function resetPasswordAction(formData: FormData) {
     const code = error.message?.toLowerCase().includes("rate")
       ? "reset_rate_limited"
       : "reset_failed";
-    redirect(buildLoginRedirect({ authError: code, next: "/lobby" }));
+    redirect(resetRedirect({ authError: code }));
   }
 
-  redirect(buildLoginRedirect({ authNotice: "password_reset_sent", next: "/lobby" }));
+  redirect(resetRedirect({ authNotice: "password_reset_sent" }));
 }
 
 export async function signUpWithPasswordAction(formData: FormData) {
@@ -127,9 +130,18 @@ export async function signUpWithPasswordAction(formData: FormData) {
   const username = getFormValue(formData, "username").trim();
   const email = getFormValue(formData, "email").trim().toLowerCase();
   const password = getFormValue(formData, "password");
+  const passwordConfirm = getFormValue(formData, "passwordConfirm");
 
   if (!username || !email || !password) {
     redirect(buildAuthRedirect({ page: "/signup", authError: "missing_credentials", next }));
+  }
+
+  if (password.length < 6) {
+    redirect(buildAuthRedirect({ page: "/signup", authError: "password_too_short", next }));
+  }
+
+  if (password !== passwordConfirm) {
+    redirect(buildAuthRedirect({ page: "/signup", authError: "password_mismatch", next }));
   }
 
   const supabase = await createSupabaseServerClient();

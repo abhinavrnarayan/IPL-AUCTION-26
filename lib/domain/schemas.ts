@@ -79,6 +79,11 @@ export const skipVoteSchema = z.object({
   teamId: z.string().uuid(),
 });
 
+export const roundInterestSchema = z.object({
+  teamId: z.string().uuid(),
+  playerIds: z.array(z.string().uuid()).default([]),
+});
+
 export const tradeSchema = z
   .object({
     teamAId: z.string().uuid(),

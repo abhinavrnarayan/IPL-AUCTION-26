@@ -1,11 +1,13 @@
+import { revalidatePath } from "next/cache";
 import { NextResponse } from "next/server";
 
 import { buildPausedAuctionState } from "@/lib/domain/auction";
 import { AppError } from "@/lib/domain/errors";
 import { handleRouteError } from "@/lib/server/api";
 import { isMissingColumnError, omitOptionalColumns } from "@/lib/server/auction-state";
+import { clearAuctionLiveSnapshot } from "@/lib/server/auction-live";
 import { requireApiUser } from "@/lib/server/auth";
-import { getAuctionStateOnly, requireRoomAdmin } from "@/lib/server/room";
+import { getAuctionStateOnly, invalidateRoomCache, requireRoomAdmin } from "@/lib/server/room";
 import { getSupabaseAdminClient } from "@/lib/supabase/admin";
 
 export async function POST(
@@ -60,7 +62,23 @@ export async function POST(
       throw new AppError("Auction state changed. Refresh and retry.", 409, "VERSION_CONFLICT");
     }
 
-    return NextResponse.json({ paused: true });
+    // Invalidate Redis caches in parallel (each is a separate round-trip
+    // to the same Redis cluster — no need to await sequentially).
+    await Promise.all([
+      invalidateRoomCache(room.id, room.code),
+      clearAuctionLiveSnapshot(room.id),
+    ]);
+    revalidatePath(`/room/${room.code}`);
+    revalidatePath(`/auction/${room.code}`);
+
+    return NextResponse.json({
+      paused: true,
+      expiresAt: (data.expires_at as string | null | undefined) ?? null,
+      lastEvent: (data.last_event as string | null | undefined) ?? null,
+      pausedRemainingMs: (data.paused_remaining_ms as number | null | undefined) ?? null,
+      phase: String(data.phase),
+      version: Number(data.version),
+    });
   } catch (error) {
     return handleRouteError(error);
   }

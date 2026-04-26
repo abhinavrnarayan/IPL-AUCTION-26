@@ -187,8 +187,8 @@ export function ResultsBoard({ snapshot }: { snapshot: ResultsSnapshot }) {
 
       {/* Team boards — drawer */}
       <DrawerSection
-        title="Team-wise leaderboards"
-        eyebrow="Dream team boards"
+        title="Team leaderboards"
+        eyebrow="Per-team standings"
         badge={topTeam ? (
           <span className="pill" style={{ fontSize: "0.78rem" }}>
             {topTeam.teamName} · {topTeam.totalPoints} pts

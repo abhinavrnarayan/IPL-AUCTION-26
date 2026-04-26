@@ -1,7 +1,9 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import Link from "next/link";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { toErrorMessage } from "@/lib/utils";
+import { auctionPhaseLabel } from "@/lib/domain/types";
 import { AdminPlayersForm } from "@/components/admin/admin-players-form";
 import { UploadTeamsForm } from "@/components/room/upload-teams-form";
 import { DrawerSection } from "@/components/room/drawer-section";
@@ -647,7 +649,7 @@ function RoomsTab() {
               <td style={{ padding: "0.7rem 1rem" }}>{room.players}</td>
               <td style={{ padding: "0.7rem 1rem" }}>{room.members}</td>
               <td style={{ padding: "0.7rem 1rem" }}>
-                <span className={`pill ${room.auctionPhase === "ACTIVE" ? "highlight" : ""}`} style={{ fontSize: "0.75rem" }}>{room.auctionPhase}</span>
+                <span className={`pill ${room.auctionPhase === "LIVE" ? "highlight" : ""}`} style={{ fontSize: "0.75rem" }}>{auctionPhaseLabel(room.auctionPhase)}</span>
               </td>
               <td style={{ padding: "0.7rem 1rem", color: "var(--subtle, #888)", fontSize: "0.8rem" }}>
                 {room.lastSync ? new Date(room.lastSync).toLocaleDateString() : "Never"}
@@ -1241,14 +1243,19 @@ function SuperadminTab() {
   }
 
   async function handleRevoke() {
-    if (!revokeEmail.trim()) return;
+    const target = revokeEmail.trim();
+    if (!target) return;
+    const confirmed = typeof window !== "undefined"
+      ? window.confirm(`Revoke superadmin access from ${target}? They will immediately lose access to /admin and all superadmin APIs.`)
+      : true;
+    if (!confirmed) return;
     setRevoking(true);
     setMessage(null);
     try {
       const res = await fetch("/api/admin/superadmin", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email: revokeEmail.trim(), grant: false }),
+        body: JSON.stringify({ email: target, grant: false }),
       });
       const data = (await res.json()) as { ok: boolean; error?: string; message?: string };
       if (!res.ok || !data.ok) throw new Error(data.error ?? "Failed.");
@@ -1345,6 +1352,7 @@ function DangerZonePanel() {
   const [selectedRoomCode, setSelectedRoomCode] = useState<string>("all");
   const [dbResetting, setDbResetting] = useState(false);
   const [confirmDbReset, setConfirmDbReset] = useState(false);
+  const [confirmText, setConfirmText] = useState("");
   const [message, setMessage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
@@ -1370,6 +1378,7 @@ function DangerZonePanel() {
   async function handleDbReset() {
     setDbResetting(true);
     setConfirmDbReset(false);
+    setConfirmText("");
     setMessage(null);
     setError(null);
     try {
@@ -1425,27 +1434,40 @@ function DangerZonePanel() {
       {error   && <div className="notice warning" style={{ marginBottom: "0.75rem" }}>{error}</div>}
 
       {confirmDbReset ? (
-        <div style={{ display: "flex", gap: "0.75rem", flexWrap: "wrap", alignItems: "center" }}>
+        <div style={{ display: "grid", gap: "0.6rem" }}>
           <span className="subtle" style={{ fontSize: "0.82rem" }}>
-            Delete ALL match data for {scopeLabel}? This cannot be undone.
+            Delete ALL match data for <strong>{scopeLabel}</strong>? This cannot be undone.
+            Type <code style={{ padding: "0.1rem 0.35rem", borderRadius: "4px", background: "rgba(239,68,68,0.1)" }}>RESET</code> to confirm.
           </span>
-          <button
-            className="button danger"
-            onClick={() => void handleDbReset()}
+          <input
+            className="input"
+            type="text"
+            placeholder="Type RESET to confirm"
+            value={confirmText}
+            onChange={(e) => setConfirmText(e.target.value)}
             disabled={dbResetting}
-            type="button"
-            style={{ fontSize: "0.82rem", padding: "0.35rem 0.8rem" }}
-          >
-            {dbResetting ? "Wiping…" : "Confirm full DB reset"}
-          </button>
-          <button
-            className="button ghost"
-            onClick={() => setConfirmDbReset(false)}
-            type="button"
-            style={{ fontSize: "0.82rem", padding: "0.35rem 0.8rem" }}
-          >
-            Cancel
-          </button>
+            autoFocus
+            style={{ maxWidth: "280px", fontSize: "0.85rem" }}
+          />
+          <div style={{ display: "flex", gap: "0.75rem", flexWrap: "wrap" }}>
+            <button
+              className="button danger"
+              onClick={() => void handleDbReset()}
+              disabled={dbResetting || confirmText.trim() !== "RESET"}
+              type="button"
+              style={{ fontSize: "0.82rem", padding: "0.35rem 0.8rem" }}
+            >
+              {dbResetting ? "Wiping…" : "Confirm full DB reset"}
+            </button>
+            <button
+              className="button ghost"
+              onClick={() => { setConfirmDbReset(false); setConfirmText(""); }}
+              type="button"
+              style={{ fontSize: "0.82rem", padding: "0.35rem 0.8rem" }}
+            >
+              Cancel
+            </button>
+          </div>
         </div>
       ) : (
         <button
@@ -1542,6 +1564,8 @@ function SettingsTab() {
           </div>
           <button
             type="button"
+            role="switch"
+            aria-checked={!!flags?.user_score_fetch}
             disabled={saving || !flags}
             onClick={() => flags && void toggle("user_score_fetch", !flags.user_score_fetch)}
             style={{
@@ -1596,6 +1620,9 @@ export function AdminShell({ adminName }: { adminName: string }) {
             </h1>
           </div>
           <div style={{ display: "flex", alignItems: "center", gap: "0.75rem" }}>
+            <Link className="button ghost" href="/lobby" style={{ fontSize: "0.85rem" }}>
+              ← Back to lobby
+            </Link>
             <span className="pill highlight" style={{ fontSize: "0.78rem" }}>Superadmin</span>
             <span className="subtle" style={{ fontSize: "0.85rem" }}>{adminName}</span>
           </div>

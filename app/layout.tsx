@@ -1,6 +1,6 @@
 import type { ReactNode } from "react";
 import type { Metadata } from "next";
-import { Outfit, Inter } from "next/font/google";
+import { Space_Grotesk, Manrope, JetBrains_Mono } from "next/font/google";
 import IntroSplashWrapper from "@/components/intro-splash-wrapper";
 import { AmbientBackground } from "@/components/ambient-background";
 import AuctionAIWidget from "@/components/ai/auction-ai-widget";
@@ -9,14 +9,21 @@ import { getSessionUser } from "@/lib/server/auth";
 
 import "./globals.css";
 
-const displayFont = Outfit({
+const displayFont = Space_Grotesk({
   subsets: ["latin"],
   variable: "--font-display",
+  weight: ["400", "500", "600", "700"],
 });
 
-const bodyFont = Inter({
+const bodyFont = Manrope({
   subsets: ["latin"],
   variable: "--font-body",
+});
+
+const monoFont = JetBrains_Mono({
+  subsets: ["latin"],
+  variable: "--font-mono",
+  weight: ["400", "500", "600", "700"],
 });
 
 const base =
@@ -204,7 +211,7 @@ export default async function RootLayout({
           dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
         />
       </head>
-      <body className={`${displayFont.variable} ${bodyFont.variable}`}>
+      <body className={`${displayFont.variable} ${bodyFont.variable} ${monoFont.variable}`}>
         <a href="#main-content" className="skip-to-main">Skip to main content</a>
         <AmbientBackground />
         <IntroSplashWrapper />

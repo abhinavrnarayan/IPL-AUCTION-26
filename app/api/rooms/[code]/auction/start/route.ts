@@ -4,6 +4,7 @@ import { NextResponse } from "next/server";
 import { buildStartingAuctionState, shuffleItems } from "@/lib/domain/auction";
 import { AppError } from "@/lib/domain/errors";
 import { handleRouteError } from "@/lib/server/api";
+import { clearAuctionLiveSnapshot } from "@/lib/server/auction-live";
 import { requireApiUser, syncUserProfileFromAuthUser } from "@/lib/server/auth";
 import { reorderPlayersSafely } from "@/lib/server/player-order";
 import { getRoomEntities, requireRoomAdmin, invalidateRoomCache } from "@/lib/server/room";
@@ -99,6 +100,7 @@ export async function POST(
     }
 
     await invalidateRoomCache(room.id, room.code);
+    await clearAuctionLiveSnapshot(room.id);
     revalidatePath(`/room/${room.code}`);
     revalidatePath(`/auction/${room.code}`);
     revalidatePath(`/results/${room.code}`);

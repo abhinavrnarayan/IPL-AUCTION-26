@@ -1,0 +1,110 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><link rel="stylesheet" href="_base.css">
+<style>
+body { padding: 16px; display: block; }
+.shield-wrap {
+  display: grid;
+  grid-template-columns: 220px 1fr;
+  gap: 14px;
+  align-items: stretch;
+}
+.shield {
+  position: relative;
+  border-radius: 14px 14px 18px 18px;
+  overflow: hidden;
+  padding: 14px 12px 18px;
+  background: #080c1c;
+  border: 1px solid rgba(252,211,77,0.22);
+  box-shadow: inset 0 1px 0 rgba(252,211,77,0.15), 0 12px 30px rgba(0,0,0,0.35);
+  display: flex; flex-direction: column; justify-content: flex-end; gap: 8px;
+}
+.shield::before {
+  content:"";
+  position: absolute; inset: 0;
+  background:
+    radial-gradient(260px 180px at 20% 10%, rgba(129,140,248,0.22), transparent 70%),
+    radial-gradient(220px 160px at 85% 90%, rgba(234,88,12,0.18), transparent 70%),
+    linear-gradient(180deg, #0f1530 0%, #080c1c 65%, #060d1f 100%);
+}
+.shield::after {
+  content:""; position:absolute; inset:6px; border-radius: 10px 10px 14px 14px;
+  border: 1.5px solid transparent;
+  background: linear-gradient(180deg,#fcd34d,#8b6914) border-box;
+  -webkit-mask: linear-gradient(#000 0 0) padding-box, linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor; mask-composite: exclude;
+  pointer-events: none;
+}
+.shield-label {
+  position: relative; z-index:1;
+  font-family: var(--font-display);
+  font-size: 10px; letter-spacing: 0.22em; text-transform: uppercase;
+  color: #fcd34d;
+}
+.shield-title { position: relative; z-index:1; font-family: var(--font-display); font-weight:700; font-size: 18px; color: #f2f4fb; letter-spacing:-0.01em; line-height:1.1; }
+.shield-sub { position: relative; z-index:1; font-size: 11px; color: #c7cbe0; font-family: var(--font-body); }
+.stack { display:flex; flex-direction:column; gap: 10px; }
+.tier {
+  display: grid;
+  grid-template-columns: 120px 1fr 1fr 1fr 1fr;
+  gap: 8px;
+  align-items: stretch;
+}
+.tier-label {
+  display:flex; flex-direction:column; justify-content:center;
+  font-family: var(--font-body); font-size: 11px;
+  color: #c7cbe0; padding-left: 2px;
+}
+.tier-label em { font-style: normal; color: #8a90a9; font-size: 10px; display:block; margin-top:2px; }
+.surface {
+  height: 62px; border-radius: 10px;
+  position: relative; overflow: hidden;
+  padding: 8px 10px;
+  display: flex; flex-direction: column; justify-content: space-between;
+  font-family: var(--font-mono); font-size: 10px;
+  border: 1px solid rgba(252,211,77,0.10);
+}
+.surface .name { font-family: var(--font-body); font-weight:600; font-size: 11px; color: #f2f4fb; }
+.surface .hex { color: rgba(242,244,251,0.75); }
+.surface.translucent { background: rgba(252,211,77,0.04); backdrop-filter: blur(4px); }
+.surface.translucent::before {
+  content:""; position:absolute; inset:0; z-index:-1;
+  background:
+    radial-gradient(80px 60px at 70% 30%, rgba(99,102,241,0.4), transparent 70%),
+    linear-gradient(135deg, #0f1530, #1e2753);
+}
+.usage {
+  display:flex; align-items:center; gap:6px;
+  font-family: var(--font-body); font-size: 10px;
+  color: #8a90a9; letter-spacing: 0.04em; text-transform: uppercase;
+}
+.usage .dot { width:5px; height:5px; border-radius:50%; background:#fcd34d; }
+</style>
+</head>
+<body>
+<div class="shield-wrap">
+  <div class="shield">
+    <div class="shield-label">Shield stack</div>
+    <div class="shield-title">Midnight navy<br>surfaces</div>
+    <div class="shield-sub">Every surface is a tint of the crest's dark blue field — never pure black.</div>
+  </div>
+  <div class="stack">
+    <div class="tier">
+      <div class="tier-label">Backdrop<em>Root canvas</em></div>
+      <div class="surface" style="background:#080c1c"><span class="name">bg</span><span class="hex">#080C1C</span></div>
+      <div class="surface" style="background:#0f1530"><span class="name">bg-1 · raised</span><span class="hex">#0F1530</span></div>
+      <div class="surface" style="background:#151c3d"><span class="name">bg-2 · panel</span><span class="hex">#151C3D</span></div>
+      <div class="surface" style="background:#1e2753"><span class="name">bg-3 · hover</span><span class="hex">#1E2753</span></div>
+    </div>
+    <div class="tier">
+      <div class="tier-label">Glass<em>Translucent + blur</em></div>
+      <div class="surface translucent"><span class="name">panel</span><span class="hex">gold 4% on nav</span></div>
+      <div class="surface" style="background:rgba(252,211,77,0.07);border-color:rgba(252,211,77,0.22)"><span class="name">border</span><span class="hex">gold hairline</span></div>
+      <div class="surface" style="background:linear-gradient(180deg,#0f1530, #080c1c);border:1px solid rgba(252,211,77,0.14)"><span class="name">room card</span><span class="hex">subtle vignette</span></div>
+      <div class="surface" style="background:radial-gradient(120% 120% at 50% 0%, #1e2753 0%, #080c1c 80%);border:1px solid rgba(252,211,77,0.10)"><span class="name">spotlight</span><span class="hex">hero vignette</span></div>
+    </div>
+    <div class="usage">
+      <span class="dot"></span>Hairlines use gold at 7–22% — never white — so panels inherit the crest's banner edge.
+    </div>
+  </div>
+</div>
+</body></html>

@@ -14,23 +14,43 @@ interface SiteLogoProps {
  * Use inside any .brand div or heading.
  */
 export function SiteLogo({ suffix, size = 28, className }: SiteLogoProps) {
+  const framePadding = Math.round(size * 0.12);
+
   return (
     <span
       className={`site-logo${className ? ` ${className}` : ""}`}
       style={{
         display: "inline-flex",
         alignItems: "center",
-        gap: "0.4rem",
-        // inherit font styles from parent .brand
+        gap: "0.55rem",
       }}
     >
-      <Image
-        alt="SFL logo"
-        height={size}
-        src="/images/sfl.png"
-        style={{ objectFit: "contain", flexShrink: 0 }}
-        width={size}
-      />
+      <span
+        aria-hidden
+        style={{
+          display: "inline-flex",
+          alignItems: "center",
+          justifyContent: "center",
+          padding: framePadding,
+          borderRadius: "10px",
+          background:
+            "linear-gradient(180deg, rgba(252,211,77,0.18) 0%, rgba(201,24,43,0.12) 100%)",
+          border: "1px solid",
+          borderImage:
+            "linear-gradient(180deg, #fcd34d 0%, #d4a24c 55%, #8b6914 100%) 1",
+          boxShadow:
+            "0 0 12px rgba(252, 211, 77, 0.18), inset 0 1px 0 rgba(255,255,255,0.1)",
+          flexShrink: 0,
+        }}
+      >
+        <Image
+          alt="SFL logo"
+          height={size}
+          src="/images/sfl.png"
+          style={{ objectFit: "contain", display: "block" }}
+          width={size}
+        />
+      </span>
       <span>SFL{suffix ? ` ${suffix}` : ""}</span>
     </span>
   );

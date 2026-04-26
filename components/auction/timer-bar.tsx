@@ -17,7 +17,7 @@ export function TimerBar({
 
   const urgency =
     isPaused ? "paused"
-    : remainingSeconds <= 3 ? "critical"
+    : remainingSeconds <= 5 ? "critical"
     : remainingSeconds <= 10 ? "warning"
     : "normal";
 

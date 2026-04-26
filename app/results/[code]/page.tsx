@@ -64,23 +64,24 @@ export default async function ResultsPage({
       <div className="nav">
         <div>
           <div className="brand"><SiteLogo suffix="Results" /></div>
+          <div className="subtle" style={{ fontFamily: "var(--font-display)", fontWeight: 600 }}>{snapshot.room.name}</div>
           <div className="subtle mono">{snapshot.room.code}</div>
         </div>
         <div className="link-row">
-          {snapshot.currentMember?.isAdmin ? (
-            <ResultsResetButton roomCode={snapshot.room.code} />
-          ) : null}
-          {/* Visible to all members when superadmin has the flag enabled,
-              or always to admins (they can use Reset Points for a full rebuild) */}
-          {(flags.user_score_fetch || snapshot.currentMember?.isAdmin) ? (
-            <UpdateScoresButton roomCode={snapshot.room.code} />
-          ) : null}
           <Link className="button ghost" href={`/room/${snapshot.room.code}`}>
             Room
           </Link>
           <Link className="button secondary" href={`/auction/${snapshot.room.code}`}>
             Auction
           </Link>
+          {/* Visible to all members when superadmin has the flag enabled,
+              or always to admins (they can use Reset Points for a full rebuild) */}
+          {(flags.user_score_fetch || snapshot.currentMember?.isAdmin) ? (
+            <UpdateScoresButton roomCode={snapshot.room.code} />
+          ) : null}
+          {snapshot.currentMember?.isAdmin ? (
+            <ResultsResetButton roomCode={snapshot.room.code} />
+          ) : null}
         </div>
       </div>
       <div style={{ display: "flex", justifyContent: "flex-end", padding: "0 0 0.5rem" }}>

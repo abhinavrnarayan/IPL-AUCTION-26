@@ -14,6 +14,7 @@ import { SelfCreateTeamForm } from "@/components/room/self-create-team-form";
 import { TradePanel } from "@/components/trades/trade-panel";
 import { SoldPlayerShowcase } from "@/components/sold-player-showcase";
 import { hasServiceRoleEnv } from "@/lib/config";
+import { auctionPhaseLabel } from "@/lib/domain/types";
 import { requireSessionUser } from "@/lib/server/auth";
 import { getRoomSnapshot } from "@/lib/server/queries";
 import { deriveRoleLabel, formatCurrency, formatCurrencyShort } from "@/lib/utils";
@@ -94,6 +95,9 @@ export default async function RoomPage({
           <Link className="button ghost" href="/lobby">
             Lobby
           </Link>
+          <Link className="button ghost" href="/profile">
+            Profile
+          </Link>
           <Link className="button secondary" href={`/results/${snapshot.room.code}`}>
             Results
           </Link>
@@ -116,7 +120,7 @@ export default async function RoomPage({
           <div className="pill-row">
             <span className="pill">{deriveRoleLabel(snapshot.currentMember)}</span>
             <span className="pill highlight">
-              {snapshot.auctionState?.phase ?? "WAITING"}
+              {auctionPhaseLabel(snapshot.auctionState?.phase)}
             </span>
           </div>
         </div>
@@ -239,7 +243,7 @@ export default async function RoomPage({
               teams={snapshot.teams}
             />
             {snapshot.currentMember.isAdmin &&
-            ["WAITING", "ROUND_END", "COMPLETED"].includes(
+            ["WAITING", "COMPLETED"].includes(
               snapshot.auctionState?.phase ?? "WAITING",
             ) ? (
               <div style={{ marginTop: "1rem" }}>
@@ -258,9 +262,15 @@ export default async function RoomPage({
                   roomCode={snapshot.room.code}
                 />
               </div>
+            ) : snapshot.currentMember.isAdmin && snapshot.auctionState?.phase === "ROUND_END" ? (
+              <div className="notice" style={{ marginTop: "1rem" }}>
+                Status: {auctionPhaseLabel(snapshot.auctionState.phase)}.{" "}
+                <Link href={`/auction/${snapshot.room.code}`}>Open auction controls</Link>
+                {" "}to continue the next round or complete the auction.
+              </div>
             ) : snapshot.auctionState?.phase !== "WAITING" ? (
               <div className="notice" style={{ marginTop: "1rem" }}>
-                The auction is already {snapshot.auctionState?.phase.toLowerCase()}.
+                Status: {auctionPhaseLabel(snapshot.auctionState?.phase)}.
               </div>
             ) : (
               <div className="notice" style={{ marginTop: "1rem" }}>

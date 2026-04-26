@@ -5,7 +5,8 @@ import { AppError } from "@/lib/domain/errors";
 import { roomSettingsSchema } from "@/lib/domain/schemas";
 import { handleRouteError } from "@/lib/server/api";
 import { requireApiUser } from "@/lib/server/auth";
-import { getAuctionStateOnly, requireRoomMember } from "@/lib/server/room";
+import { clearAuctionLiveSnapshot } from "@/lib/server/auction-live";
+import { getAuctionStateOnly, invalidateRoomCache, requireRoomMember } from "@/lib/server/room";
 import { getSupabaseAdminClient } from "@/lib/supabase/admin";
 
 export async function PATCH(
@@ -62,6 +63,8 @@ export async function PATCH(
       }
     }
 
+    await invalidateRoomCache(room.id, room.code);
+    await clearAuctionLiveSnapshot(room.id);
     revalidatePath(`/room/${room.code}`);
     revalidatePath(`/auction/${room.code}`);
 

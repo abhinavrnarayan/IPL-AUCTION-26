@@ -1,0 +1,217 @@
+/* ============================================================
+   SFL — St. Thomas Fantasy League
+   Design tokens: colors + typography
+   ============================================================ */
+
+/* ---------- Fonts (Google Fonts — flagged as nearest matches) ---------- */
+@import url("https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Manrope:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap");
+
+:root {
+  /* ======================================================
+     Colors — Deep-midnight auction stage with indigo primary,
+     warm amber accents (inspired by the crest: navy shield,
+     gold trim, orange flame, red cricket ball)
+     ====================================================== */
+
+  /* Base backdrop — midnight shield navy (NOT black) — sampled from the
+     crest's dark blue field; every surface is a tint of this one hue. */
+  --bg:                 #080c1c;   /* shield core — deepest */
+  --bg-1:               #0f1530;   /* raised card   — shield mid */
+  --bg-2:               #151c3d;   /* panel         — shield light */
+  --bg-3:               #1e2753;   /* hover/active  — shield highlight */
+  --panel:              rgba(252, 211, 77, 0.04);   /* whisper of gold trim */
+  --panel-border:       rgba(252, 211, 77, 0.14);   /* gold-tinted hairline */
+  --panel-border-soft:  rgba(252, 211, 77, 0.07);
+
+  /* Foreground text */
+  --text:               #f2f4fb;
+  --fg1:                #f2f4fb;
+  --fg2:                #c7cbe0;   /* secondary */
+  --subtle:             #8a90a9;   /* tertiary */
+  --muted:              #6a7088;
+  --disabled:           #4a506a;
+
+  /* Brand / primary — shield navy + indigo highlight.
+     The crest's shield is deep navy, lit by indigo — this is our primary. */
+  --primary:            #2a3b7a;   /* shield navy (CTAs, chrome) */
+  --primary-strong:     #6366f1;   /* indigo highlight (leading, focus) */
+  --primary-glow-color: #818cf8;   /* glow center */
+  --primary-soft:       rgba(42, 59, 122, 0.18);
+  --primary-ring:       rgba(129, 140, 248, 0.95);
+  --primary-glow:       rgba(99, 102, 241, 0.35);
+
+  /* Accent — FLAME. The crest's signature: amber → red gradient (cape over fire).
+     Use on highlights, currency pills, SOLD moments, hero CTAs. */
+  --accent:             #f59e0b;   /* flame mid (amber) */
+  --accent-strong:      #fbbf24;   /* flame lick */
+  --accent-soft:        rgba(245, 158, 11, 0.10);
+  --ember:              #ea580c;   /* cape orange */
+  --flame:              linear-gradient(135deg, #fcd34d 0%, #f59e0b 38%, #ea580c 70%, #c9182b 100%);
+  --flame-soft:         linear-gradient(135deg, rgba(252,211,77,0.12), rgba(201,24,43,0.12));
+
+  /* Gold trim — the crest's rope and banner edge. Use for premium markers. */
+  --gold:               #fcd34d;
+  --gold-trim:          #b8860b;   /* darker gold edge */
+  --gold-trim-gradient: linear-gradient(180deg, #fcd34d 0%, #d4a24c 50%, #8b6914 100%);
+
+  /* Crest — deep navy shield (for illustrations + splash only) */
+  --navy:               #0f1d3a;
+  --navy-deep:          #060d1f;
+
+  /* Cricket-ball red — scuffed leather, NOT a generic red. */
+  --ball-red:           #c9182b;
+  --ball-stitch:        #f2f4fb;
+
+  /* Semantic */
+  --success:            #10b981;
+  --success-soft:       rgba(16, 185, 129, 0.12);
+  --warning:            #f59e0b;
+  --warning-soft:       rgba(245, 158, 11, 0.12);
+  --danger:             #f43f5e;
+  --danger-soft:        rgba(244, 63, 94, 0.12);
+  --info:               #60a5fa;
+
+  /* Leading / live-bid */
+  --leading:            #4ade80;
+
+  /* Avatar rotation (from sidebar code) */
+  --avatar-1: #6366f1;
+  --avatar-2: #10b981;
+  --avatar-3: #f472b6;
+  --avatar-4: #f59e0b;
+  --avatar-5: #3b82f6;
+  --avatar-6: #8b5cf6;
+
+  /* ======================================================
+     Typography
+     ====================================================== */
+  --font-display: "Space Grotesk", "SF Pro Display", system-ui, sans-serif;
+  --font-body:    "Manrope", "Inter", system-ui, sans-serif;
+  --font-mono:    "JetBrains Mono", ui-monospace, Menlo, monospace;
+
+  /* Type scale */
+  --fs-eyebrow:  0.72rem;  /* uppercase labels */
+  --fs-xs:       0.75rem;
+  --fs-sm:       0.85rem;
+  --fs-base:     1rem;
+  --fs-md:       1.1rem;
+  --fs-lg:       1.35rem;
+  --fs-xl:       1.75rem;
+  --fs-2xl:      2.25rem;
+  --fs-3xl:      3rem;
+  --fs-display:  clamp(2rem, 6vw, 3.5rem);
+
+  --lh-tight:    1.15;
+  --lh-snug:     1.3;
+  --lh-body:     1.55;
+  --lh-loose:    1.7;
+
+  --tracking-tight: -0.02em;
+  --tracking-normal: 0;
+  --tracking-wide:   0.08em;
+  --tracking-eyebrow: 0.18em;
+
+  /* ======================================================
+     Radius / shadow / spacing / elevation
+     ====================================================== */
+  --r-xs:   4px;
+  --r-sm:   6px;
+  --r-md:   10px;
+  --r-lg:   14px;
+  --r-xl:   20px;
+  --r-pill: 999px;
+
+  --sh-sm:  0 1px 2px rgba(0,0,0,0.4);
+  --sh-md:  0 8px 24px rgba(0,0,0,0.35);
+  --sh-lg:  0 16px 40px rgba(0,0,0,0.45);
+  --sh-glow: 0 0 24px var(--primary-glow);
+  --sh-hover-indigo: 0 16px 40px rgba(99,102,241,0.16);
+  --sh-inset: inset 0 1px 0 rgba(255,255,255,0.05);
+
+  --sp-1:  0.25rem;
+  --sp-2:  0.5rem;
+  --sp-3:  0.75rem;
+  --sp-4:  1rem;
+  --sp-5:  1.5rem;
+  --sp-6:  2rem;
+  --sp-8:  3rem;
+
+  /* Ambient glow drift (see ambient-background.tsx) */
+  --glow-x: 5%;
+  --glow-y: 0%;
+}
+
+/* ============================================================
+   Semantic text styles
+   ============================================================ */
+h1, .h1 {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: var(--fs-display);
+  line-height: var(--lh-tight);
+  letter-spacing: var(--tracking-tight);
+  color: var(--fg1);
+  margin: 0;
+  text-wrap: balance;
+}
+h2, .h2 {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: var(--fs-xl);
+  line-height: var(--lh-snug);
+  letter-spacing: var(--tracking-tight);
+  color: var(--fg1);
+  margin: 0;
+}
+h3, .h3 {
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: var(--fs-lg);
+  line-height: var(--lh-snug);
+  color: var(--fg1);
+  margin: 0;
+}
+p, .p {
+  font-family: var(--font-body);
+  font-size: var(--fs-base);
+  line-height: var(--lh-body);
+  color: var(--fg2);
+  margin: 0;
+}
+.subtle {
+  color: var(--subtle);
+  font-family: var(--font-body);
+}
+.mono, code {
+  font-family: var(--font-mono);
+  font-size: 0.92em;
+  letter-spacing: 0;
+}
+.eyebrow {
+  font-family: var(--font-body);
+  font-weight: 600;
+  font-size: var(--fs-eyebrow);
+  text-transform: uppercase;
+  letter-spacing: var(--tracking-eyebrow);
+  color: var(--primary-strong);
+}
+
+/* Body defaults */
+body {
+  background: var(--bg);
+  color: var(--fg1);
+  font-family: var(--font-body);
+  font-size: var(--fs-base);
+  line-height: var(--lh-body);
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Ambient indigo drift background (reusable) */
+.sfl-ambient {
+  background:
+    radial-gradient(1000px 600px at calc(50% + var(--glow-x, 0%)) calc(0% + var(--glow-y, 0%)),
+      rgba(99,102,241,0.18), transparent 60%),
+    radial-gradient(800px 500px at calc(85% - var(--glow-x, 0%)) 90%,
+      rgba(245,158,11,0.10), transparent 70%),
+    var(--bg);
+}

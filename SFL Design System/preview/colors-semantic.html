@@ -1,0 +1,149 @@
+<!doctype html>
+<html><head><meta charset="utf-8">
+<template id="__bundler_thumbnail" data-bg-color="#080c1c">
+  <svg viewBox="0 0 1200 800" xmlns="http://www.w3.org/2000/svg">
+    <defs>
+      <radialGradient id="bg" cx="50%" cy="30%" r="70%">
+        <stop offset="0%" stop-color="#1e2753"/>
+        <stop offset="60%" stop-color="#0f1530"/>
+        <stop offset="100%" stop-color="#060d1f"/>
+      </radialGradient>
+      <linearGradient id="gold" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0%" stop-color="#fcd34d"/>
+        <stop offset="50%" stop-color="#d4a24c"/>
+        <stop offset="100%" stop-color="#8b6914"/>
+      </linearGradient>
+      <radialGradient id="flame" cx="50%" cy="100%" r="80%">
+        <stop offset="0%" stop-color="#fcd34d"/>
+        <stop offset="30%" stop-color="#f59e0b"/>
+        <stop offset="60%" stop-color="#ea580c"/>
+        <stop offset="85%" stop-color="#c9182b" stop-opacity="0"/>
+      </radialGradient>
+      <radialGradient id="ball" cx="30%" cy="30%" r="70%">
+        <stop offset="0%" stop-color="#ef4458"/>
+        <stop offset="50%" stop-color="#c9182b"/>
+        <stop offset="100%" stop-color="#7a0a17"/>
+      </radialGradient>
+    </defs>
+    <rect width="1200" height="800" fill="url(#bg)"/>
+    <rect x="360" y="120" width="480" height="560" rx="28" fill="none" stroke="url(#gold)" stroke-width="6"/>
+    <ellipse cx="600" cy="370" rx="90" ry="140" fill="url(#flame)"/>
+    <circle cx="490" cy="500" r="50" fill="url(#ball)"/>
+    <circle cx="710" cy="500" r="50" fill="url(#ball)"/>
+    <rect x="420" y="600" width="360" height="50" rx="6" fill="url(#gold)"/>
+    <text x="600" y="632" text-anchor="middle" font-family="system-ui, sans-serif" font-weight="700" font-size="22" letter-spacing="4" fill="#1a0f00">SNT THOMAS · SFL</text>
+  </svg>
+</template>
+<link rel="stylesheet" href="_base.css">
+<style>
+body { padding: 16px; display:block; background:#080c1c; }
+.wrap { display:grid; grid-template-columns: 180px 1fr; gap: 14px; }
+
+/* The crest — real elements as color proofs */
+.crest {
+  position: relative; border-radius: 14px;
+  background: radial-gradient(120% 120% at 50% 20%, #1e2753 0%, #0f1530 55%, #060d1f 100%);
+  border: 2px solid #fcd34d;
+  box-shadow: inset 0 0 0 1px #8b6914, inset 0 0 40px rgba(234,88,12,0.14), 0 10px 30px rgba(0,0,0,0.4);
+  padding: 14px 12px;
+  display:flex; flex-direction:column; justify-content:space-between; align-items:center;
+  min-height: 240px;
+}
+.crest-banner {
+  margin-top: 6px;
+  width: 100%;
+  padding: 6px 8px;
+  border-radius: 6px;
+  background: linear-gradient(180deg,#fcd34d,#d4a24c 50%,#8b6914);
+  color: #1a0f00;
+  text-align:center;
+  font-family: var(--font-display); font-weight:700; font-size: 11px; letter-spacing: 0.15em;
+  text-transform: uppercase;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.4), 0 2px 6px rgba(0,0,0,0.4);
+}
+.ball {
+  width: 36px; height: 36px; border-radius: 50%;
+  background: radial-gradient(circle at 30% 30%, #ef4458 0%, #c9182b 40%, #7a0a17 100%);
+  position: relative;
+  box-shadow: 0 4px 12px rgba(201,24,43,0.5), inset -2px -4px 8px rgba(0,0,0,0.4);
+}
+.ball::before, .ball::after {
+  content:""; position:absolute; left:50%; top:4px; bottom:4px; width:1px;
+  background: repeating-linear-gradient(180deg, #f2f4fb 0 2px, transparent 2px 4px);
+  transform: translateX(-50%);
+}
+.ball::after { transform: translateX(-6px) rotate(-2deg); }
+.balls-row { display:flex; gap: 14px; align-items:center; }
+.flame-wisp {
+  width: 52px; height: 52px;
+  background:
+    radial-gradient(ellipse 50% 80% at 50% 100%, #fcd34d 0%, #f59e0b 30%, #ea580c 55%, transparent 75%),
+    radial-gradient(ellipse 30% 50% at 50% 40%, #fbbf24, transparent 70%);
+  filter: blur(0.3px);
+}
+.crest-label { font-family: var(--font-display); font-size: 9px; color: #8a90a9; letter-spacing: 0.22em; text-transform:uppercase; margin-bottom: 6px; }
+
+/* Right column */
+.col-r { display:flex; flex-direction:column; gap: 10px; }
+.chip-row { display:flex; flex-wrap: wrap; gap: 8px; }
+.chip {
+  padding: 8px 12px;
+  border-radius: 999px;
+  font-family: var(--font-body); font-size: 11px; font-weight: 600;
+  display:inline-flex; align-items:center; gap:6px;
+  border: 1px solid transparent;
+}
+.chip .dot { width:6px; height:6px; border-radius: 50%; }
+.chip .hex { font-family: var(--font-mono); font-size:10px; opacity:0.75; margin-left:2px; }
+
+.chip.navy    { background: rgba(15,29,58,0.9); color: #c7cbe0; border-color: rgba(252,211,77,0.2); }
+.chip.navy .dot { background: #0f1d3a; box-shadow: 0 0 0 1px rgba(252,211,77,0.4); }
+.chip.ball    { background: rgba(201,24,43,0.18); color: #ffb3bd; border-color: rgba(201,24,43,0.55); }
+.chip.ball .dot { background: radial-gradient(circle at 30% 30%, #ef4458, #c9182b 60%, #7a0a17); box-shadow: inset 0 -1px 1px rgba(0,0,0,0.3); }
+.chip.gold    { background: linear-gradient(180deg,#fcd34d,#8b6914); color:#1a0f00; }
+.chip.gold .dot { background:#1a0f00; }
+.chip.success { background: rgba(16,185,129,0.14); color: #6ee7b7; border-color: rgba(16,185,129,0.45); }
+.chip.success .dot { background: #10b981; }
+.chip.live    { background: rgba(74,222,128,0.16); color: #86efac; border-color: rgba(74,222,128,0.5); box-shadow: 0 0 12px rgba(74,222,128,0.3); }
+.chip.live .dot { background: #4ade80; animation: pulse 1.4s ease-in-out infinite; }
+@keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.4} }
+.chip.danger  { background: rgba(244,63,94,0.14); color: #fda4af; border-color: rgba(244,63,94,0.5); }
+.chip.danger .dot { background: #f43f5e; }
+.chip.info    { background: rgba(96,165,250,0.14); color: #93c5fd; border-color: rgba(96,165,250,0.45); }
+.chip.info .dot { background: #60a5fa; }
+.chip.warning { background: rgba(245,158,11,0.14); color: #fcd34d; border-color: rgba(245,158,11,0.5); }
+.chip.warning .dot { background: #f59e0b; }
+
+.section-title { font-family: var(--font-display); font-size: 10px; color:#fcd34d; letter-spacing: 0.22em; text-transform: uppercase; margin-top: 4px; }
+.caption { font-family: var(--font-body); font-size: 11px; color: #8a90a9; line-height: 1.4; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="crest">
+    <div class="crest-label">Crest elements</div>
+    <div class="flame-wisp"></div>
+    <div class="balls-row"><div class="ball"></div><div class="ball"></div></div>
+    <div class="crest-banner">SNT Thomas · SFL</div>
+  </div>
+  <div class="col-r">
+    <div class="section-title">Crest palette</div>
+    <div class="chip-row">
+      <span class="chip navy"><span class="dot"></span>navy · shield <span class="hex">#0F1D3A</span></span>
+      <span class="chip gold"><span class="dot"></span>gold · trim <span class="hex">#FCD34D → #8B6914</span></span>
+      <span class="chip ball"><span class="dot"></span>ball-red <span class="hex">#C9182B</span></span>
+    </div>
+    <div class="caption">Worn only on brand moments — splash, crest mark, championship banners. Not UI chrome.</div>
+
+    <div class="section-title">Semantic states</div>
+    <div class="chip-row">
+      <span class="chip live"><span class="dot"></span>LIVE · leading <span class="hex">#4ADE80</span></span>
+      <span class="chip success"><span class="dot"></span>sold · success <span class="hex">#10B981</span></span>
+      <span class="chip warning"><span class="dot"></span>bid rising <span class="hex">#F59E0B</span></span>
+      <span class="chip danger"><span class="dot"></span>timer &lt;3s <span class="hex">#F43F5E</span></span>
+      <span class="chip info"><span class="dot"></span>info <span class="hex">#60A5FA</span></span>
+    </div>
+    <div class="caption">Live green breathes; sub-3s timer flashes red with glow; info is a neutral sky.</div>
+  </div>
+</div>
+</body></html>

@@ -9,7 +9,9 @@ export type LoginAuthErrorCode =
   | "email_taken"
   | "credential_auth_failed"
   | "reset_failed"
-  | "reset_rate_limited";
+  | "reset_rate_limited"
+  | "password_mismatch"
+  | "password_too_short";
 
 export type LoginAuthNoticeCode =
   | "account_created"
@@ -87,6 +89,10 @@ export function getLoginAuthErrorMessage(errorCode?: string | null) {
       return "Could not send the password reset email. Check the address and try again.";
     case "reset_rate_limited":
       return "Too many reset requests. Wait a few minutes before trying again.";
+    case "password_mismatch":
+      return "Passwords do not match. Re-enter both to continue.";
+    case "password_too_short":
+      return "Password must be at least 6 characters.";
     default:
       return null;
   }

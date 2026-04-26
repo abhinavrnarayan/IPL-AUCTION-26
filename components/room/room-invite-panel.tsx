@@ -58,7 +58,22 @@ export function RoomInvitePanel({
           </p>
         </div>
       </div>
-      <div className="invite-code">{roomCode}</div>
+      <div
+        className="invite-code"
+        onClick={() => void handleCopyCode()}
+        onKeyDown={(event) => {
+          if (event.key === "Enter" || event.key === " ") {
+            event.preventDefault();
+            void handleCopyCode();
+          }
+        }}
+        role="button"
+        tabIndex={0}
+        title="Click to copy room code"
+        style={{ cursor: "pointer" }}
+      >
+        {roomCode}
+      </div>
       <div className="button-row">
         <button className="button secondary" onClick={handleCopyCode} type="button">
           Copy code

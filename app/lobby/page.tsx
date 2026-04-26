@@ -76,6 +76,9 @@ export default async function LobbyPage() {
           <Link className="button ghost" href="/">
             Home
           </Link>
+          <Link className="button ghost" href="/profile">
+            Profile
+          </Link>
           <form action={signOutAction}>
             <button className="button ghost" type="submit">
               Sign out

@@ -8,7 +8,7 @@ import {
   getLoginAuthNoticeMessage,
   sanitizeNextPath,
 } from "@/lib/auth-errors";
-import { signInWithPasswordAction, resetPasswordAction } from "@/app/login/actions";
+import { signInWithPasswordAction } from "@/app/login/actions";
 import { hasBrowserSupabaseEnv } from "@/lib/config";
 import { getSessionUser } from "@/lib/server/auth";
 
@@ -44,7 +44,7 @@ export default async function LoginPage({
         {/* Brand */}
         <div style={{ marginBottom: "1.75rem", textAlign: "center" }}>
           <div className="brand" style={{ justifyContent: "center", display: "flex" }}>
-            <SiteLogo suffix="Fantasy League" />
+            <SiteLogo suffix="Fantasy IPL" />
           </div>
           <p className="subtle" style={{ marginTop: "0.5rem", fontSize: "0.92rem" }}>
             Sign in to your account to continue
@@ -97,33 +97,18 @@ export default async function LoginPage({
               />
             </div>
 
-            <button className="button secondary" type="submit" style={{ marginTop: "0.25rem" }}>
+            <button className="button" type="submit" style={{ marginTop: "0.25rem" }}>
               Sign in
             </button>
           </form>
         )}
 
         {hasBrowserSupabaseEnv && (
-          <details className="forgot-password-details">
-            <summary>Forgot your password?</summary>
-            <form action={resetPasswordAction} className="form-grid" style={{ marginTop: "0.75rem" }}>
-              <div className="field">
-                <label htmlFor="reset-email">Email address</label>
-                <input
-                  required
-                  autoComplete="email"
-                  className="input"
-                  id="reset-email"
-                  name="email"
-                  type="email"
-                  placeholder="you@example.com"
-                />
-              </div>
-              <button className="button ghost" type="submit" style={{ marginTop: "0.25rem" }}>
-                Send reset link
-              </button>
-            </form>
-          </details>
+          <div className="forgot-password-row" style={{ marginTop: "0.75rem", textAlign: "right" }}>
+            <Link href="/login/reset" className="auth-link">
+              Forgot your password?
+            </Link>
+          </div>
         )}
 
         <div className="auth-switch" style={{ marginTop: "0.5rem" }}>

@@ -60,3 +60,6 @@ PM.md
 
 # Simulation scripts
 scripts/
+.mcp.json
+.env.local.backup-qmvmxmfi-PRIMARY-2026-04-25
+supabase/setup-test-db.sql

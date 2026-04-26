@@ -53,12 +53,16 @@ function getInitials(displayName: string | null, email: string | null): string {
     .join("");
 }
 
-const AVATAR_COLORS = [
-  "#6366f1", "#10b981", "#f472b6",
-  "#f59e0b", "#3b82f6", "#8b5cf6",
+const AVATAR_GRADIENTS = [
+  "linear-gradient(135deg, #6366f1, #2a3b7a)",
+  "linear-gradient(135deg, #10b981, #047857)",
+  "linear-gradient(135deg, #f472b6, #be185d)",
+  "linear-gradient(135deg, #fbbf24, #c9182b)",
+  "linear-gradient(135deg, #60a5fa, #1e40af)",
+  "linear-gradient(135deg, #a78bfa, #5b21b6)",
 ];
 function avatarColor(id: string) {
-  return AVATAR_COLORS[id.charCodeAt(0) % AVATAR_COLORS.length];
+  return AVATAR_GRADIENTS[id.charCodeAt(0) % AVATAR_GRADIENTS.length];
 }
 
 /* ─────────────────────────────────────────────

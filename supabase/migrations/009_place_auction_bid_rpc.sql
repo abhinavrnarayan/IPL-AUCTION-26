@@ -13,6 +13,11 @@ language plpgsql
 security definer
 set search_path = public
 as $$
+-- Without this, plpgsql can't decide whether `version` (and other unqualified
+-- names) refers to the auction_state column or the function's OUT parameter
+-- (RETURNS TABLE column). use_column forces SET targets and column refs in
+-- DML to bind to the table column, which is what we want here.
+#variable_conflict use_column
 declare
   v_room            public.rooms%rowtype;
   v_member          public.room_members%rowtype;
@@ -60,7 +65,12 @@ begin
     raise exception 'No player is currently on the block.';
   end if;
 
-  if v_auction.expires_at is null or v_auction.expires_at <= timezone('utc', now()) then
+  -- Compare against now() (timestamptz) directly. timezone('utc', now())
+  -- returns a `timestamp without time zone`; when compared to a timestamptz
+  -- column Postgres reinterprets it via the session timezone, which silently
+  -- shifts the comparison if the session isn't UTC (causing every bid to
+  -- think the timer already expired).
+  if v_auction.expires_at is null or v_auction.expires_at <= now() then
     raise exception 'Bidding time has ended for this player.';
   end if;
 
@@ -130,16 +140,21 @@ begin
     raise exception 'Team does not have enough purse for this bid.';
   end if;
 
-  v_next_expires_at := timezone('utc', now()) + make_interval(secs => v_room.timer_seconds);
+  -- Same reasoning: now() is timestamptz; the wrapper would strip the tz.
+  v_next_expires_at := now() + make_interval(secs => v_room.timer_seconds);
 
-  update public.auction_state
+  -- Qualify column refs with the table name. Without this, Postgres can't
+  -- disambiguate `version` between the auction_state column and the
+  -- function's OUT parameter (RETURNS TABLE column also named `version`),
+  -- and raises 42702 "column reference 'version' is ambiguous".
+  update public.auction_state as a
   set current_bid = v_next_amount,
       current_team_id = v_team.id,
       expires_at = v_next_expires_at,
       version = v_auction.version + 1,
       last_event = 'NEW_BID'
-  where room_id = v_room.id
-    and version = v_auction.version;
+  where a.room_id = v_room.id
+    and a.version = v_auction.version;
 
   get diagnostics v_row_count = row_count;
   if v_row_count = 0 then

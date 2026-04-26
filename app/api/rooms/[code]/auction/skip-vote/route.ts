@@ -3,6 +3,7 @@ import { NextResponse } from "next/server";
 import { AppError } from "@/lib/domain/errors";
 import { skipVoteSchema } from "@/lib/domain/schemas";
 import { readJson, handleRouteError } from "@/lib/server/api";
+import { clearAuctionLiveSnapshot } from "@/lib/server/auction-live";
 import { requireApiUser } from "@/lib/server/auth";
 import { getAuctionStateOnly, getRoomEntities, requireRoomMember } from "@/lib/server/room";
 import { getSupabaseAdminClient } from "@/lib/supabase/admin";
@@ -20,7 +21,7 @@ export async function POST(
 
     // Players may only vote for their own team; admins can vote for any team
     if (!member.isAdmin) {
-      const { teams } = await getRoomEntities(room.id);
+      const { teams } = await getRoomEntities(room.id, true);
       const team = teams.find((t) => t.id === input.teamId);
       if (!team) {
         throw new AppError("Team not found.", 404, "TEAM_NOT_FOUND");
@@ -52,7 +53,7 @@ export async function POST(
     const nextSkipVotes = [...auctionState.skipVoteTeamIds, input.teamId];
 
     // Fetch total teams to check if all have voted
-    const { teams } = await getRoomEntities(room.id);
+    const { teams } = await getRoomEntities(room.id, true);
     const allVoted = member.isAdmin || nextSkipVotes.length >= teams.length;
 
     // If all teams voted, expire the timer immediately to trigger auto-advance
@@ -79,11 +80,15 @@ export async function POST(
       throw new AppError("Auction state changed. Try again.", 409, "VERSION_CONFLICT");
     }
 
+    await clearAuctionLiveSnapshot(room.id);
+
     return NextResponse.json({
+      expiresAt: nextExpiresAt,
       voted: true,
       voteCount: nextSkipVotes.length,
       total: teams.length,
       allVoted,
+      version: Number(data.version),
     });
   } catch (error) {
     return handleRouteError(error);

@@ -8,6 +8,8 @@ import { AppError } from "@/lib/domain/errors";
 import { bidSchema } from "@/lib/domain/schemas";
 import { readJson, handleRouteError } from "@/lib/server/api";
 import { requireApiUser } from "@/lib/server/auth";
+import { clearAuctionLiveSnapshot } from "@/lib/server/auction-live";
+import { recordBidTiming } from "@/lib/server/bid-timing-stats";
 import {
   mapAuctionState,
   mapPlayer,
@@ -15,6 +17,29 @@ import {
   requireRoomMember,
 } from "@/lib/server/room";
 import { getSupabaseAdminClient } from "@/lib/supabase/admin";
+
+// Map RPC raise-exception messages back to AppError codes that
+// `lib/server/api.ts → toClientMessage` will surface verbatim instead of
+// masking as "Something went wrong." Each match must correspond to an
+// entry in the safePassthrough set in api.ts.
+function mapRpcErrorToCode(message: string): string {
+  const m = message.toLowerCase();
+  if (m.includes("highest bidder cannot bid again")) return "DUPLICATE_BID";
+  if (m.includes("squad is already full")) return "SQUAD_FULL";
+  if (m.includes("bidding time has ended")) return "TIMER_EXPIRED";
+  if (m.includes("auction is not live")) return "INVALID_PHASE";
+  if (m.includes("auction has not started")) return "INVALID_PHASE";
+  if (m.includes("invalid bid increment")) return "INVALID_INCREMENT";
+  if (m.includes("does not have enough purse")) return "LOW_PURSE";
+  if (m.includes("you can only bid for your own team")) return "TEAM_ACCESS_DENIED";
+  if (m.includes("team was not found")) return "TEAM_NOT_FOUND";
+  if (m.includes("room was not found")) return "ROOM_NOT_FOUND";
+  if (m.includes("join this room")) return "ROOM_ACCESS_DENIED";
+  if (m.includes("no player is currently on the block")) return "NO_ACTIVE_PLAYER";
+  if (m.includes("no active player is available")) return "NO_PLAYER";
+  if (m.includes("auction state changed")) return "VERSION_CONFLICT";
+  return "BID_RPC_FAILED";
+}
 
 export async function POST(
   request: Request,
@@ -47,7 +72,12 @@ export async function POST(
         error.message?.includes("schema cache");
 
       if (!isMissingRpc) {
-        throw new AppError(error.message || "Bid failed.", 400, "BID_RPC_FAILED");
+        // Map RPC raise-exception messages to safe-passthrough codes so the
+        // UI shows the actual reason (e.g. "Highest bidder cannot bid again
+        // immediately") instead of the generic "Something went wrong."
+        const msg = error.message || "Bid failed.";
+        const code = mapRpcErrorToCode(msg);
+        throw new AppError(msg, 400, code);
       }
 
       const result = await placeBidWithoutRpc({
@@ -64,8 +94,15 @@ export async function POST(
         steps: marks,
       };
       console.info("[auction-bid-timing]", JSON.stringify({ roomCode: code.toUpperCase(), timing }));
+      recordBidTiming({ totalMs: timing.totalMs, steps: timing.steps, roomCode: code.toUpperCase(), outcome: "ok" });
       return NextResponse.json(
-        { amount: result.amount, timing },
+        {
+          amount: result.amount,
+          expiresAt: result.expiresAt,
+          timerSeconds: result.timerSeconds,
+          timing,
+          version: result.version,
+        },
         {
           headers: {
             "x-auction-bid-ms": String(timing.totalMs),
@@ -78,14 +115,33 @@ export async function POST(
     if (!result) {
       throw new AppError("Bid failed.", 500, "BID_RPC_EMPTY");
     }
+    const { data: roomRow } = await admin
+      .from("rooms")
+      .select("id, timer_seconds")
+      .eq("code", code.toUpperCase())
+      .maybeSingle();
+    mark("roomForCache");
+    const roomId = String(roomRow?.id ?? "");
+    const timerSeconds = Number(roomRow?.timer_seconds ?? 0) || undefined;
+    if (roomId) {
+      await clearAuctionLiveSnapshot(roomId);
+      mark("auctionLiveCacheClear");
+    }
 
     const timing = {
       totalMs: Date.now() - startedAt,
       steps: marks,
     };
     console.info("[auction-bid-timing]", JSON.stringify({ roomCode: code.toUpperCase(), timing }));
+    recordBidTiming({ totalMs: timing.totalMs, steps: timing.steps, roomCode: code.toUpperCase(), outcome: "ok" });
     return NextResponse.json(
-      { amount: Number(result.amount), timing },
+      {
+        amount: Number(result.amount),
+        expiresAt: result.expires_at ? String(result.expires_at) : null,
+        timerSeconds,
+        timing,
+        version: Number(result.version),
+      },
       {
         headers: {
           "x-auction-bid-ms": String(timing.totalMs),
@@ -98,6 +154,7 @@ export async function POST(
       steps: marks,
       message: error instanceof Error ? error.message : String(error),
     }));
+    recordBidTiming({ totalMs: Date.now() - startedAt, steps: marks, roomCode: "(unknown)", outcome: "error" });
     return handleRouteError(error);
   }
 }
@@ -218,5 +275,13 @@ async function placeBidWithoutRpc({
     throw new AppError(bidError.message, 500, "BID_LOG_FAILED");
   }
 
-  return { amount: nextBidAmount };
+  await clearAuctionLiveSnapshot(room.id);
+  mark("auctionLiveCacheClear");
+
+  return {
+    amount: nextBidAmount,
+    expiresAt: nextExpiresAt,
+    timerSeconds: room.timerSeconds,
+    version: Number(updatedState.version),
+  };
 }

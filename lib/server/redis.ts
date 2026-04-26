@@ -12,6 +12,7 @@ export const TTL = {
   MATCH_LIST: 30 * 60,           // 30 minutes — new matches added during season
   SERIES_ID: 60 * 60,            // 1 hour — series structure rarely changes
   ROOM: 30,                      // 30 seconds — live auction data
+  AUCTION_LIVE: 1,                // 1 second - live auction bridge
   LEADERBOARD: 60,               // 1 minute
 } as const;
 
@@ -109,5 +110,34 @@ export async function cacheDel(...keys: string[]): Promise<void> {
     await redis.del(...keys);
   } catch {
     // Ignore
+  }
+}
+
+export async function withRedisLock<T>(
+  key: string,
+  ttlMs: number,
+  fn: () => Promise<T>,
+): Promise<T> {
+  const redis = getRedis();
+  if (!redis) return fn();
+
+  const token = `${process.pid}:${Date.now()}:${Math.random().toString(36).slice(2)}`;
+
+  try {
+    const acquired = await redis.set(key, token, "PX", ttlMs, "NX");
+    if (acquired !== "OK") {
+      return fn();
+    }
+
+    try {
+      return await fn();
+    } finally {
+      const current = await redis.get(key).catch(() => null);
+      if (current === token) {
+        await redis.del(key).catch(() => undefined);
+      }
+    }
+  } catch {
+    return fn();
   }
 }

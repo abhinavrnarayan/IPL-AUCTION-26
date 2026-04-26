@@ -16,6 +16,7 @@ import {
   mapRoom,
   mapTrade,
 } from "@/lib/server/room";
+import { getAuctionLiveSnapshot } from "@/lib/server/auction-live";
 
 export async function getLobbySnapshot(
   user: UserProfile | null,
@@ -144,15 +145,9 @@ export async function getAuctionSnapshot(
   const admin = getSupabaseAdminClient();
 
   // Parallelize all per-room queries after we have room.id
-  const [currentMember, entities, bidResult, tradeResult] = await Promise.all([
+  const [currentMember, liveSnapshot, tradeResult] = await Promise.all([
     getRoomMember(room.id, user.id),
-    getRoomEntities(room.id),
-    admin
-      .from("bids")
-      .select("*")
-      .eq("room_id", room.id)
-      .order("created_at", { ascending: false })
-      .limit(12),
+    getAuctionLiveSnapshot(room.id, room.timerSeconds),
     admin
       .from("trades")
       .select("*")
@@ -162,26 +157,19 @@ export async function getAuctionSnapshot(
       .limit(40),
   ]);
 
-  if (!currentMember || !entities.auctionState) {
+  if (!currentMember || !liveSnapshot?.auctionState) {
     return null;
   }
 
   return {
     room,
-    teams: entities.teams,
-    players: entities.players,
-    auctionState: entities.auctionState,
-    bids: (bidResult.data ?? []).map((row) => ({
-      id: String(row.id),
-      roomId: String(row.room_id),
-      playerId: String(row.player_id),
-      teamId: String(row.team_id),
-      amount: Number(row.amount),
-      createdAt: String(row.created_at),
-      createdBy: String(row.created_by),
-    })),
-    squads: entities.squads,
+    teams: liveSnapshot.teams,
+    players: liveSnapshot.players,
+    auctionState: liveSnapshot.auctionState,
+    bids: liveSnapshot.bids,
+    squads: liveSnapshot.squads,
     trades: (tradeResult.data ?? []).map((row) => mapTrade(row as Record<string, unknown>)),
+    roundInterests: liveSnapshot.roundInterests,
     user,
     currentMember,
   };

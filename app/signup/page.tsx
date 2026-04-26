@@ -44,7 +44,7 @@ export default async function SignupPage({
         {/* Brand */}
         <div style={{ marginBottom: "1.75rem", textAlign: "center" }}>
           <div className="brand" style={{ justifyContent: "center", display: "flex" }}>
-            <SiteLogo suffix="Fantasy League" />
+            <SiteLogo suffix="Fantasy IPL" />
           </div>
           <p className="subtle" style={{ marginTop: "0.5rem", fontSize: "0.92rem" }}>
             Create your account and join the league
@@ -75,7 +75,7 @@ export default async function SignupPage({
               <label htmlFor="signup-username">Display name</label>
               <input
                 required
-                autoComplete="nickname"
+                autoComplete="username"
                 className="input"
                 id="signup-username"
                 name="username"
@@ -108,6 +108,20 @@ export default async function SignupPage({
                 name="password"
                 type="password"
                 placeholder="At least 6 characters"
+              />
+            </div>
+
+            <div className="field">
+              <label htmlFor="signup-password-confirm">Confirm password</label>
+              <input
+                required
+                minLength={6}
+                autoComplete="new-password"
+                className="input"
+                id="signup-password-confirm"
+                name="passwordConfirm"
+                type="password"
+                placeholder="Re-enter password"
               />
             </div>
 
